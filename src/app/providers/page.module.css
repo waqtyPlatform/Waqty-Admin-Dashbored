@@ -202,6 +202,29 @@
     background: var(--color-info-light);
 }
 
+/* Form inputs in modals */
+.formInput {
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    font-family: var(--font-sans);
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.formInput:focus {
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px var(--color-primary-50);
+}
+
+.formInput::placeholder {
+    color: var(--text-tertiary);
+}
+
 @media (max-width: 640px) {
     .pageHeader {
         flex-direction: column;
