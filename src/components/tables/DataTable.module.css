@@ -1,0 +1,234 @@
+.wrapper {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.toolbarLeft {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0;
+}
+
+.toolbarRight {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+.searchBox {
+    position: relative;
+    max-width: 320px;
+    flex: 1;
+}
+
+.searchIcon {
+    position: absolute;
+    left: var(--space-3);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+[dir='rtl'] .searchIcon {
+    left: auto;
+    right: var(--space-3);
+}
+
+.searchInput {
+    width: 100%;
+    padding: var(--space-2) var(--space-3) var(--space-2) 36px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    outline: none;
+    font-family: var(--font-sans);
+    transition: border-color 0.15s;
+}
+
+[dir='rtl'] .searchInput {
+    padding: var(--space-2) 36px var(--space-2) var(--space-3);
+}
+
+.searchInput:focus {
+    border-color: var(--color-primary-500);
+}
+
+.searchInput::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* Table */
+.tableWrap {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.table th {
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+    user-select: none;
+}
+
+[dir='rtl'] .table th {
+    text-align: right;
+}
+
+.table th.sortable {
+    cursor: pointer;
+}
+
+.table th.sortable:hover {
+    color: var(--text-primary);
+}
+
+.thContent {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.sortIconInactive {
+    opacity: 0.3;
+}
+
+.table td {
+    padding: var(--space-3) var(--space-4);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background: var(--bg-secondary);
+}
+
+.table tbody tr.clickable {
+    cursor: pointer;
+}
+
+.empty {
+    text-align: center;
+    padding: var(--space-10) var(--space-4) !important;
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
+}
+
+.skeleton {
+    height: 16px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-5);
+    border-top: 1px solid var(--border-color);
+}
+
+.pageInfo {
+    font-size: var(--text-xs);
+    color: var(--text-secondary);
+}
+
+.pageButtons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.pageBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    height: 32px;
+    padding: 0 var(--space-2);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pageBtn:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+.pageBtn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pageBtn.active {
+    background: var(--color-primary-500);
+    color: white;
+    border-color: var(--color-primary-500);
+}
+
+@media (max-width: 640px) {
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbarLeft,
+    .toolbarRight {
+        width: 100%;
+    }
+
+    .searchBox {
+        max-width: none;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+}
