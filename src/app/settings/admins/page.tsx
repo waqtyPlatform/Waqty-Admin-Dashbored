@@ -8,7 +8,7 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import type { SuperAdminUser, SuperAdminRole } from '@/types/admin';
 import { Plus, Shield } from 'lucide-react';
 
-const mockAdmins: SuperAdminUser[] = [
+const initialAdmins: SuperAdminUser[] = [
     { id: '1', uuid: 'sa-1', name: 'Super Admin', email: 'superadmin@hagzy.com', role: 'super_admin', permissions: [], active: true, last_login_at: '2026-04-13T10:00:00Z', created_at: '2023-01-01T00:00:00Z', updated_at: '2026-04-13T10:00:00Z' },
     { id: '2', uuid: 'sa-2', name: 'Platform Admin', email: 'admin@hagzy.com', role: 'admin', permissions: [], active: true, last_login_at: '2026-04-13T09:00:00Z', created_at: '2023-06-01T00:00:00Z', updated_at: '2026-04-13T09:00:00Z' },
     { id: '3', uuid: 'sa-3', name: 'Content Moderator', email: 'moderator@hagzy.com', role: 'moderator', permissions: [], active: true, last_login_at: '2026-04-12T16:00:00Z', created_at: '2024-01-15T00:00:00Z', updated_at: '2026-04-12T16:00:00Z' },
@@ -21,6 +21,7 @@ const roleColors: Record<SuperAdminRole, string> = { super_admin: '#dc2626', adm
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function AdminsPage() {
+    const [admins, setAdmins] = useState(initialAdmins);
     const [showCreate, setShowCreate] = useState(false);
 
     const columns: Column<SuperAdminUser>[] = [
@@ -41,15 +42,26 @@ export default function AdminsPage() {
                     </button>
                 </PermissionGate>
             </div>
-            <DataTable<SuperAdminUser> columns={columns} data={mockAdmins} searchKeys={['name', 'email', 'role']} searchPlaceholder="Search admins..." getRowKey={r => r.id} />
+            <DataTable<SuperAdminUser> columns={columns} data={admins} searchKeys={['name', 'email', 'role']} searchPlaceholder="Search admins..." getRowKey={r => r.id} />
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Add Admin User" submitLabel="Create Admin" onSubmit={e => { e.preventDefault(); setShowCreate(false); }}>
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Add Admin User" submitLabel="Create Admin" onSubmit={e => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                const now = new Date().toISOString();
+                const id = String(Date.now());
+                setAdmins(prev => [{
+                    id, uuid: `sa-${id}`, name: String(fd.get('name') || ''), email: String(fd.get('email') || ''),
+                    role: (fd.get('role') || 'viewer') as SuperAdminUser['role'], permissions: [],
+                    active: true, last_login_at: null, created_at: now, updated_at: now,
+                }, ...prev]);
+                setShowCreate(false);
+            }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Full Name" required><input type="text" required style={inputStyle} placeholder="Admin name" /></FormField>
-                    <FormField label="Email" required><input type="email" required style={inputStyle} placeholder="admin@hagzy.com" /></FormField>
+                    <FormField label="Full Name" required><input name="name" type="text" required style={inputStyle} placeholder="Admin name" /></FormField>
+                    <FormField label="Email" required><input name="email" type="email" required style={inputStyle} placeholder="admin@hagzy.com" /></FormField>
                 </div>
                 <FormField label="Role" required>
-                    <select required style={inputStyle}>
+                    <select name="role" required style={inputStyle}>
                         <option value="">Select role...</option>
                         <option value="admin">Admin</option>
                         <option value="moderator">Moderator</option>
@@ -58,7 +70,7 @@ export default function AdminsPage() {
                         <option value="viewer">Viewer</option>
                     </select>
                 </FormField>
-                <FormField label="Temporary Password" required><input type="password" required style={inputStyle} placeholder="Min 8 characters" minLength={8} /></FormField>
+                <FormField label="Temporary Password" required><input name="password" type="password" required style={inputStyle} placeholder="Min 8 characters" minLength={8} /></FormField>
             </FormModal>
         </div>
     );

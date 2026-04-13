@@ -8,7 +8,7 @@ import { Plus, Megaphone } from 'lucide-react';
 
 interface Announcement { id: string; title: string; title_ar: string; message: string; message_ar: string; target: 'all' | 'users' | 'providers' | 'employees'; priority: 'low' | 'normal' | 'high'; active: boolean; start_date: string; end_date: string; created_at: string; }
 
-const mockAnnouncements: Announcement[] = [
+const initialAnnouncements: Announcement[] = [
     { id: '1', title: 'Scheduled Maintenance', title_ar: 'صيانة مجدولة', message: 'We will be performing maintenance on April 20 from 2-4 AM.', message_ar: 'سنقوم بإجراء صيانة يوم 20 أبريل من 2-4 صباحاً.', target: 'all', priority: 'high', active: true, start_date: '2026-04-18', end_date: '2026-04-21', created_at: '2026-04-13T10:00:00Z' },
     { id: '2', title: 'New Features Available', title_ar: 'ميزات جديدة متاحة', message: 'Wallet top-up and recurring bookings are now live!', message_ar: 'شحن المحفظة والحجوزات المتكررة متاحة الآن!', target: 'users', priority: 'normal', active: true, start_date: '2026-04-10', end_date: '2026-04-30', created_at: '2026-04-10T10:00:00Z' },
     { id: '3', title: 'Commission Rate Update', title_ar: 'تحديث نسبة العمولة', message: 'Effective May 1, commission rates will be adjusted.', message_ar: 'اعتباراً من 1 مايو، سيتم تعديل نسب العمولة.', target: 'providers', priority: 'high', active: false, start_date: '2026-05-01', end_date: '2026-05-15', created_at: '2026-04-12T10:00:00Z' },
@@ -18,6 +18,7 @@ const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(
 const priorityColors: Record<string, string> = { low: 'var(--text-tertiary)', normal: 'var(--color-info)', high: 'var(--color-error)' };
 
 export default function AnnouncementsPage() {
+    const [announcements, setAnnouncements] = useState(initialAnnouncements);
     const [showCreate, setShowCreate] = useState(false);
 
     return (
@@ -30,7 +31,7 @@ export default function AnnouncementsPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {mockAnnouncements.map(a => (
+                {announcements.map(a => (
                     <div key={a.id} style={{ background: 'var(--bg-primary)', border: `1px solid ${a.priority === 'high' ? 'var(--color-warning)' : 'var(--border-color)'}`, borderRadius: 12, padding: 20 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -47,19 +48,31 @@ export default function AnnouncementsPage() {
                 ))}
             </div>
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="New Announcement" submitLabel="Publish" onSubmit={e => { e.preventDefault(); setShowCreate(false); }}>
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="New Announcement" submitLabel="Publish" onSubmit={e => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                const now = new Date().toISOString();
+                setAnnouncements(prev => [{
+                    id: String(Date.now()), title: String(fd.get('title_en') || ''), title_ar: String(fd.get('title_ar') || ''),
+                    message: String(fd.get('message_en') || ''), message_ar: String(fd.get('message_ar') || ''),
+                    target: (fd.get('target') || 'all') as Announcement['target'],
+                    priority: (fd.get('priority') || 'normal') as Announcement['priority'],
+                    active: true, start_date: now.slice(0, 10), end_date: String(fd.get('end_date') || ''), created_at: now,
+                }, ...prev]);
+                setShowCreate(false);
+            }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Title (EN)" required><input type="text" required style={inputStyle} /></FormField>
-                    <FormField label="Title (AR)" required><input type="text" required style={inputStyle} dir="rtl" /></FormField>
+                    <FormField label="Title (EN)" required><input name="title_en" type="text" required style={inputStyle} /></FormField>
+                    <FormField label="Title (AR)" required><input name="title_ar" type="text" required style={inputStyle} dir="rtl" /></FormField>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Message (EN)" required><textarea required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} /></FormField>
-                    <FormField label="Message (AR)" required><textarea required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} dir="rtl" /></FormField>
+                    <FormField label="Message (EN)" required><textarea name="message_en" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} /></FormField>
+                    <FormField label="Message (AR)" required><textarea name="message_ar" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} dir="rtl" /></FormField>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                    <FormField label="Target"><select style={inputStyle}><option value="all">All</option><option value="users">Users</option><option value="providers">Providers</option><option value="employees">Employees</option></select></FormField>
-                    <FormField label="Priority"><select style={inputStyle}><option value="normal">Normal</option><option value="low">Low</option><option value="high">High</option></select></FormField>
-                    <FormField label="End Date"><input type="date" style={inputStyle} /></FormField>
+                    <FormField label="Target"><select name="target" style={inputStyle}><option value="all">All</option><option value="users">Users</option><option value="providers">Providers</option><option value="employees">Employees</option></select></FormField>
+                    <FormField label="Priority"><select name="priority" style={inputStyle}><option value="normal">Normal</option><option value="low">Low</option><option value="high">High</option></select></FormField>
+                    <FormField label="End Date"><input name="end_date" type="date" style={inputStyle} /></FormField>
                 </div>
             </FormModal>
         </div>

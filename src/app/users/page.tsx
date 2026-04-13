@@ -9,6 +9,8 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { mockUsers } from '@/mocks/users';
 import type { PlatformUser } from '@/types/user';
+import { FormModal, FormField } from '@/components/admin/FormModal';
+import { exportToCSV } from '@/lib/utils';
 import { Plus, MoreHorizontal, Ban, ShieldCheck, Trash2, RotateCcw, Pause, Download, Wallet } from 'lucide-react';
 import styles from './page.module.css';
 
@@ -19,6 +21,9 @@ export default function UsersPage() {
     const [users, setUsers] = useState(mockUsers);
     const [statusFilter, setStatusFilter] = useState('all');
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+    const [showCreateUser, setShowCreateUser] = useState(false);
+
+    const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
     const filtered = users.filter(u => statusFilter === 'all' || u.status === statusFilter);
 
@@ -90,7 +95,7 @@ export default function UsersPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{t('users.title')}</h1>
                 <PermissionGate module="users" action="create">
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    <button onClick={() => setShowCreateUser(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
                         <Plus size={16} /> {t('users.addNew')}
                     </button>
                 </PermissionGate>
@@ -112,12 +117,35 @@ export default function UsersPage() {
                 }
                 actions={
                     <PermissionGate module="users" action="export">
-                        <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                        <button onClick={() => exportToCSV(filtered, 'users', [{key:'name',label:'Name'},{key:'email',label:'Email'},{key:'phone',label:'Phone'},{key:'city',label:'City'},{key:'status',label:'Status'},{key:'total_bookings',label:'Bookings'},{key:'total_spent',label:'Spent'}])} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
                             <Download size={16} /> Export
                         </button>
                     </PermissionGate>
                 }
             />
+
+            <FormModal open={showCreateUser} onClose={() => setShowCreateUser(false)} title="Add New User" submitLabel="Create User" onSubmit={e => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                const id = String(Date.now());
+                const now = new Date().toISOString();
+                setUsers(prev => [{
+                    id, uuid: `user-${id}`, name: String(fd.get('name') || ''), email: String(fd.get('email') || ''),
+                    phone: String(fd.get('phone') || ''), city: String(fd.get('city') || ''), country: 'Egypt',
+                    status: 'active' as const, total_bookings: 0, total_spent: 0, wallet_balance: 0, preferred_language: 'en' as const,
+                    registered_at: now, last_active_at: now, created_at: now, updated_at: now, deleted_at: null,
+                } as unknown as PlatformUser, ...prev]);
+                setShowCreateUser(false);
+            }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <FormField label="Full Name" required><input name="name" type="text" required style={inputStyle} placeholder="User name" /></FormField>
+                    <FormField label="Email" required><input name="email" type="email" required style={inputStyle} placeholder="email@example.com" /></FormField>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <FormField label="Phone" required><input name="phone" type="tel" required style={inputStyle} placeholder="+201012345678" /></FormField>
+                    <FormField label="City"><input name="city" type="text" style={inputStyle} placeholder="Cairo" /></FormField>
+                </div>
+            </FormModal>
         </div>
     );
 }

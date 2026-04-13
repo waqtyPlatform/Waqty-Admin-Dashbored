@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
+import { FormModal, FormField } from '@/components/admin/FormModal';
 import { Plus, Star, ArrowUp, ArrowDown } from 'lucide-react';
 
-const mockFeatured = [
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
+
+const initialFeatured = [
     { id: '1', provider: 'Glamour Studio', category: 'Salon', city: 'Cairo', position: 1, active: true, start: '2026-04-01', end: '2026-04-30', impressions: 12500, clicks: 980 },
     { id: '2', provider: 'Elite Barbers', category: 'Barber', city: 'Cairo', position: 2, active: true, start: '2026-04-01', end: '2026-04-30', impressions: 9800, clicks: 720 },
     { id: '3', provider: 'Beauty Clinic Cairo', category: 'Clinic', city: 'Cairo', position: 3, active: true, start: '2026-04-05', end: '2026-05-05', impressions: 7200, clicks: 540 },
@@ -13,21 +16,37 @@ const mockFeatured = [
 ];
 
 export default function FeaturedPage() {
+    const [featured, setFeatured] = useState(initialFeatured);
+    const [showCreate, setShowCreate] = useState(false);
+
+    const swapPositions = (idx: number, dir: -1 | 1) => {
+        setFeatured(prev => {
+            const arr = [...prev];
+            const targetIdx = idx + dir;
+            if (targetIdx < 0 || targetIdx >= arr.length) return prev;
+            const tempPos = arr[idx].position;
+            arr[idx] = { ...arr[idx], position: arr[targetIdx].position };
+            arr[targetIdx] = { ...arr[targetIdx], position: tempPos };
+            [arr[idx], arr[targetIdx]] = [arr[targetIdx], arr[idx]];
+            return arr;
+        });
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Star size={24} /><h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Featured Providers</h1></div>
                 <PermissionGate module="marketing" action="create">
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Featured</button>
+                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Featured</button>
                 </PermissionGate>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {mockFeatured.map(f => (
+                {featured.map((f, idx) => (
                     <div key={f.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', gap: 16 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center', flexShrink: 0 }}>
-                            <button style={{ border: '1px solid var(--border-color)', borderRadius: 4, background: 'var(--bg-primary)', cursor: 'pointer', padding: 2, color: 'var(--text-tertiary)' }}><ArrowUp size={14} /></button>
+                            <button onClick={() => swapPositions(idx, -1)} disabled={idx === 0} style={{ border: '1px solid var(--border-color)', borderRadius: 4, background: 'var(--bg-primary)', cursor: idx === 0 ? 'default' : 'pointer', padding: 2, color: 'var(--text-tertiary)', opacity: idx === 0 ? 0.3 : 1 }}><ArrowUp size={14} /></button>
                             <span style={{ fontWeight: 700, fontSize: '1.125rem', color: 'var(--color-primary-500)' }}>#{f.position}</span>
-                            <button style={{ border: '1px solid var(--border-color)', borderRadius: 4, background: 'var(--bg-primary)', cursor: 'pointer', padding: 2, color: 'var(--text-tertiary)' }}><ArrowDown size={14} /></button>
+                            <button onClick={() => swapPositions(idx, 1)} disabled={idx === featured.length - 1} style={{ border: '1px solid var(--border-color)', borderRadius: 4, background: 'var(--bg-primary)', cursor: idx === featured.length - 1 ? 'default' : 'pointer', padding: 2, color: 'var(--text-tertiary)', opacity: idx === featured.length - 1 ? 0.3 : 1 }}><ArrowDown size={14} /></button>
                         </div>
                         <div style={{ width: 48, height: 48, borderRadius: 10, background: 'var(--color-primary-50)', color: 'var(--color-primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>{f.provider.charAt(0)}</div>
                         <div style={{ flex: 1 }}>
@@ -46,6 +65,24 @@ export default function FeaturedPage() {
                     </div>
                 ))}
             </div>
+
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Add Featured Provider" submitLabel="Add" onSubmit={e => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                const newPos = featured.length + 1;
+                setFeatured(prev => [...prev, { id: String(Date.now()), provider: String(fd.get('provider') || ''), category: String(fd.get('category') || 'Salon'), city: String(fd.get('city') || ''), position: newPos, active: true, start: String(fd.get('start') || ''), end: String(fd.get('end') || ''), impressions: 0, clicks: 0 }]);
+                setShowCreate(false);
+            }}>
+                <FormField label="Provider Name" required><input name="provider" type="text" required style={inputStyle} placeholder="e.g. Glamour Studio" /></FormField>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <FormField label="Category"><select name="category" style={inputStyle}><option value="Salon">Salon</option><option value="Barber">Barber</option><option value="Clinic">Clinic</option><option value="Spa">Spa</option></select></FormField>
+                    <FormField label="City" required><input name="city" type="text" required style={inputStyle} placeholder="Cairo" /></FormField>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <FormField label="Start Date" required><input name="start" type="date" required style={inputStyle} /></FormField>
+                    <FormField label="End Date" required><input name="end" type="date" required style={inputStyle} /></FormField>
+                </div>
+            </FormModal>
         </div>
     );
 }

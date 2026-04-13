@@ -8,7 +8,7 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import type { PushNotification } from '@/types/marketing';
 import { Plus, Send, Bell } from 'lucide-react';
 
-const mockNotifs: PushNotification[] = [
+const initialNotifs: PushNotification[] = [
     { id: '1', title: 'Summer Sale is here!', title_ar: 'تخفيضات الصيف هنا!', body: 'Get 50% off all salon services this week', body_ar: 'احصل على خصم 50% على جميع خدمات الصالون هذا الأسبوع', target_app: 'user', target_segment: 'active', scheduled_at: null, sent_at: '2026-04-12T10:00:00Z', status: 'sent', recipients_count: 32000, opened_count: 8500, created_at: '2026-04-12T09:00:00Z' },
     { id: '2', title: 'New feature: Wallet Top-up', title_ar: 'ميزة جديدة: شحن المحفظة', body: 'Now you can top-up your wallet and pay faster', body_ar: 'الآن يمكنك شحن محفظتك والدفع بشكل أسرع', target_app: 'user', target_segment: 'all', scheduled_at: '2026-04-15T09:00:00Z', sent_at: null, status: 'scheduled', recipients_count: 48000, opened_count: 0, created_at: '2026-04-13T10:00:00Z' },
     { id: '3', title: 'Payslips ready', title_ar: 'كشوف الرواتب جاهزة', body: 'Your March payslip is now available', body_ar: 'كشف راتب مارس متاح الآن', target_app: 'employee', target_segment: 'all', scheduled_at: null, sent_at: '2026-04-05T08:00:00Z', status: 'sent', recipients_count: 1200, opened_count: 950, created_at: '2026-04-05T07:00:00Z' },
@@ -18,6 +18,7 @@ const mockNotifs: PushNotification[] = [
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function PushNotificationsPage() {
+    const [notifs, setNotifs] = useState(initialNotifs);
     const [showCreate, setShowCreate] = useState(false);
     const [form, setForm] = useState({ title: '', title_ar: '', body: '', body_ar: '', target_app: 'user', target_segment: 'all' });
 
@@ -44,9 +45,19 @@ export default function PushNotificationsPage() {
                     </button>
                 </PermissionGate>
             </div>
-            <DataTable<PushNotification> columns={columns} data={mockNotifs} searchKeys={['title', 'body']} searchPlaceholder="Search notifications..." getRowKey={r => r.id} />
+            <DataTable<PushNotification> columns={columns} data={notifs} searchKeys={['title', 'body']} searchPlaceholder="Search notifications..." getRowKey={r => r.id} />
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create Push Notification" submitLabel="Send / Schedule" onSubmit={e => { e.preventDefault(); setShowCreate(false); }}>
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create Push Notification" submitLabel="Send / Schedule" onSubmit={e => {
+                e.preventDefault();
+                const now = new Date().toISOString();
+                setNotifs(prev => [{
+                    id: String(Date.now()), title: form.title, title_ar: form.title_ar, body: form.body, body_ar: form.body_ar,
+                    target_app: form.target_app as PushNotification['target_app'], target_segment: form.target_segment as PushNotification['target_segment'],
+                    scheduled_at: null, sent_at: now, status: 'sent' as const, recipients_count: 0, opened_count: 0, created_at: now,
+                }, ...prev]);
+                setForm({ title: '', title_ar: '', body: '', body_ar: '', target_app: 'user', target_segment: 'all' });
+                setShowCreate(false);
+            }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                     <FormField label="Title (English)" required><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required style={inputStyle} placeholder="Notification title" /></FormField>
                     <FormField label="Title (Arabic)" required><input type="text" value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} required style={inputStyle} placeholder="عنوان الإشعار" dir="rtl" /></FormField>

@@ -7,7 +7,7 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import type { Campaign } from '@/types/marketing';
 import { Plus, Eye, MousePointerClick, Target, DollarSign } from 'lucide-react';
 
-const mockCampaigns: Campaign[] = [
+const initialCampaigns: Campaign[] = [
     { id: '1', name: 'Summer Promotion 2026', description: 'Platform-wide summer discount campaign', type: 'push', status: 'active', start_date: '2026-04-01', end_date: '2026-06-30', budget: 50000, spent: 18500, impressions: 125000, clicks: 9800, conversions: 1250, created_at: '2026-03-25T10:00:00Z' },
     { id: '2', name: 'New Providers Welcome', description: 'Featured listing for new providers', type: 'featured_listing', status: 'active', start_date: '2026-01-01', end_date: '2026-12-31', budget: 0, spent: 0, impressions: 45000, clicks: 5200, conversions: 420, created_at: '2026-01-01T00:00:00Z' },
     { id: '3', name: 'Eid Al-Adha Specials', description: 'Holiday special offers push + banners', type: 'banner', status: 'draft', start_date: '2026-06-01', end_date: '2026-06-15', budget: 30000, spent: 0, impressions: 0, clicks: 0, conversions: 0, created_at: '2026-04-10T10:00:00Z' },
@@ -17,6 +17,7 @@ const mockCampaigns: Campaign[] = [
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function CampaignsPage() {
+    const [campaigns, setCampaigns] = useState(initialCampaigns);
     const [showCreate, setShowCreate] = useState(false);
 
     return (
@@ -31,7 +32,7 @@ export default function CampaignsPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {mockCampaigns.map(c => (
+                {campaigns.map(c => (
                     <div key={c.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -52,16 +53,27 @@ export default function CampaignsPage() {
                 ))}
             </div>
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create Campaign" submitLabel="Create" onSubmit={e => { e.preventDefault(); setShowCreate(false); }}>
-                <FormField label="Campaign Name" required><input type="text" required style={inputStyle} placeholder="e.g. Summer Promotion 2026" /></FormField>
-                <FormField label="Description"><textarea style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Campaign description" /></FormField>
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create Campaign" submitLabel="Create" onSubmit={e => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                setCampaigns(prev => [{
+                    id: String(Date.now()), name: String(fd.get('name') || ''), description: String(fd.get('description') || ''),
+                    type: String(fd.get('type') || 'push') as Campaign['type'], status: 'draft' as const,
+                    start_date: String(fd.get('start_date') || ''), end_date: String(fd.get('end_date') || ''),
+                    budget: Number(fd.get('budget') || 0), spent: 0, impressions: 0, clicks: 0, conversions: 0,
+                    created_at: new Date().toISOString(),
+                }, ...prev]);
+                setShowCreate(false);
+            }}>
+                <FormField label="Campaign Name" required><input name="name" type="text" required style={inputStyle} placeholder="e.g. Summer Promotion 2026" /></FormField>
+                <FormField label="Description"><textarea name="description" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Campaign description" /></FormField>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Type"><select style={inputStyle}><option value="push">Push Notification</option><option value="email">Email</option><option value="banner">Banner</option><option value="featured_listing">Featured Listing</option></select></FormField>
-                    <FormField label="Budget (EGP)"><input type="number" style={inputStyle} placeholder="0 for unlimited" /></FormField>
+                    <FormField label="Type"><select name="type" style={inputStyle}><option value="push">Push Notification</option><option value="email">Email</option><option value="banner">Banner</option><option value="featured_listing">Featured Listing</option></select></FormField>
+                    <FormField label="Budget (EGP)"><input name="budget" type="number" style={inputStyle} placeholder="0 for unlimited" /></FormField>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Start Date" required><input type="date" required style={inputStyle} /></FormField>
-                    <FormField label="End Date" required><input type="date" required style={inputStyle} /></FormField>
+                    <FormField label="Start Date" required><input name="start_date" type="date" required style={inputStyle} /></FormField>
+                    <FormField label="End Date" required><input name="end_date" type="date" required style={inputStyle} /></FormField>
                 </div>
             </FormModal>
         </div>

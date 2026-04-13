@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { CreditCard, Wallet, Smartphone } from 'lucide-react';
 
-const gateways = [
+const initialGateways = [
     { id: '1', name: 'Stripe', icon: <CreditCard size={20} />, status: 'active', type: 'Credit/Debit Cards', fee: '2.9% + EGP 1', enabled: true },
     { id: '2', name: 'PayPal', icon: <Wallet size={20} />, status: 'active', type: 'PayPal Payments', fee: '3.4% + EGP 1.50', enabled: true },
     { id: '3', name: 'Apple Pay', icon: <Smartphone size={20} />, status: 'active', type: 'Mobile Payment', fee: '2.9%', enabled: true },
@@ -14,6 +14,12 @@ const gateways = [
 ];
 
 export default function PaymentsPage() {
+    const [gateways, setGateways] = useState(initialGateways);
+
+    const toggleGateway = (id: string) => {
+        setGateways(prev => prev.map(g => g.id === id ? { ...g, enabled: !g.enabled } : g));
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800 }}>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Payment Gateways</h1>
@@ -28,7 +34,7 @@ export default function PaymentsPage() {
                             </div>
                             <div style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{g.type} &middot; Fee: {g.fee}</div>
                         </div>
-                        <button style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: g.enabled ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative' }}>
+                        <button onClick={() => toggleGateway(g.id)} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: g.enabled ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
                             <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, left: g.enabled ? 23 : 3, transition: 'left 0.2s' }} />
                         </button>
                     </div>

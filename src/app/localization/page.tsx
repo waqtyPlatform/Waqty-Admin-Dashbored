@@ -8,7 +8,7 @@ import { Plus, Edit, Globe } from 'lucide-react';
 
 interface TranslationEntry { id: string; key: string; en: string; ar: string; module: string; updated_at: string; }
 
-const mockTranslations: TranslationEntry[] = [
+const initialTranslations: TranslationEntry[] = [
     { id: '1', key: 'common.save', en: 'Save', ar: 'حفظ', module: 'common', updated_at: '2026-04-01T10:00:00Z' },
     { id: '2', key: 'common.cancel', en: 'Cancel', ar: 'إلغاء', module: 'common', updated_at: '2026-04-01T10:00:00Z' },
     { id: '3', key: 'auth.login', en: 'Sign In', ar: 'تسجيل الدخول', module: 'auth', updated_at: '2026-03-15T10:00:00Z' },
@@ -24,13 +24,13 @@ const mockTranslations: TranslationEntry[] = [
 ];
 
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
-const modules = Array.from(new Set(mockTranslations.map(t => t.module)));
-
 export default function LocalizationPage() {
+    const [translations, setTranslations] = useState(initialTranslations);
     const [showCreate, setShowCreate] = useState(false);
     const [editEntry, setEditEntry] = useState<TranslationEntry | null>(null);
     const [moduleFilter, setModuleFilter] = useState('all');
-    const filtered = mockTranslations.filter(t => moduleFilter === 'all' || t.module === moduleFilter);
+    const modules = Array.from(new Set(translations.map(t => t.module)));
+    const filtered = translations.filter(t => moduleFilter === 'all' || t.module === moduleFilter);
 
     const columns: Column<TranslationEntry>[] = [
         { key: 'key', label: 'Key', sortable: true, render: r => <code style={{ fontSize: '0.8125rem', fontWeight: 500, background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: 4 }}>{r.key}</code> },
@@ -50,7 +50,7 @@ export default function LocalizationPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 8, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                <span>Total keys: <strong>{mockTranslations.length}</strong></span>
+                <span>Total keys: <strong>{translations.length}</strong></span>
                 <span>&middot;</span>
                 <span>Modules: <strong>{modules.length}</strong></span>
             </div>
@@ -62,11 +62,24 @@ export default function LocalizationPage() {
                 </select>}
             />
 
-            <FormModal open={showCreate || !!editEntry} onClose={() => { setShowCreate(false); setEditEntry(null); }} title={editEntry ? 'Edit Translation' : 'Add Translation Key'} submitLabel={editEntry ? 'Save' : 'Add Key'} onSubmit={e => { e.preventDefault(); setShowCreate(false); setEditEntry(null); }}>
-                <FormField label="Key" required><input type="text" required defaultValue={editEntry?.key || ''} style={inputStyle} placeholder="e.g. booking.confirmTitle" /></FormField>
-                <FormField label="Module"><input type="text" defaultValue={editEntry?.module || ''} style={inputStyle} placeholder="e.g. booking" /></FormField>
-                <FormField label="English" required><input type="text" required defaultValue={editEntry?.en || ''} style={inputStyle} placeholder="English translation" /></FormField>
-                <FormField label="Arabic" required><input type="text" required defaultValue={editEntry?.ar || ''} style={inputStyle} placeholder="الترجمة العربية" dir="rtl" /></FormField>
+            <FormModal open={showCreate || !!editEntry} onClose={() => { setShowCreate(false); setEditEntry(null); }} title={editEntry ? 'Edit Translation' : 'Add Translation Key'} submitLabel={editEntry ? 'Save' : 'Add Key'} onSubmit={e => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                const now = new Date().toISOString();
+                if (editEntry) {
+                    setTranslations(prev => prev.map(t => t.id === editEntry.id ? {
+                        ...t, key: String(fd.get('key') || t.key), module: String(fd.get('module') || t.module),
+                        en: String(fd.get('en') || t.en), ar: String(fd.get('ar') || t.ar), updated_at: now,
+                    } : t));
+                } else {
+                    setTranslations(prev => [{ id: String(Date.now()), key: String(fd.get('key') || ''), module: String(fd.get('module') || ''), en: String(fd.get('en') || ''), ar: String(fd.get('ar') || ''), updated_at: now }, ...prev]);
+                }
+                setShowCreate(false); setEditEntry(null);
+            }}>
+                <FormField label="Key" required><input name="key" type="text" required defaultValue={editEntry?.key || ''} style={inputStyle} placeholder="e.g. booking.confirmTitle" /></FormField>
+                <FormField label="Module"><input name="module" type="text" defaultValue={editEntry?.module || ''} style={inputStyle} placeholder="e.g. booking" /></FormField>
+                <FormField label="English" required><input name="en" type="text" required defaultValue={editEntry?.en || ''} style={inputStyle} placeholder="English translation" /></FormField>
+                <FormField label="Arabic" required><input name="ar" type="text" required defaultValue={editEntry?.ar || ''} style={inputStyle} placeholder="الترجمة العربية" dir="rtl" /></FormField>
             </FormModal>
         </div>
     );

@@ -7,7 +7,7 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import type { ContentPage } from '@/types/content';
 import { Plus, Edit, FileText } from 'lucide-react';
 
-const mockPages: ContentPage[] = [
+const initialPages: ContentPage[] = [
     { id: '1', slug: 'terms', title: 'Terms & Conditions', title_ar: 'الشروط والأحكام', content: 'Full terms content...', content_ar: 'محتوى الشروط الكامل...', type: 'terms', published: true, last_updated_by: 'Platform Admin', created_at: '2023-01-01T00:00:00Z', updated_at: '2026-04-01T10:00:00Z' },
     { id: '2', slug: 'privacy', title: 'Privacy Policy', title_ar: 'سياسة الخصوصية', content: 'Full privacy policy...', content_ar: 'سياسة الخصوصية الكاملة...', type: 'privacy', published: true, last_updated_by: 'Platform Admin', created_at: '2023-01-01T00:00:00Z', updated_at: '2026-03-15T10:00:00Z' },
     { id: '3', slug: 'faq', title: 'FAQ', title_ar: 'الأسئلة الشائعة', content: 'Frequently asked questions...', content_ar: 'الأسئلة الشائعة...', type: 'faq', published: true, last_updated_by: 'Content Moderator', created_at: '2023-06-01T00:00:00Z', updated_at: '2026-04-10T10:00:00Z' },
@@ -17,6 +17,7 @@ const mockPages: ContentPage[] = [
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function ContentPagesPage() {
+    const [pages, setPages] = useState(initialPages);
     const [editPage, setEditPage] = useState<ContentPage | null>(null);
 
     return (
@@ -27,7 +28,7 @@ export default function ContentPagesPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-                {mockPages.map(page => (
+                {pages.map(page => (
                     <div key={page.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                             <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>{page.title}</h3>
@@ -46,15 +47,29 @@ export default function ContentPagesPage() {
                 ))}
             </div>
 
-            <FormModal open={!!editPage} onClose={() => setEditPage(null)} title={editPage ? `Edit: ${editPage.title}` : ''} submitLabel="Save Changes" onSubmit={e => { e.preventDefault(); setEditPage(null); }}>
+            <FormModal open={!!editPage} onClose={() => setEditPage(null)} title={editPage ? `Edit: ${editPage.title}` : ''} submitLabel="Save Changes" onSubmit={e => {
+                e.preventDefault();
+                if (!editPage) return;
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                setPages(prev => prev.map(p => p.id === editPage.id ? {
+                    ...p,
+                    title: String(fd.get('title') || p.title),
+                    title_ar: String(fd.get('title_ar') || p.title_ar),
+                    content: String(fd.get('content') || p.content),
+                    content_ar: String(fd.get('content_ar') || p.content_ar),
+                    updated_at: new Date().toISOString(),
+                    last_updated_by: 'Platform Admin',
+                } : p));
+                setEditPage(null);
+            }}>
                 {editPage && (
                     <>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                            <FormField label="Title (English)"><input type="text" defaultValue={editPage.title} style={inputStyle} /></FormField>
-                            <FormField label="Title (Arabic)"><input type="text" defaultValue={editPage.title_ar} style={inputStyle} dir="rtl" /></FormField>
+                            <FormField label="Title (English)"><input name="title" type="text" defaultValue={editPage.title} style={inputStyle} /></FormField>
+                            <FormField label="Title (Arabic)"><input name="title_ar" type="text" defaultValue={editPage.title_ar} style={inputStyle} dir="rtl" /></FormField>
                         </div>
-                        <FormField label="Content (English)"><textarea defaultValue={editPage.content} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} /></FormField>
-                        <FormField label="Content (Arabic)"><textarea defaultValue={editPage.content_ar} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} dir="rtl" /></FormField>
+                        <FormField label="Content (English)"><textarea name="content" defaultValue={editPage.content} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} /></FormField>
+                        <FormField label="Content (Arabic)"><textarea name="content_ar" defaultValue={editPage.content_ar} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} dir="rtl" /></FormField>
                     </>
                 )}
             </FormModal>

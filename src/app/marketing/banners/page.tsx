@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
+import { FormModal, FormField } from '@/components/admin/FormModal';
 import { Plus, Image as ImageIcon, Eye } from 'lucide-react';
 
-const mockBanners = [
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
+
+const initialBanners = [
     { id: '1', title: 'Summer Sale Banner', placement: 'Home Top', dimensions: '1200x400', status: 'active' as const, start: '2026-04-01', end: '2026-04-30', impressions: 85000, clicks: 6200 },
     { id: '2', title: 'New Provider Welcome', placement: 'Category Page', dimensions: '800x200', status: 'active' as const, start: '2026-04-05', end: '2026-05-05', impressions: 42000, clicks: 3100 },
     { id: '3', title: 'Eid Holiday Special', placement: 'Home Top', dimensions: '1200x400', status: 'draft' as const, start: '2026-06-01', end: '2026-06-15', impressions: 0, clicks: 0 },
@@ -13,16 +16,19 @@ const mockBanners = [
 ];
 
 export default function BannersPage() {
+    const [banners, setBanners] = useState(initialBanners);
+    const [showCreate, setShowCreate] = useState(false);
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><ImageIcon size={24} /><h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Banners</h1></div>
                 <PermissionGate module="marketing" action="create">
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Upload Banner</button>
+                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Upload Banner</button>
                 </PermissionGate>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
-                {mockBanners.map(b => (
+                {banners.map(b => (
                     <div key={b.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, overflow: 'hidden' }}>
                         <div style={{ height: 120, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '0.8125rem' }}>
                             <ImageIcon size={32} strokeWidth={1} />
@@ -44,6 +50,23 @@ export default function BannersPage() {
                     </div>
                 ))}
             </div>
+
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Upload Banner" submitLabel="Create Banner" onSubmit={e => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                setBanners(prev => [{ id: String(Date.now()), title: String(fd.get('title') || ''), placement: String(fd.get('placement') || 'Home Top'), dimensions: String(fd.get('dimensions') || '1200x400'), status: 'draft' as const, start: String(fd.get('start') || ''), end: String(fd.get('end') || ''), impressions: 0, clicks: 0 }, ...prev]);
+                setShowCreate(false);
+            }}>
+                <FormField label="Banner Title" required><input name="title" type="text" required style={inputStyle} placeholder="e.g. Summer Sale Banner" /></FormField>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <FormField label="Placement"><select name="placement" style={inputStyle}><option value="Home Top">Home Top</option><option value="Home Bottom">Home Bottom</option><option value="Category Page">Category Page</option><option value="Search Results">Search Results</option></select></FormField>
+                    <FormField label="Dimensions"><select name="dimensions" style={inputStyle}><option value="1200x400">1200x400</option><option value="1200x300">1200x300</option><option value="800x200">800x200</option><option value="600x600">600x600</option></select></FormField>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <FormField label="Start Date" required><input name="start" type="date" required style={inputStyle} /></FormField>
+                    <FormField label="End Date" required><input name="end" type="date" required style={inputStyle} /></FormField>
+                </div>
+            </FormModal>
         </div>
     );
 }

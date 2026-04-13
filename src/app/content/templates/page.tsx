@@ -8,7 +8,7 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import type { EmailTemplate } from '@/types/content';
 import { Plus, Edit, Mail, MessageSquare } from 'lucide-react';
 
-const mockTemplates: EmailTemplate[] = [
+const initialTemplates: EmailTemplate[] = [
     { id: '1', name: 'Welcome Email', slug: 'welcome', subject: 'Welcome to Hagzy!', subject_ar: 'مرحباً في هاقزي!', body_html: '<h1>Welcome {{name}}!</h1><p>Your account is ready.</p>', body_html_ar: '<h1>مرحباً {{name}}!</h1><p>حسابك جاهز.</p>', variables: ['name', 'email'], type: 'email', active: true, created_at: '2023-01-01T00:00:00Z', updated_at: '2026-04-01T10:00:00Z' },
     { id: '2', name: 'Booking Confirmation', slug: 'booking_confirmed', subject: 'Booking Confirmed - {{provider}}', subject_ar: 'تم تأكيد الحجز - {{provider}}', body_html: '<p>Your booking with {{provider}} on {{date}} at {{time}} is confirmed.</p>', body_html_ar: '<p>تم تأكيد حجزك مع {{provider}} في {{date}} الساعة {{time}}.</p>', variables: ['name', 'provider', 'date', 'time', 'service'], type: 'email', active: true, created_at: '2023-01-01T00:00:00Z', updated_at: '2026-03-20T10:00:00Z' },
     { id: '3', name: 'Password Reset', slug: 'password_reset', subject: 'Reset Your Password', subject_ar: 'إعادة تعيين كلمة المرور', body_html: '<p>Use code {{otp}} to reset your password.</p>', body_html_ar: '<p>استخدم الرمز {{otp}} لإعادة تعيين كلمة المرور.</p>', variables: ['name', 'otp'], type: 'email', active: true, created_at: '2023-01-01T00:00:00Z', updated_at: '2026-02-15T10:00:00Z' },
@@ -19,6 +19,7 @@ const mockTemplates: EmailTemplate[] = [
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function TemplatesPage() {
+    const [templates, setTemplates] = useState(initialTemplates);
     const [editTpl, setEditTpl] = useState<EmailTemplate | null>(null);
 
     const columns: Column<EmailTemplate>[] = [
@@ -38,17 +39,31 @@ export default function TemplatesPage() {
                     <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Template</button>
                 </PermissionGate>
             </div>
-            <DataTable<EmailTemplate> columns={columns} data={mockTemplates} searchKeys={['name', 'slug', 'subject']} searchPlaceholder="Search templates..." getRowKey={r => r.id} />
+            <DataTable<EmailTemplate> columns={columns} data={templates} searchKeys={['name', 'slug', 'subject']} searchPlaceholder="Search templates..." getRowKey={r => r.id} />
 
-            <FormModal open={!!editTpl} onClose={() => setEditTpl(null)} title={editTpl ? `Edit: ${editTpl.name}` : ''} submitLabel="Save" onSubmit={e => { e.preventDefault(); setEditTpl(null); }}>
+            <FormModal open={!!editTpl} onClose={() => setEditTpl(null)} title={editTpl ? `Edit: ${editTpl.name}` : ''} submitLabel="Save" onSubmit={e => {
+                e.preventDefault();
+                if (!editTpl) return;
+                const fd = new FormData(e.currentTarget as HTMLFormElement);
+                setTemplates(prev => prev.map(t => t.id === editTpl.id ? {
+                    ...t,
+                    name: String(fd.get('name') || t.name),
+                    subject: String(fd.get('subject') || t.subject),
+                    subject_ar: String(fd.get('subject_ar') || t.subject_ar),
+                    body_html: String(fd.get('body_html') || t.body_html),
+                    body_html_ar: String(fd.get('body_html_ar') || t.body_html_ar),
+                    updated_at: new Date().toISOString(),
+                } : t));
+                setEditTpl(null);
+            }}>
                 {editTpl && <>
-                    <FormField label="Template Name"><input type="text" defaultValue={editTpl.name} style={inputStyle} /></FormField>
+                    <FormField label="Template Name"><input name="name" type="text" defaultValue={editTpl.name} style={inputStyle} /></FormField>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <FormField label="Subject (EN)"><input type="text" defaultValue={editTpl.subject} style={inputStyle} /></FormField>
-                        <FormField label="Subject (AR)"><input type="text" defaultValue={editTpl.subject_ar} style={inputStyle} dir="rtl" /></FormField>
+                        <FormField label="Subject (EN)"><input name="subject" type="text" defaultValue={editTpl.subject} style={inputStyle} /></FormField>
+                        <FormField label="Subject (AR)"><input name="subject_ar" type="text" defaultValue={editTpl.subject_ar} style={inputStyle} dir="rtl" /></FormField>
                     </div>
-                    <FormField label="Body (EN)"><textarea defaultValue={editTpl.body_html} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} /></FormField>
-                    <FormField label="Body (AR)"><textarea defaultValue={editTpl.body_html_ar} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} dir="rtl" /></FormField>
+                    <FormField label="Body (EN)"><textarea name="body_html" defaultValue={editTpl.body_html} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} /></FormField>
+                    <FormField label="Body (AR)"><textarea name="body_html_ar" defaultValue={editTpl.body_html_ar} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} dir="rtl" /></FormField>
                     <div style={{ padding: 8, background: 'var(--bg-tertiary)', borderRadius: 6, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
                         Variables: {editTpl.variables.map(v => `{{${v}}}`).join(', ')}
                     </div>

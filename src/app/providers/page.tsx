@@ -10,6 +10,7 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, ConfirmModal, FormField } from '@/components/admin/FormModal';
 import { mockProviders } from '@/mocks/providers';
 import type { Provider } from '@/types/provider';
+import { exportToCSV } from '@/lib/utils';
 import {
     Plus,
     MoreHorizontal,
@@ -219,7 +220,7 @@ export default function ProvidersPage() {
                 }
                 actions={
                     <PermissionGate module="providers" action="export">
-                        <button className={styles.exportBtn}><Download size={16} /> {t('common.export')}</button>
+                        <button className={styles.exportBtn} onClick={() => exportToCSV(filtered, 'providers', [{key:'business_name',label:'Business'},{key:'email',label:'Email'},{key:'status',label:'Status'},{key:'business_category',label:'Category'},{key:'total_bookings',label:'Bookings'},{key:'total_revenue',label:'Revenue'}])}><Download size={16} /> {t('common.export')}</button>
                     </PermissionGate>
                 }
             />
