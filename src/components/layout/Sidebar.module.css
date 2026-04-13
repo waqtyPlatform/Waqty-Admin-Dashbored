@@ -1,0 +1,317 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    inset-inline-start: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    background: var(--bg-sidebar);
+    color: var(--text-sidebar);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    transition: width var(--transition-normal);
+    overflow: hidden;
+}
+
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed);
+}
+
+.collapsed .header {
+    justify-content: center;
+    padding: var(--space-4) var(--space-2);
+}
+
+/* ── Header ── */
+.header {
+    display: flex;
+    align-items: center;
+    padding: var(--space-4) var(--space-4);
+    height: var(--topbar-height);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: var(--space-3);
+    flex-shrink: 0;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    text-decoration: none;
+    color: white;
+    flex: 1;
+    min-width: 0;
+}
+
+.logoIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-lg);
+    background: var(--color-primary-500);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-bold);
+    font-size: var(--text-lg);
+    flex-shrink: 0;
+}
+
+.logoText {
+    font-size: var(--text-xl);
+    font-weight: var(--font-bold);
+    color: white;
+    white-space: nowrap;
+}
+
+.logoIconBtn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.logoIconBtn:hover .logoIcon {
+    background: var(--color-primary-400);
+}
+
+.collapseBtn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sidebar);
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.collapseBtn:hover {
+    background: var(--bg-sidebar-hover);
+    color: white;
+}
+
+.mobileCloseBtn {
+    display: none;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-md);
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sidebar);
+}
+
+.mobileCloseBtn:hover {
+    background: var(--bg-sidebar-hover);
+    color: white;
+}
+
+/* ── Navigation ── */
+.nav {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--space-3) var(--space-2);
+}
+
+.navList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.navItem {
+    position: relative;
+}
+
+.navLink {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--text-sidebar);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
+    transition: all var(--transition-fast);
+    width: 100%;
+    cursor: pointer;
+    white-space: nowrap;
+    min-height: 40px;
+}
+
+.navLink:hover {
+    background: var(--bg-sidebar-hover);
+    color: white;
+}
+
+.navLink.active {
+    background: var(--bg-sidebar-active);
+    color: white;
+}
+
+.navIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+}
+
+.navLabel {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chevron {
+    display: flex;
+    align-items: center;
+    transition: transform var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.chevronOpen {
+    transform: rotate(180deg);
+}
+
+/* ── Sub-navigation ── */
+.subNav {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-1) 0 var(--space-1) calc(var(--space-3) + 20px + var(--space-3));
+    gap: var(--space-0);
+}
+
+.subNavLink {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--text-sidebar);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+    white-space: nowrap;
+}
+
+.subNavLink:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.subDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-gray-600);
+    flex-shrink: 0;
+    transition: background var(--transition-fast);
+}
+
+.subNavLink.subActive {
+    color: var(--color-primary-400);
+}
+
+.subNavLink.subActive .subDot {
+    background: var(--color-primary-400);
+}
+
+/* ── Collapsed Tooltip ── */
+.tooltip {
+    display: none;
+    position: absolute;
+    inset-inline-start: calc(100% + 8px);
+    top: 0;
+    background: var(--color-gray-800);
+    border: 1px solid var(--color-gray-700);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    min-width: 180px;
+    z-index: 200;
+    box-shadow: var(--shadow-xl);
+    animation: scaleIn var(--transition-fast) both;
+}
+
+.collapsed .navItem:hover .tooltip {
+    display: block;
+}
+
+.tooltipTitle {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-gray-400);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-bottom: var(--space-2);
+    margin-bottom: var(--space-2);
+    border-bottom: 1px solid var(--color-gray-700);
+}
+
+.tooltipList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.tooltipLink {
+    display: block;
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--text-sidebar);
+    text-decoration: none;
+    font-size: var(--text-sm);
+    transition: all var(--transition-fast);
+}
+
+.tooltipLink:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.tooltipLink.tooltipActive {
+    color: var(--color-primary-400);
+}
+
+/* ── Overlay (mobile) ── */
+.overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg-overlay);
+    z-index: 99;
+    animation: fadeIn var(--transition-fast) both;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1023px) {
+    .sidebar {
+        transform: translateX(-100%);
+        width: var(--sidebar-width) !important;
+    }
+
+    .sidebar.mobileOpen {
+        transform: translateX(0);
+    }
+
+    .collapseBtn {
+        display: none;
+    }
+
+    .mobileCloseBtn {
+        display: flex;
+    }
+
+    .overlay {
+        display: block;
+    }
+}

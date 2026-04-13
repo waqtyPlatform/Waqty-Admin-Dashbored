@@ -1,0 +1,170 @@
+/* ═══════════════════════════════════════════════════════
+   HAGZY — Responsive Design System
+   Mobile-first responsive overrides for all breakpoints
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Small phones (< 480px) ── */
+@media (max-width: 479px) {
+    /* Target CSS Module content class via attribute selector */
+    [class*='content'] {
+        padding: var(--space-3) !important;
+    }
+}
+
+/* ── Phones (< 768px) ── */
+@media (max-width: 767px) {
+    :root {
+        --topbar-height: 56px;
+    }
+
+    /* Content area — matches CSS Module hashed .content class */
+    [class*='AppShell_content'],
+    [class*='content__'] {
+        padding: var(--space-4) !important;
+    }
+
+    /* Prevent horizontal overflow on body */
+    html,
+    body {
+        overflow-x: hidden;
+    }
+
+    /* Cards — full width on mobile */
+    [class*='card'],
+    [class*='Card'] {
+        border-radius: var(--radius-md) !important;
+    }
+
+    /* Touch-friendly tap targets (exclude small icon buttons explicitly) */
+    button:not([class*='rankNumber']):not([class*='legendDot']),
+    a:not([class*='legendItem']),
+    [role='button'] {
+        min-height: 36px;
+    }
+
+    /* Modal fullscreen on mobile */
+    [class*='modalContent'],
+    [class*='slideOverContent'] {
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 100% !important;
+        max-height: 100% !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Search bar — hide keyboard shortcut hint */
+    [class*='searchKbd'] {
+        display: none !important;
+    }
+}
+
+/* ── Tablets (768px - 1023px) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+    /* Side panels — take 50% instead of fixed width */
+    [class*='slideOverContent'] {
+        width: 50% !important;
+        min-width: 400px !important;
+    }
+}
+
+/* ── Mobile Bottom Navigation Bar ── */
+.mobileBottomNav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    z-index: 90;
+    padding: var(--space-1) var(--space-2);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 767px) {
+    .mobileBottomNav {
+        display: flex;
+        align-items: center;
+        justify-content: space-around;
+    }
+
+    /* Add padding at bottom of main content for bottom nav */
+    main {
+        padding-bottom: 72px !important;
+    }
+}
+
+.mobileBottomNav a,
+.mobileBottomNav button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: var(--space-1);
+    border-radius: var(--radius-md);
+    color: var(--text-tertiary);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: var(--font-medium);
+    transition: color var(--transition-fast);
+    min-width: 56px;
+}
+
+.mobileBottomNav a:hover,
+.mobileBottomNav button:hover,
+.mobileBottomNav a.active,
+.mobileBottomNav button.active {
+    color: var(--color-primary-500);
+}
+
+/* ── Safe area insets (notch phones) ── */
+@supports (padding: env(safe-area-inset-bottom)) {
+    .mobileBottomNav {
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(64px + env(safe-area-inset-bottom));
+    }
+
+    @media (max-width: 767px) {
+        main {
+            padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+        }
+    }
+}
+
+/* ── Landscape phone fixes ── */
+@media (max-height: 500px) and (orientation: landscape) {
+    .mobileBottomNav {
+        height: 48px;
+    }
+
+    .mobileBottomNav a,
+    .mobileBottomNav button {
+        flex-direction: row;
+        gap: var(--space-2);
+        font-size: var(--text-xs);
+    }
+}
+
+/* ── Responsive Typography ── */
+@media (max-width: 767px) {
+    h1 {
+        font-size: var(--text-xl) !important;
+    }
+
+    h2 {
+        font-size: var(--text-lg) !important;
+    }
+
+    h3 {
+        font-size: var(--text-base) !important;
+    }
+}
+
+/* ── Print: Hide mobile nav ── */
+@media print {
+    .mobileBottomNav {
+        display: none !important;
+    }
+}

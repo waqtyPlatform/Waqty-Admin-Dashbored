@@ -1,0 +1,31 @@
+.layout {
+    min-height: 100vh;
+}
+
+.main {
+    margin-inline-start: var(--sidebar-width);
+    margin-top: var(--topbar-height);
+    min-height: calc(100vh - var(--topbar-height));
+    transition: margin-inline-start var(--transition-normal);
+}
+
+.sidebarCollapsed .main {
+    margin-inline-start: var(--sidebar-collapsed);
+}
+
+.sidebarCollapsed :global(.topbar),
+.sidebarCollapsed header[class*="topbar"] {
+    inset-inline-start: var(--sidebar-collapsed);
+}
+
+.content {
+    padding: var(--space-6);
+    max-width: var(--content-max-width);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1023px) {
+    .main {
+        margin-inline-start: 0 !important;
+    }
+}
