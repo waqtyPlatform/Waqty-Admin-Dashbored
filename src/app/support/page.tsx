@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import type { SupportTicket } from '@/types/ticket';
@@ -18,6 +19,7 @@ const mockTickets: SupportTicket[] = [
 const priorityColors: Record<string, string> = { low: 'var(--text-tertiary)', medium: 'var(--color-info)', high: 'var(--color-warning)', urgent: 'var(--color-error)' };
 
 export default function SupportPage() {
+    const router = useRouter();
     const [statusFilter, setStatusFilter] = useState('all');
     const filtered = mockTickets.filter(t => statusFilter === 'all' || t.status === statusFilter);
 
@@ -58,7 +60,7 @@ export default function SupportPage() {
                     <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>SLA Breached</div><div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-error)' }}>{summary.breached}</div></div>
                 </div>
             </div>
-            <DataTable<SupportTicket> columns={columns} data={filtered} searchKeys={['subject', 'id', 'submitted_by']} searchPlaceholder="Search tickets..." getRowKey={r => r.id}
+            <DataTable<SupportTicket> columns={columns} data={filtered} searchKeys={['subject', 'id', 'submitted_by']} searchPlaceholder="Search tickets..." getRowKey={r => r.id} onRowClick={r => router.push(`/support/${r.id}`)}
                 filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)' }}>
                     <option value="all">All Status</option><option value="open">Open</option><option value="in_progress">In Progress</option><option value="waiting_on_customer">Waiting</option><option value="resolved">Resolved</option>
                 </select>}
