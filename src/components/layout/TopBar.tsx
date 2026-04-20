@@ -33,46 +33,53 @@ export default function TopBar() {
 
     return (
         <header className={styles.topbar}>
-            <div className={styles.left}>
-                <button className={styles.menuBtn} onClick={() => setMobileOpen(true)} aria-label="Open menu">
-                    <Menu size={20} />
-                </button>
-                <div className={`${styles.searchBox} ${searchFocused ? styles.searchFocused : ''}`}>
-                    <Search size={18} className={styles.searchIcon} />
-                    <input
-                        type="text"
-                        placeholder={t('topbar.search')}
-                        className={styles.searchInput}
-                        onFocus={() => setSearchFocused(true)}
-                        onBlur={() => setSearchFocused(false)}
-                    />
-                    <kbd className={styles.searchKbd}>Ctrl+K</kbd>
-                </div>
+            {/* Mobile menu button */}
+            <button className={styles.mobileMenuBtn} onClick={() => setMobileOpen(true)} aria-label="Open menu">
+                <Menu size={20} />
+            </button>
+
+            {/* Search */}
+            <div className={`${styles.searchWrapper} ${searchFocused ? styles.searchActive : ''}`}>
+                <Search size={18} className={styles.searchIcon} />
+                <input
+                    type="text"
+                    placeholder={t('topbar.search')}
+                    className={styles.searchInput}
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                />
+                <kbd className={styles.searchKbd}>⌘K</kbd>
             </div>
 
-            <div className={styles.right}>
+            {/* Actions */}
+            <div className={styles.actions}>
                 <button className={styles.iconBtn} onClick={toggleLanguage} title={language === 'en' ? 'العربية' : 'English'}>
                     <Languages size={20} />
                 </button>
                 <button className={styles.iconBtn} onClick={toggleTheme} title="Toggle theme">
                     {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
-                <button className={styles.iconBtn} title="Notifications">
-                    <Bell size={20} />
-                    <span className={styles.badge}>3</span>
-                </button>
 
+                {/* Notifications */}
+                <div className={styles.notifWrapper}>
+                    <button className={styles.iconBtn} title="Notifications">
+                        <Bell size={20} />
+                        <span className={styles.notifBadge}>3</span>
+                    </button>
+                </div>
+
+                {/* User menu */}
                 <div className={styles.userMenu} ref={userMenuRef}>
                     <button className={styles.userBtn} onClick={() => setUserMenuOpen(!userMenuOpen)}>
-                        <div className={styles.avatar}>{user?.name?.charAt(0) || 'A'}</div>
+                        <div className={styles.userAvatar}>{user?.name?.charAt(0) || 'A'}</div>
                         <div className={styles.userInfo}>
                             <span className={styles.userName}>{user?.name || 'Admin'}</span>
                             <span className={styles.userRole}>{user?.role?.replace('_', ' ') || 'super admin'}</span>
                         </div>
-                        <ChevronDown size={16} className={userMenuOpen ? styles.chevronOpen : ''} />
+                        <ChevronDown size={16} />
                     </button>
                     {userMenuOpen && (
-                        <div className={styles.dropdown}>
+                        <div className={styles.userDropdown}>
                             <button className={styles.dropdownItem} onClick={() => { setUserMenuOpen(false); router.push('/settings'); }}>
                                 <Settings size={16} /> {t('topbar.settings')}
                             </button>
@@ -80,7 +87,7 @@ export default function TopBar() {
                                 <User size={16} /> {t('topbar.profile')}
                             </button>
                             <div className={styles.dropdownDivider} />
-                            <button className={`${styles.dropdownItem} ${styles.danger}`} onClick={() => { setUserMenuOpen(false); logout(); }}>
+                            <button className={`${styles.dropdownItem} ${styles.dropdownDanger}`} onClick={() => { setUserMenuOpen(false); logout(); }}>
                                 <LogOut size={16} /> {t('topbar.logout')}
                             </button>
                         </div>

@@ -1,0 +1,153 @@
+'use client';
+
+import React, { useState } from 'react';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import { Save, Globe, Plus } from 'lucide-react';
+
+const initialLanguages = [
+    { code: 'en', name: 'English', native: 'English', rtl: false, active: true, completion: 100, isDefault: true },
+    { code: 'ar', name: 'Arabic', native: 'العربية', rtl: true, active: true, completion: 100, isDefault: false },
+    { code: 'fr', name: 'French', native: 'Français', rtl: false, active: false, completion: 45, isDefault: false },
+    { code: 'es', name: 'Spanish', native: 'Español', rtl: false, active: false, completion: 30, isDefault: false },
+];
+
+const currencies = [
+    { code: 'EGP', name: 'Egyptian Pound', symbol: 'EGP', isDefault: true },
+    { code: 'USD', name: 'US Dollar', symbol: '$', isDefault: false },
+    { code: 'EUR', name: 'Euro', symbol: '€', isDefault: false },
+    { code: 'SAR', name: 'Saudi Riyal', symbol: 'SAR', isDefault: false },
+    { code: 'AED', name: 'UAE Dirham', symbol: 'AED', isDefault: false },
+];
+
+export default function LocalizationSettingsPage() {
+    const [languages, setLanguages] = useState(initialLanguages);
+    const [defaultLang, setDefaultLang] = useState('en');
+    const [defaultCurrency, setDefaultCurrency] = useState('EGP');
+    const [timezone, setTimezone] = useState('Africa/Cairo');
+    const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+    const [firstDayOfWeek, setFirstDayOfWeek] = useState('saturday');
+    const [saved, setSaved] = useState(false);
+
+    const toggleLangActive = (code: string) => {
+        setLanguages(prev => prev.map(l => l.code === code ? { ...l, active: !l.active } : l));
+    };
+
+    const makeDefault = (code: string) => {
+        setDefaultLang(code);
+        setLanguages(prev => prev.map(l => ({ ...l, isDefault: l.code === code })));
+    };
+
+    const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <Globe size={24} />
+                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Localization Settings</h1>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {saved && <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: 500 }}>Saved!</span>}
+                    <button onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Save size={16} /> Save</button>
+                </div>
+            </div>
+
+            {/* Languages */}
+            <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Supported Languages</h3>
+                    <button onClick={() => alert('Add language flow')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={14} /> Add Language</button>
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                    <thead><tr style={{ background: 'var(--bg-secondary)' }}>
+                        {['Language', 'Native', 'RTL', 'Completion', 'Status', 'Default', ''].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
+                    </tr></thead>
+                    <tbody>{languages.map(lang => (
+                        <tr key={lang.code} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '10px 12px' }}><strong>{lang.name}</strong> <code style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>({lang.code})</code></td>
+                            <td style={{ padding: '10px 12px' }} dir={lang.rtl ? 'rtl' : 'ltr'}>{lang.native}</td>
+                            <td style={{ padding: '10px 12px' }}>{lang.rtl ? 'Yes' : 'No'}</td>
+                            <td style={{ padding: '10px 12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <div style={{ width: 80, height: 6, background: 'var(--bg-tertiary)', borderRadius: 3, overflow: 'hidden' }}>
+                                        <div style={{ width: `${lang.completion}%`, height: '100%', background: lang.completion === 100 ? 'var(--color-success)' : lang.completion > 50 ? 'var(--color-info)' : 'var(--color-warning)' }} />
+                                    </div>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{lang.completion}%</span>
+                                </div>
+                            </td>
+                            <td style={{ padding: '10px 12px' }}><StatusBadge status={lang.active ? 'active' : 'deactivated'} /></td>
+                            <td style={{ padding: '10px 12px' }}>
+                                {defaultLang === lang.code ? <span style={{ fontSize: '0.75rem', padding: '2px 8px', background: 'var(--color-primary-50)', color: 'var(--color-primary-600)', borderRadius: 4, fontWeight: 600 }}>Default</span> : <button onClick={() => makeDefault(lang.code)} style={{ fontSize: '0.75rem', padding: '2px 8px', border: '1px solid var(--border-color)', borderRadius: 4, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-secondary)', fontFamily: 'var(--font-sans)' }}>Set as default</button>}
+                            </td>
+                            <td style={{ padding: '10px 12px' }}>
+                                <button onClick={() => toggleLangActive(lang.code)} disabled={defaultLang === lang.code} style={{ fontSize: '0.75rem', padding: '4px 10px', border: '1px solid var(--border-color)', borderRadius: 4, background: 'var(--bg-primary)', cursor: defaultLang === lang.code ? 'not-allowed' : 'pointer', color: defaultLang === lang.code ? 'var(--text-tertiary)' : 'var(--text-primary)', fontFamily: 'var(--font-sans)', opacity: defaultLang === lang.code ? 0.5 : 1 }}>
+                                    {lang.active ? 'Disable' : 'Enable'}
+                                </button>
+                            </td>
+                        </tr>
+                    ))}</tbody>
+                </table>
+            </div>
+
+            {/* Regional */}
+            <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Regional Defaults</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <Field label="Default Currency">
+                        <select value={defaultCurrency} onChange={e => setDefaultCurrency(e.target.value)} style={selectStyle}>
+                            {currencies.map(c => <option key={c.code} value={c.code}>{c.name} ({c.symbol})</option>)}
+                        </select>
+                    </Field>
+                    <Field label="Default Timezone">
+                        <select value={timezone} onChange={e => setTimezone(e.target.value)} style={selectStyle}>
+                            <option value="Africa/Cairo">Africa/Cairo (GMT+2)</option>
+                            <option value="Asia/Dubai">Asia/Dubai (GMT+4)</option>
+                            <option value="Asia/Riyadh">Asia/Riyadh (GMT+3)</option>
+                            <option value="Europe/London">Europe/London (GMT+0)</option>
+                            <option value="UTC">UTC</option>
+                        </select>
+                    </Field>
+                    <Field label="Date Format">
+                        <select value={dateFormat} onChange={e => setDateFormat(e.target.value)} style={selectStyle}>
+                            <option value="DD/MM/YYYY">DD/MM/YYYY (13/04/2026)</option>
+                            <option value="MM/DD/YYYY">MM/DD/YYYY (04/13/2026)</option>
+                            <option value="YYYY-MM-DD">YYYY-MM-DD (2026-04-13)</option>
+                        </select>
+                    </Field>
+                    <Field label="First Day of Week">
+                        <select value={firstDayOfWeek} onChange={e => setFirstDayOfWeek(e.target.value)} style={selectStyle}>
+                            <option value="sunday">Sunday</option>
+                            <option value="monday">Monday</option>
+                            <option value="saturday">Saturday</option>
+                        </select>
+                    </Field>
+                </div>
+            </div>
+
+            {/* Supported Currencies */}
+            <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Supported Currencies</h3>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {currencies.map(c => (
+                        <div key={c.code} style={{ padding: '8px 14px', border: `1px solid ${defaultCurrency === c.code ? 'var(--color-primary-500)' : 'var(--border-color)'}`, borderRadius: 8, background: defaultCurrency === c.code ? 'var(--color-primary-50)' : 'var(--bg-primary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <strong>{c.code}</strong>
+                            <span style={{ color: 'var(--text-secondary)' }}>{c.name}</span>
+                            {defaultCurrency === c.code && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-primary-500)', color: 'white', borderRadius: 3 }}>DEFAULT</span>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const selectStyle = { padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)', width: '100%', cursor: 'pointer', outline: 'none' };
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label style={{ fontSize: '0.8125rem', color: 'var(--text-primary)', fontWeight: 500 }}>{label}</label>
+            {children}
+        </div>
+    );
+}
