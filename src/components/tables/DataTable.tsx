@@ -31,7 +31,7 @@ interface DataTableProps<T> {
 
 type SortDir = 'asc' | 'desc' | null;
 
-export function DataTable<T extends Record<string, unknown>>({
+export function DataTable<T extends object>({
     columns,
     data,
     searchPlaceholder,
@@ -55,15 +55,15 @@ export function DataTable<T extends Record<string, unknown>>({
     const filtered = useMemo(() => {
         if (!debouncedSearch || searchKeys.length === 0) return data;
         const q = debouncedSearch.toLowerCase();
-        return data.filter(row => searchKeys.some(key => String(row[key] ?? '').toLowerCase().includes(q)));
+        return data.filter(row => searchKeys.some(key => String((row as Record<string, unknown>)[key] ?? '').toLowerCase().includes(q)));
     }, [data, debouncedSearch, searchKeys]);
 
     // Sort
     const sorted = useMemo(() => {
         if (!sortKey || !sortDir) return filtered;
         return [...filtered].sort((a, b) => {
-            const aVal = a[sortKey];
-            const bVal = b[sortKey];
+            const aVal = (a as Record<string, unknown>)[sortKey];
+            const bVal = (b as Record<string, unknown>)[sortKey];
             if (aVal == null && bVal == null) return 0;
             if (aVal == null) return 1;
             if (bVal == null) return -1;
@@ -169,7 +169,7 @@ export function DataTable<T extends Record<string, unknown>>({
                                 >
                                     {columns.map(col => (
                                         <td key={col.key}>
-                                            {col.render ? col.render(row) : String(row[col.key] ?? '')}
+                                            {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '')}
                                         </td>
                                     ))}
                                 </tr>

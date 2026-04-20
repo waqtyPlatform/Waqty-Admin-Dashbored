@@ -1,17 +1,17 @@
 /**
  * Export data as CSV file download
  */
-export function exportToCSV<T extends Record<string, unknown>>(data: T[], filename: string, columns?: { key: string; label: string }[]) {
+export function exportToCSV<T extends object>(data: T[], filename: string, columns?: { key: string; label: string }[]) {
     if (data.length === 0) return;
 
-    const keys = columns ? columns.map(c => c.key) : Object.keys(data[0]);
+    const keys = columns ? columns.map(c => c.key) : Object.keys(data[0] as object);
     const headers = columns ? columns.map(c => c.label) : keys;
 
     const csvRows = [
         headers.join(','),
         ...data.map(row =>
             keys.map(k => {
-                const val = String(row[k] ?? '');
+                const val = String((row as Record<string, unknown>)[k] ?? '');
                 return val.includes(',') || val.includes('"') ? `"${val.replace(/"/g, '""')}"` : val;
             }).join(',')
         ),
