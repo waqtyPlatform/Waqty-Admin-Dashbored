@@ -11,7 +11,7 @@ export interface Provider {
     business_category: BusinessCategory;
     status: ProviderStatus;
     subscription_plan_id: string | null;
-    subscription_status: 'active' | 'trial' | 'expired' | 'cancelled';
+    subscription_status: 'active' | 'trial' | 'expired' | 'cancelled' | 'past_due';
     country: string;
     city: string;
     branches_count: number;

@@ -1,0 +1,119 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+.label {
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.required {
+    color: var(--color-error);
+}
+
+.error {
+    font-size: var(--text-xs);
+    color: var(--color-error);
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-2);
+}
+
+.cancelBtn {
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: all 0.15s;
+}
+
+.cancelBtn:hover:not(:disabled) {
+    background: var(--bg-tertiary);
+}
+
+.submitBtn {
+    padding: var(--space-2) var(--space-4);
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--color-primary-500);
+    color: white;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    transition: all 0.15s;
+}
+
+.submitBtn:hover:not(:disabled) {
+    background: var(--color-primary-600);
+}
+
+.submitBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.dangerBtn {
+    background: var(--color-error);
+}
+
+.dangerBtn:hover:not(:disabled) {
+    background: #dc2626;
+}
+
+.warningBtn {
+    background: var(--color-warning);
+}
+
+.warningBtn:hover:not(:disabled) {
+    background: #d97706;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.confirmMessage {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Row layout for side-by-side fields */
+.row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+}
+
+@media (max-width: 480px) {
+    .row {
+        grid-template-columns: 1fr;
+    }
+}
