@@ -581,17 +581,23 @@ src/
 ### Phase 1 — MVP (Complete)
 49 pages, 15 modules, mock data layer, CRUD modals, role-based access, Arabic/English + RTL, dark/light theme, responsive design.
 
-### Phase 2 — Polish & Correctness (In Progress)
-See `plans/humming-coalescing-petal.md` for details. Scope:
-- Replace 9 `alert()` stubs with real modals
-- Add impersonation banner, wire CommandPalette
-- Subscription extras (Extend Trial, Generate Invoice, Refund)
-- Full form validation (RHF + Zod)
-- Migrate inline styles -> CSS modules
-- i18n keys for all remaining hardcoded strings
-- Sonner toasts for success/error
-- Empty states, loading states, breadcrumbs
-- Persist filters in URL
+### Phase 2 — Polish & Correctness (Complete)
+All audit items closed:
+- **Dead-end flows** — 9 `alert()` stubs and empty `onClick` handlers replaced with real FormModal / ConfirmModal workflows
+- **Impersonation** — AuthContext state + sticky TopBar banner with Exit
+- **Command Palette** — `cmdk`-powered global `Cmd/Ctrl+K` with 40+ route shortcuts and quick actions
+- **Subscription extras** — Extend Trial, Generate Invoice (line-items + 14% VAT), Refund (partial/full, refund destination)
+- **Form validation** — Zod v4 schemas (email, Egypt phone, password, provider/user/admin/plan/promo/ad) wired via `useValidatedForm` (RHF + zodResolver). Inline error rendering in `FormField`
+- **Design system** — `src/components/admin/shared.module.css` primitives; 41 pages migrated from inline styles; hex colors swapped to CSS tokens for dark-mode compatibility
+- **i18n** — 100% of pages use `useTranslation`; ~450 en/ar translation keys; `dir="rtl"` on all Arabic input fields
+- **Toasts** — success/error/undo on every create/update/delete via `ToastProvider`
+- **Empty states / loading / breadcrumbs** — `EmptyState` in every DataTable empty row; `Loader2` spinner in FormModal submit; auto-derived `Breadcrumbs` from pathname in `AppShell`
+- **URL-persisted filters** — `useSearchParams()` on providers, users, reviews, support
+- **Keyboard & mobile** — Escape-to-close on all modals, body-scroll lock, 640px responsive CSS
+- **MobileBottomNav** — 5-icon bottom nav for mobile devices
+- **Provider extras** — Adjust Commission modal, Export dropdown (Bookings / Employees / Financial Summary CSV)
+- **Finance hub** — sub-nav cards (Commissions / Payouts / Invoices / Tax Reports)
+- **Correctness** — AuthContext microtask fix, useApiQuery stale-closure fix via `useRef`, permission auto-assignment on admin create, null-safe `formatDate`, stable React keys
 
 ### Phase 3 — Backend Integration
 - Wire `ApiClient` to real endpoints
