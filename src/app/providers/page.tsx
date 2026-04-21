@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermission } from '@/hooks/usePermission';
@@ -11,6 +11,7 @@ import { FormModal, ConfirmModal, FormField } from '@/components/admin/FormModal
 import { mockProviders } from '@/mocks/providers';
 import type { Provider } from '@/types/provider';
 import { exportToCSV } from '@/lib/utils';
+import { scoreProvider, assessChurnRisk, type ProviderScore, type ChurnRisk } from '@/lib/analytics';
 import {
     Plus,
     MoreHorizontal,
@@ -34,6 +35,18 @@ export default function ProvidersPage() {
     const [providers, setProviders] = useState(mockProviders);
     const statusFilter = searchParams.get('status') || 'all';
     const categoryFilter = searchParams.get('category') || 'all';
+    const churnFilter = searchParams.get('churn') || 'all';
+
+    const scoreMap = useMemo<Map<string, ProviderScore>>(() => {
+        const m = new Map<string, ProviderScore>();
+        providers.forEach(p => m.set(p.id, scoreProvider(p, providers)));
+        return m;
+    }, [providers]);
+    const churnMap = useMemo<Map<string, ChurnRisk>>(() => {
+        const m = new Map<string, ChurnRisk>();
+        providers.forEach(p => m.set(p.id, assessChurnRisk(p, providers)));
+        return m;
+    }, [providers]);
     const setFilter = useCallback((key: string, value: string) => {
         const params = new URLSearchParams(searchParams.toString());
         if (value === 'all') params.delete(key);
@@ -48,6 +61,7 @@ export default function ProvidersPage() {
     const filtered = providers.filter(p => {
         if (statusFilter !== 'all' && p.status !== statusFilter) return false;
         if (categoryFilter !== 'all' && p.business_category !== categoryFilter) return false;
+        if (churnFilter !== 'all' && churnMap.get(p.id)?.risk !== churnFilter) return false;
         return true;
     });
 
@@ -74,15 +88,26 @@ export default function ProvidersPage() {
             key: 'business_name',
             label: t('providers.businessName'),
             sortable: true,
-            render: (row) => (
-                <div className={styles.providerCell}>
-                    <div className={styles.providerAvatar}>{row.business_name.charAt(0)}</div>
-                    <div>
-                        <div className={styles.providerName}>{row.business_name}</div>
-                        <div className={styles.providerEmail}>{row.email}</div>
+            render: (row) => {
+                const churn = churnMap.get(row.id);
+                const isHigh = churn?.risk === 'high';
+                return (
+                    <div className={styles.providerCell} style={isHigh ? { borderInlineStart: '3px solid var(--color-error)', paddingInlineStart: 8, marginInlineStart: -11 } : undefined}>
+                        <div className={styles.providerAvatar}>{row.business_name.charAt(0)}</div>
+                        <div>
+                            <div className={styles.providerName}>
+                                {row.business_name}
+                                {isHigh && (
+                                    <span title={churn?.reasons.join(' • ')} style={{ marginInlineStart: 8, padding: '1px 6px', fontSize: '0.6875rem', borderRadius: 4, background: 'color-mix(in srgb, var(--color-error) 14%, transparent)', color: 'var(--color-error)', fontWeight: 600 }}>
+                                        {t('providers.churnRisk.level.high')}
+                                    </span>
+                                )}
+                            </div>
+                            <div className={styles.providerEmail}>{row.email}</div>
+                        </div>
                     </div>
-                </div>
-            ),
+                );
+            },
         },
         {
             key: 'business_category',
@@ -123,6 +148,37 @@ export default function ProvidersPage() {
             label: t('providers.revenue'),
             sortable: true,
             render: (row) => `EGP ${(row.total_revenue / 1000).toFixed(0)}K`,
+        },
+        {
+            key: 'score',
+            label: t('providers.score.title'),
+            sortable: true,
+            render: (row) => {
+                const s = scoreMap.get(row.id);
+                if (!s) return null;
+                const tierColor = s.tier === 'elite' ? 'var(--color-success)'
+                    : s.tier === 'strong' ? 'var(--color-info)'
+                    : s.tier === 'average' ? 'var(--color-warning)'
+                    : 'var(--color-error)';
+                return (
+                    <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        padding: '3px 10px',
+                        borderRadius: 999,
+                        background: `color-mix(in srgb, ${tierColor} 14%, transparent)`,
+                        color: tierColor,
+                        fontWeight: 600,
+                        fontSize: '0.8125rem',
+                    }}>
+                        {s.score}
+                        <span style={{ fontSize: '0.6875rem', fontWeight: 500, textTransform: 'uppercase', opacity: 0.85 }}>
+                            {t(`providers.score.tier.${s.tier === 'at_risk' ? 'atRisk' : s.tier}`)}
+                        </span>
+                    </span>
+                );
+            },
         },
         {
             key: 'actions',
@@ -223,6 +279,16 @@ export default function ProvidersPage() {
                             <option value="clinic">Clinic</option>
                             <option value="spa">Spa</option>
                             <option value="nails">Nails</option>
+                        </select>
+                        <select
+                            value={churnFilter}
+                            onChange={e => setFilter('churn', e.target.value)}
+                            className={styles.filterSelect}
+                        >
+                            <option value="all">{t('providers.churnRisk.title')}: {t('common.all')}</option>
+                            <option value="high">{t('providers.churnRisk.level.high')}</option>
+                            <option value="watch">{t('providers.churnRisk.level.watch')}</option>
+                            <option value="none">{t('providers.churnRisk.level.none')}</option>
                         </select>
                     </div>
                 }

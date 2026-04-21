@@ -97,6 +97,7 @@ const translations: Translations = {
     'sidebar.featured': { en: 'Featured', ar: 'المميزون' },
     'sidebar.banners': { en: 'Banners', ar: 'البانرات' },
     'sidebar.ads': { en: 'Ads', ar: 'الإعلانات' },
+    'sidebar.experiments': { en: 'Experiments', ar: 'التجارب' },
     'sidebar.support': { en: 'Support', ar: 'الدعم' },
     'sidebar.content': { en: 'Content', ar: 'المحتوى' },
     'sidebar.pages': { en: 'Pages', ar: 'الصفحات' },
@@ -844,6 +845,64 @@ const translations: Translations = {
     'systemHealth.uptime': { en: 'Uptime', ar: 'وقت التشغيل' },
     'systemHealth.latency': { en: 'Latency', ar: 'زمن الاستجابة' },
     'systemHealth.errors': { en: 'Errors', ar: 'الأخطاء' },
+
+    // ── Common extras ──
+    'common.pause': { en: 'Pause', ar: 'إيقاف مؤقت' },
+    'common.resume': { en: 'Resume', ar: 'استئناف' },
+
+    // ── Revenue Forecast (Feature 1) ──
+    'reports.revenue.forecast.title': { en: 'Revenue Forecast', ar: 'توقع الإيرادات' },
+    'reports.revenue.forecast.nextMonth': { en: 'Next Month Projected', ar: 'الشهر القادم المتوقع' },
+    'reports.revenue.forecast.confidence': { en: 'Confidence Band (±15%)', ar: 'نطاق الثقة (±15%)' },
+    'reports.revenue.forecast.disclaimer': { en: 'Forecast is a linear fit on historical monthly totals; treat as directional.', ar: 'التوقع قائم على انحدار خطي للإجماليات الشهرية التاريخية؛ استخدمه كإشارة توجيهية.' },
+
+    // ── Audit Log Anomalies (Feature 2) ──
+    'auditLogs.flags': { en: 'Flags', ar: 'إشارات' },
+    'auditLogs.allLogs': { en: 'All logs', ar: 'جميع السجلات' },
+    'auditLogs.anomaliesOnly': { en: 'Anomalies only', ar: 'الشاذة فقط' },
+    'auditLogs.flagged': { en: 'Flagged', ar: 'مُشار إليها' },
+    'auditLogs.severity.medium': { en: 'Medium severity', ar: 'خطورة متوسطة' },
+    'auditLogs.severity.high': { en: 'High severity', ar: 'خطورة عالية' },
+    'auditLogs.anomalyReasons': { en: 'Reasons', ar: 'الأسباب' },
+
+    // ── Marketing Experiments (Feature 3) ──
+    'marketing.experiments.title': { en: 'Ad Experiments', ar: 'تجارب الإعلانات' },
+    'marketing.experiments.newExperiment': { en: 'New Experiment', ar: 'تجربة جديدة' },
+    'marketing.experiments.hypothesis': { en: 'Hypothesis', ar: 'الفرضية' },
+    'marketing.experiments.running': { en: 'Running', ar: 'قيد التشغيل' },
+    'marketing.experiments.completed': { en: 'Completed', ar: 'مكتملة' },
+    'marketing.experiments.avgLift': { en: 'Avg Lift', ar: 'متوسط الرفع' },
+    'marketing.experiments.variantA': { en: 'Variant A', ar: 'البديل أ' },
+    'marketing.experiments.variantB': { en: 'Variant B', ar: 'البديل ب' },
+    'marketing.experiments.lift': { en: 'Lift', ar: 'الرفع' },
+    'marketing.experiments.confidence': { en: 'Confidence', ar: 'الثقة' },
+    'marketing.experiments.winner': { en: 'Winner', ar: 'الفائز' },
+    'marketing.experiments.inconclusive': { en: 'Inconclusive', ar: 'غير حاسم' },
+    'marketing.experiments.endExperiment': { en: 'End Experiment', ar: 'إنهاء التجربة' },
+    'marketing.experiments.endConfirmMessage': { en: 'End this experiment now? Results will be locked and no further traffic will be routed.', ar: 'إنهاء هذه التجربة الآن؟ سيتم تثبيت النتائج ولن يتم توجيه أي حركة مرور إضافية.' },
+    'marketing.experiments.resultDetail': { en: 'Result Detail', ar: 'تفاصيل النتيجة' },
+
+    // ── Provider Score (Feature 4) ──
+    'providers.score.title': { en: 'Score', ar: 'التقييم' },
+    'providers.score.tier.elite': { en: 'Elite', ar: 'نخبة' },
+    'providers.score.tier.strong': { en: 'Strong', ar: 'قوي' },
+    'providers.score.tier.average': { en: 'Average', ar: 'متوسط' },
+    'providers.score.tier.atRisk': { en: 'At Risk', ar: 'معرض للخطر' },
+    'providers.score.breakdown.bookings': { en: 'Bookings', ar: 'الحجوزات' },
+    'providers.score.breakdown.revenue': { en: 'Revenue', ar: 'الإيرادات' },
+    'providers.score.breakdown.activity': { en: 'Activity', ar: 'النشاط' },
+    'providers.score.breakdown.subscription': { en: 'Subscription', ar: 'الاشتراك' },
+    'providers.score.breakdown.tenure': { en: 'Tenure', ar: 'الأقدمية' },
+
+    // ── Churn Risk (Feature 5) ──
+    'providers.churnRisk.title': { en: 'Churn Risk', ar: 'مخاطر الانسحاب' },
+    'providers.churnRisk.level.none': { en: 'None', ar: 'لا يوجد' },
+    'providers.churnRisk.level.watch': { en: 'Watch', ar: 'مراقبة' },
+    'providers.churnRisk.level.high': { en: 'High', ar: 'عالية' },
+    'providers.churnRisk.reasons': { en: 'Reasons', ar: 'الأسباب' },
+    'providers.churnRisk.noReasons': { en: 'No risk signals detected.', ar: 'لم يتم رصد إشارات خطر.' },
+    'dashboard.churnWatch.title': { en: 'Churn Risk Watch', ar: 'مراقبة مخاطر الانسحاب' },
+    'dashboard.churnWatch.empty': { en: 'No providers flagged for churn risk.', ar: 'لا يوجد مقدمو خدمة مُشار إليهم بمخاطر الانسحاب.' },
 };
 
 export default translations;

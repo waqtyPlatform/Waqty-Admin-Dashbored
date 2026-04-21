@@ -35,6 +35,10 @@ import {
     mockTopProviders,
     mockRecentActivity,
 } from '@/mocks/dashboard';
+import { mockProviders } from '@/mocks/providers';
+import { assessChurnRisk } from '@/lib/analytics';
+import Link from 'next/link';
+import { AlertTriangle } from 'lucide-react';
 import styles from './page.module.css';
 
 const KPI_ICONS = [
@@ -58,6 +62,12 @@ const ACTIVITY_COLORS: Record<string, string> = {
 
 export default function DashboardPage() {
     const { t } = useTranslation();
+
+    const churnWatch = mockProviders
+        .map(p => ({ provider: p, risk: assessChurnRisk(p, mockProviders) }))
+        .filter(x => x.risk.risk !== 'none')
+        .sort((a, b) => b.risk.riskScore - a.risk.riskScore)
+        .slice(0, 5);
 
     return (
         <div className={styles.dashboard}>
@@ -178,6 +188,62 @@ export default function DashboardPage() {
                             </tbody>
                         </table>
                     </div>
+                </div>
+
+                {/* Churn Risk Watch */}
+                <div className={styles.chartCard}>
+                    <h3 className={styles.chartTitle}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                            <AlertTriangle size={16} style={{ color: 'var(--color-warning)' }} />
+                            {t('dashboard.churnWatch.title')}
+                        </span>
+                    </h3>
+                    {churnWatch.length === 0 ? (
+                        <div style={{ padding: 24, textAlign: 'center', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                            {t('dashboard.churnWatch.empty')}
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {churnWatch.map(({ provider, risk }) => {
+                                const color = risk.risk === 'high' ? 'var(--color-error)' : 'var(--color-warning)';
+                                return (
+                                    <Link
+                                        key={provider.id}
+                                        href={`/providers/${provider.id}`}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 12,
+                                            padding: '8px 10px',
+                                            borderRadius: 8,
+                                            border: '1px solid var(--border-color)',
+                                            textDecoration: 'none',
+                                            color: 'var(--text-primary)',
+                                            borderInlineStart: `3px solid ${color}`,
+                                        }}
+                                    >
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{provider.business_name}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                {risk.reasons[0] || '—'}
+                                            </div>
+                                        </div>
+                                        <span style={{
+                                            padding: '2px 8px',
+                                            borderRadius: 999,
+                                            fontSize: '0.6875rem',
+                                            fontWeight: 600,
+                                            textTransform: 'uppercase',
+                                            color,
+                                            background: `color-mix(in srgb, ${color} 14%, transparent)`,
+                                        }}>
+                                            {t(`providers.churnRisk.level.${risk.risk}`)}
+                                        </span>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
 
                 {/* Recent Activity */}
