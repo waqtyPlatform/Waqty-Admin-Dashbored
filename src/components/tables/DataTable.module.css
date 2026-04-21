@@ -87,7 +87,7 @@
 }
 
 .table th {
-    text-align: left;
+    text-align: start;
     padding: var(--space-3) var(--space-4);
     color: var(--text-secondary);
     font-weight: 500;

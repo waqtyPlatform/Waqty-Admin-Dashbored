@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { useAuth } from '@/contexts/AuthContext';
 import { CommandPaletteProvider } from '@/components/CommandPalette';
+import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { Breadcrumbs } from './Breadcrumbs';
 import styles from './AppShell.module.css';
 import { usePathname } from 'next/navigation';
@@ -47,12 +48,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
         <SidebarProvider>
             <ToastProvider>
-                <CommandPaletteProvider>
-                    <ErrorBoundary>
-                        <AppContent>{children}</AppContent>
-                        <OfflineBanner />
-                    </ErrorBoundary>
-                </CommandPaletteProvider>
+                <NotificationsProvider>
+                    <CommandPaletteProvider>
+                        <ErrorBoundary>
+                            <AppContent>{children}</AppContent>
+                            <OfflineBanner />
+                        </ErrorBoundary>
+                    </CommandPaletteProvider>
+                </NotificationsProvider>
             </ToastProvider>
         </SidebarProvider>
     );
