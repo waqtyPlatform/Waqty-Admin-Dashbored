@@ -8,6 +8,7 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { copyToClipboard } from '@/lib/utils';
 import type { PromoCode } from '@/types/marketing';
 import { Plus, Copy } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
 const initialCodes: PromoCode[] = [
@@ -20,29 +21,30 @@ const initialCodes: PromoCode[] = [
 
 
 export default function PromoCodesPage() {
+    const { t } = useTranslation();
     const [codes, setCodes] = useState(initialCodes);
     const [showCreate, setShowCreate] = useState(false);
 
     const columns: Column<PromoCode>[] = [
-        { key: 'code', label: 'Code', sortable: true, render: r => <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><code style={{ fontWeight: 600, padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: 4, fontSize: '0.8125rem' }}>{r.code}</code><button onClick={() => copyToClipboard(r.code)} style={{ border: 'none', background: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 2 }}><Copy size={12} /></button></div> },
-        { key: 'type', label: 'Type', sortable: true, render: r => r.type === 'percentage' ? `${r.value}%` : `EGP ${r.value}` },
-        { key: 'min_order', label: 'Min Order', render: r => r.min_order > 0 ? `EGP ${r.min_order}` : '-' },
-        { key: 'used_count', label: 'Usage', sortable: true, render: r => `${r.used_count}${r.usage_limit ? ` / ${r.usage_limit}` : ''}` },
-        { key: 'valid_until', label: 'Valid Until', sortable: true, render: r => new Date(r.valid_until).toLocaleDateString() },
-        { key: 'active', label: 'Status', render: r => <StatusBadge status={r.active ? 'active' : (r.used_count >= (r.usage_limit || Infinity) ? 'expired' : 'draft')} /> },
+        { key: 'code', label: t('marketing.promoCodes.code'), sortable: true, render: r => <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><code style={{ fontWeight: 600, padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: 4, fontSize: '0.8125rem' }}>{r.code}</code><button onClick={() => copyToClipboard(r.code)} style={{ border: 'none', background: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', padding: 2 }}><Copy size={12} /></button></div> },
+        { key: 'type', label: t('marketing.promoCodes.type'), sortable: true, render: r => r.type === 'percentage' ? `${r.value}%` : `EGP ${r.value}` },
+        { key: 'min_order', label: t('marketing.promoCodes.minOrder'), render: r => r.min_order > 0 ? `EGP ${r.min_order}` : '-' },
+        { key: 'used_count', label: t('marketing.promoCodes.usage'), sortable: true, render: r => `${r.used_count}${r.usage_limit ? ` / ${r.usage_limit}` : ''}` },
+        { key: 'valid_until', label: t('marketing.promoCodes.validUntil'), sortable: true, render: r => new Date(r.valid_until).toLocaleDateString() },
+        { key: 'active', label: t('common.status'), render: r => <StatusBadge status={r.active ? 'active' : (r.used_count >= (r.usage_limit || Infinity) ? 'expired' : 'draft')} /> },
     ];
 
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
-                <h1 className={shared.pageTitle}>Promo Codes</h1>
+                <h1 className={shared.pageTitle}>{t('marketing.promoCodes.title')}</h1>
                 <PermissionGate module="marketing" action="create">
-                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> Create Code</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> {t('marketing.promoCodes.create')}</button>
                 </PermissionGate>
             </div>
-            <DataTable<PromoCode> columns={columns} data={codes} searchKeys={['code']} searchPlaceholder="Search promo codes..." getRowKey={r => r.id} />
+            <DataTable<PromoCode> columns={columns} data={codes} searchKeys={['code']} searchPlaceholder={t('marketing.promoCodes.searchPlaceholder')} getRowKey={r => r.id} />
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create Promo Code" submitLabel="Create" onSubmit={e => {
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title={t('marketing.promoCodes.createPromoCode')} submitLabel={t('common.create')} onSubmit={e => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
                 const newCode: PromoCode = {
@@ -62,18 +64,18 @@ export default function PromoCodesPage() {
                 setCodes(prev => [newCode, ...prev]);
                 setShowCreate(false);
             }}>
-                <FormField label="Code" required><input name="code" type="text" required className={shared.formInput} placeholder="e.g. SUMMER50" /></FormField>
+                <FormField label={t('marketing.promoCodes.code')} required><input name="code" type="text" required className={shared.formInput} placeholder="e.g. SUMMER50" /></FormField>
                 <div className={shared.formGrid2}>
-                    <FormField label="Type"><select name="type" className={shared.formInput}><option value="percentage">Percentage</option><option value="fixed">Fixed Amount</option></select></FormField>
-                    <FormField label="Value" required><input name="value" type="number" required className={shared.formInput} placeholder="e.g. 20" /></FormField>
+                    <FormField label={t('marketing.promoCodes.type')}><select name="type" className={shared.formInput}><option value="percentage">{t('marketing.promoCodes.percentage')}</option><option value="fixed">{t('marketing.promoCodes.fixedAmount')}</option></select></FormField>
+                    <FormField label={t('marketing.promoCodes.value')} required><input name="value" type="number" required className={shared.formInput} placeholder="e.g. 20" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label="Min Order (EGP)"><input name="min_order" type="number" className={shared.formInput} placeholder="0" /></FormField>
-                    <FormField label="Max Discount"><input name="max_discount" type="number" className={shared.formInput} placeholder="Leave empty for none" /></FormField>
+                    <FormField label={t('marketing.promoCodes.minOrderEgp')}><input name="min_order" type="number" className={shared.formInput} placeholder="0" /></FormField>
+                    <FormField label={t('marketing.promoCodes.maxDiscount')}><input name="max_discount" type="number" className={shared.formInput} placeholder="Leave empty for none" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label="Usage Limit"><input name="usage_limit" type="number" className={shared.formInput} placeholder="Leave empty for unlimited" /></FormField>
-                    <FormField label="Valid Until" required><input name="valid_until" type="date" required className={shared.formInput} /></FormField>
+                    <FormField label={t('marketing.promoCodes.usageLimit')}><input name="usage_limit" type="number" className={shared.formInput} placeholder="Leave empty for unlimited" /></FormField>
+                    <FormField label={t('marketing.promoCodes.validUntil')} required><input name="valid_until" type="date" required className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

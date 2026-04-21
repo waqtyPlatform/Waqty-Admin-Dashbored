@@ -5,6 +5,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { Plus, Megaphone } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
@@ -20,15 +21,16 @@ const initialAnnouncements: Announcement[] = [
 const priorityColors: Record<string, string> = { low: 'var(--text-tertiary)', normal: 'var(--color-info)', high: 'var(--color-error)' };
 
 export default function AnnouncementsPage() {
+    const { t } = useTranslation();
     const [announcements, setAnnouncements] = useState(initialAnnouncements);
     const [showCreate, setShowCreate] = useState(false);
 
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Megaphone size={24} /><h1 className={shared.pageTitle}>Announcements</h1></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Megaphone size={24} /><h1 className={shared.pageTitle}>{t('content.announcements.title')}</h1></div>
                 <PermissionGate module="content" action="create">
-                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> New Announcement</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> {t('content.announcements.new')}</button>
                 </PermissionGate>
             </div>
 
@@ -50,7 +52,7 @@ export default function AnnouncementsPage() {
                 ))}
             </div>
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="New Announcement" submitLabel="Publish" onSubmit={e => {
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title={t('content.announcements.new')} submitLabel={t('content.announcements.publish')} onSubmit={e => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
                 const now = new Date().toISOString();
@@ -64,17 +66,17 @@ export default function AnnouncementsPage() {
                 setShowCreate(false);
             }}>
                 <div className={shared.formGrid2}>
-                    <FormField label="Title (EN)" required><input name="title_en" type="text" required className={shared.formInput} /></FormField>
-                    <FormField label="Title (AR)" required><input name="title_ar" type="text" required className={shared.formInput} dir="rtl" /></FormField>
+                    <FormField label={t('content.announcements.titleEn')} required><input name="title_en" type="text" required className={shared.formInput} /></FormField>
+                    <FormField label={t('content.announcements.titleAr')} required><input name="title_ar" type="text" required className={shared.formInput} dir="rtl" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label="Message (EN)" required><textarea name="message_en" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} /></FormField>
-                    <FormField label="Message (AR)" required><textarea name="message_ar" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} dir="rtl" /></FormField>
+                    <FormField label={t('content.announcements.messageEn')} required><textarea name="message_en" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} /></FormField>
+                    <FormField label={t('content.announcements.messageAr')} required><textarea name="message_ar" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} dir="rtl" /></FormField>
                 </div>
                 <div className={shared.formGrid3}>
-                    <FormField label="Target"><select name="target" className={shared.formInput}><option value="all">All</option><option value="users">Users</option><option value="providers">Providers</option><option value="employees">Employees</option></select></FormField>
-                    <FormField label="Priority"><select name="priority" className={shared.formInput}><option value="normal">Normal</option><option value="low">Low</option><option value="high">High</option></select></FormField>
-                    <FormField label="End Date"><input name="end_date" type="date" className={shared.formInput} /></FormField>
+                    <FormField label={t('content.announcements.target')}><select name="target" className={shared.formInput}><option value="all">All</option><option value="users">Users</option><option value="providers">Providers</option><option value="employees">Employees</option></select></FormField>
+                    <FormField label={t('content.announcements.priority')}><select name="priority" className={shared.formInput}><option value="normal">Normal</option><option value="low">Low</option><option value="high">High</option></select></FormField>
+                    <FormField label={t('content.announcements.endDate')}><input name="end_date" type="date" className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

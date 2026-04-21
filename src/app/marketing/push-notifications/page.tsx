@@ -7,6 +7,7 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import type { PushNotification } from '@/types/marketing';
 import { Plus, Send, Bell } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
@@ -20,18 +21,19 @@ const initialNotifs: PushNotification[] = [
 
 
 export default function PushNotificationsPage() {
+    const { t } = useTranslation();
     const [notifs, setNotifs] = useState(initialNotifs);
     const [showCreate, setShowCreate] = useState(false);
     const [form, setForm] = useState({ title: '', title_ar: '', body: '', body_ar: '', target_app: 'user', target_segment: 'all' });
 
     const columns: Column<PushNotification>[] = [
-        { key: 'title', label: 'Title', sortable: true, render: r => <div><div style={{ fontWeight: 500 }}>{r.title}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.body.slice(0, 50)}...</div></div> },
-        { key: 'target_app', label: 'App', render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.target_app}</span> },
-        { key: 'target_segment', label: 'Segment', render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.target_segment}</span> },
-        { key: 'status', label: 'Status', sortable: true, render: r => <StatusBadge status={r.status === 'sent' ? 'completed' : r.status} /> },
-        { key: 'recipients_count', label: 'Recipients', sortable: true, render: r => r.recipients_count.toLocaleString() },
-        { key: 'opened_count', label: 'Opened', sortable: true, render: r => r.sent_at ? `${r.opened_count.toLocaleString()} (${r.recipients_count ? Math.round(r.opened_count / r.recipients_count * 100) : 0}%)` : '-' },
-        { key: 'sent_at', label: 'Sent', render: r => r.sent_at ? new Date(r.sent_at).toLocaleDateString() : r.scheduled_at ? `Scheduled: ${new Date(r.scheduled_at).toLocaleDateString()}` : 'Draft' },
+        { key: 'title', label: t('marketing.push.title2'), sortable: true, render: r => <div><div style={{ fontWeight: 500 }}>{r.title}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.body.slice(0, 50)}...</div></div> },
+        { key: 'target_app', label: t('marketing.push.app'), render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.target_app}</span> },
+        { key: 'target_segment', label: t('marketing.push.segment'), render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.target_segment}</span> },
+        { key: 'status', label: t('common.status'), sortable: true, render: r => <StatusBadge status={r.status === 'sent' ? 'completed' : r.status} /> },
+        { key: 'recipients_count', label: t('marketing.push.recipients'), sortable: true, render: r => r.recipients_count.toLocaleString() },
+        { key: 'opened_count', label: t('marketing.push.opened'), sortable: true, render: r => r.sent_at ? `${r.opened_count.toLocaleString()} (${r.recipients_count ? Math.round(r.opened_count / r.recipients_count * 100) : 0}%)` : '-' },
+        { key: 'sent_at', label: t('marketing.push.sent'), render: r => r.sent_at ? new Date(r.sent_at).toLocaleDateString() : r.scheduled_at ? `Scheduled: ${new Date(r.scheduled_at).toLocaleDateString()}` : 'Draft' },
     ];
 
     return (
@@ -39,17 +41,17 @@ export default function PushNotificationsPage() {
             <div className={shared.pageHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Bell size={24} />
-                    <h1 className={shared.pageTitle}>Push Notifications</h1>
+                    <h1 className={shared.pageTitle}>{t('marketing.push.title')}</h1>
                 </div>
                 <PermissionGate module="marketing" action="create">
                     <button onClick={() => setShowCreate(true)} className={shared.addBtn}>
-                        <Plus size={16} /> Create Notification
+                        <Plus size={16} /> {t('marketing.push.create')}
                     </button>
                 </PermissionGate>
             </div>
-            <DataTable<PushNotification> columns={columns} data={notifs} searchKeys={['title', 'body']} searchPlaceholder="Search notifications..." getRowKey={r => r.id} />
+            <DataTable<PushNotification> columns={columns} data={notifs} searchKeys={['title', 'body']} searchPlaceholder={t('marketing.push.searchPlaceholder')} getRowKey={r => r.id} />
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create Push Notification" submitLabel="Send / Schedule" onSubmit={e => {
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title={t('marketing.push.createPush')} submitLabel={t('marketing.push.sendSchedule')} onSubmit={e => {
                 e.preventDefault();
                 const now = new Date().toISOString();
                 setNotifs(prev => [{
@@ -61,16 +63,16 @@ export default function PushNotificationsPage() {
                 setShowCreate(false);
             }}>
                 <div className={shared.formGrid2}>
-                    <FormField label="Title (English)" required><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required className={shared.formInput} placeholder="Notification title" /></FormField>
-                    <FormField label="Title (Arabic)" required><input type="text" value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} required className={shared.formInput} placeholder="عنوان الإشعار" dir="rtl" /></FormField>
+                    <FormField label={t('marketing.push.titleEn')} required><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required className={shared.formInput} placeholder="Notification title" /></FormField>
+                    <FormField label={t('marketing.push.titleAr')} required><input type="text" value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} required className={shared.formInput} placeholder="عنوان الإشعار" dir="rtl" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label="Body (English)" required><textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="Notification body" /></FormField>
-                    <FormField label="Body (Arabic)" required><textarea value={form.body_ar} onChange={e => setForm(f => ({ ...f, body_ar: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="نص الإشعار" dir="rtl" /></FormField>
+                    <FormField label={t('marketing.push.bodyEn')} required><textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="Notification body" /></FormField>
+                    <FormField label={t('marketing.push.bodyAr')} required><textarea value={form.body_ar} onChange={e => setForm(f => ({ ...f, body_ar: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="نص الإشعار" dir="rtl" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label="Target App"><select value={form.target_app} onChange={e => setForm(f => ({ ...f, target_app: e.target.value }))} className={shared.formInput}><option value="user">User App</option><option value="employee">Employee App</option><option value="all">All Apps</option></select></FormField>
-                    <FormField label="Target Segment"><select value={form.target_segment} onChange={e => setForm(f => ({ ...f, target_segment: e.target.value }))} className={shared.formInput}><option value="all">All Users</option><option value="active">Active Users</option><option value="inactive">Inactive Users</option><option value="new">New Users</option></select></FormField>
+                    <FormField label={t('marketing.push.targetApp')}><select value={form.target_app} onChange={e => setForm(f => ({ ...f, target_app: e.target.value }))} className={shared.formInput}><option value="user">User App</option><option value="employee">Employee App</option><option value="all">All Apps</option></select></FormField>
+                    <FormField label={t('marketing.push.targetSegment')}><select value={form.target_segment} onChange={e => setForm(f => ({ ...f, target_segment: e.target.value }))} className={shared.formInput}><option value="all">All Users</option><option value="active">Active Users</option><option value="inactive">Inactive Users</option><option value="new">New Users</option></select></FormField>
                 </div>
             </FormModal>
         </div>

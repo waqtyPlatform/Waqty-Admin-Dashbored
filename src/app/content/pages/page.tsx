@@ -6,6 +6,7 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import type { ContentPage } from '@/types/content';
 import { Plus, Edit, FileText } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
@@ -19,6 +20,7 @@ const initialPages: ContentPage[] = [
 
 
 export default function ContentPagesPage() {
+    const { t } = useTranslation();
     const [pages, setPages] = useState(initialPages);
     const [editPage, setEditPage] = useState<ContentPage | null>(null);
 
@@ -26,7 +28,7 @@ export default function ContentPagesPage() {
         <div className={shared.page}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <FileText size={24} />
-                <h1 className={shared.pageTitle}>Content Pages</h1>
+                <h1 className={shared.pageTitle}>{t('content.pages.title')}</h1>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
@@ -42,14 +44,14 @@ export default function ContentPagesPage() {
                         </p>
                         <PermissionGate module="content" action="edit">
                             <button onClick={() => setEditPage(page)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                                <Edit size={14} /> Edit
+                                <Edit size={14} /> {t('common.edit')}
                             </button>
                         </PermissionGate>
                     </div>
                 ))}
             </div>
 
-            <FormModal open={!!editPage} onClose={() => setEditPage(null)} title={editPage ? `Edit: ${editPage.title}` : ''} submitLabel="Save Changes" onSubmit={e => {
+            <FormModal open={!!editPage} onClose={() => setEditPage(null)} title={editPage ? `${t('common.edit')}: ${editPage.title}` : ''} submitLabel={t('content.pages.saveChanges')} onSubmit={e => {
                 e.preventDefault();
                 if (!editPage) return;
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
@@ -67,11 +69,11 @@ export default function ContentPagesPage() {
                 {editPage && (
                     <>
                         <div className={shared.formGrid2}>
-                            <FormField label="Title (English)"><input name="title" type="text" defaultValue={editPage.title} className={shared.formInput} /></FormField>
-                            <FormField label="Title (Arabic)"><input name="title_ar" type="text" defaultValue={editPage.title_ar} className={shared.formInput} dir="rtl" /></FormField>
+                            <FormField label={t('content.pages.titleEn')}><input name="title" type="text" defaultValue={editPage.title} className={shared.formInput} /></FormField>
+                            <FormField label={t('content.pages.titleAr')}><input name="title_ar" type="text" defaultValue={editPage.title_ar} className={shared.formInput} dir="rtl" /></FormField>
                         </div>
-                        <FormField label="Content (English)"><textarea name="content" defaultValue={editPage.content} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} /></FormField>
-                        <FormField label="Content (Arabic)"><textarea name="content_ar" defaultValue={editPage.content_ar} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} dir="rtl" /></FormField>
+                        <FormField label={t('content.pages.contentEn')}><textarea name="content" defaultValue={editPage.content} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} /></FormField>
+                        <FormField label={t('content.pages.contentAr')}><textarea name="content_ar" defaultValue={editPage.content_ar} style={{ ...inputStyle, minHeight: 150, resize: 'vertical' }} dir="rtl" /></FormField>
                     </>
                 )}
             </FormModal>

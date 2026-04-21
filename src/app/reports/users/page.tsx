@@ -3,6 +3,7 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, UserPlus, UserCheck, UserX } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
 const growthData = [
@@ -16,15 +17,16 @@ const growthData = [
 ];
 
 export default function UserReportsPage() {
+    const { t } = useTranslation();
     return (
         <div className={shared.page}>
-            <h1 className={shared.pageTitle}>User Reports</h1>
+            <h1 className={shared.pageTitle}>{t('reports.users.title')}</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                 {[
-                    { label: 'Total Users', value: '48,392', icon: <Users size={20} />, color: 'var(--color-primary-500)' },
-                    { label: 'New This Month', value: '2,800', icon: <UserPlus size={20} />, color: 'var(--color-success)' },
-                    { label: 'Active (30d)', value: '38,900', icon: <UserCheck size={20} />, color: 'var(--color-info)' },
-                    { label: 'Churned', value: '1,200', icon: <UserX size={20} />, color: 'var(--color-error)' },
+                    { label: t('reports.users.total'), value: '48,392', icon: <Users size={20} />, color: 'var(--color-primary-500)' },
+                    { label: t('reports.users.newThisMonth'), value: '2,800', icon: <UserPlus size={20} />, color: 'var(--color-success)' },
+                    { label: t('reports.users.active30d'), value: '38,900', icon: <UserCheck size={20} />, color: 'var(--color-info)' },
+                    { label: t('reports.users.churned'), value: '1,200', icon: <UserX size={20} />, color: 'var(--color-error)' },
                 ].map(k => (
                     <div key={k.label} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
                         <div style={{ width: 44, height: 44, borderRadius: 10, background: `color-mix(in srgb, ${k.color} 12%, transparent)`, color: k.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{k.icon}</div>
@@ -33,16 +35,16 @@ export default function UserReportsPage() {
                 ))}
             </div>
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>User Growth</h3>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('reports.users.growth')}</h3>
                 <ResponsiveContainer width="100%" height={350}>
                     <AreaChart data={growthData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
                         <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
                         <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                        <Area type="monotone" dataKey="total" stroke="var(--color-primary-500)" fill="var(--color-primary-500)" fillOpacity={0.2} name="Total Users" />
-                        <Area type="monotone" dataKey="active" stroke="var(--color-info)" fill="var(--color-info)" fillOpacity={0.2} name="Active Users" />
-                        <Area type="monotone" dataKey="new" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} name="New Users" />
+                        <Area type="monotone" dataKey="total" stroke="var(--color-primary-500)" fill="var(--color-primary-500)" fillOpacity={0.2} name={t('reports.users.totalUsers')} />
+                        <Area type="monotone" dataKey="active" stroke="var(--color-info)" fill="var(--color-info)" fillOpacity={0.2} name={t('reports.users.activeUsers')} />
+                        <Area type="monotone" dataKey="new" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} name={t('reports.users.newUsers')} />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

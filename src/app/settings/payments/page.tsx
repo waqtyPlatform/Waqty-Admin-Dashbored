@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { CreditCard, Wallet, Smartphone } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
 const initialGateways = [
@@ -15,6 +16,7 @@ const initialGateways = [
 ];
 
 export default function PaymentsPage() {
+    const { t } = useTranslation();
     const [gateways, setGateways] = useState(initialGateways);
 
     const toggleGateway = (id: string) => {
@@ -23,7 +25,7 @@ export default function PaymentsPage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800 }}>
-            <h1 className={shared.pageTitle}>Payment Gateways</h1>
+            <h1 className={shared.pageTitle}>{t('settings.payments.title')}</h1>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {gateways.map(g => (
                     <div key={g.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -33,7 +35,7 @@ export default function PaymentsPage() {
                                 <span style={{ fontWeight: 600 }}>{g.name}</span>
                                 <StatusBadge status={g.status} />
                             </div>
-                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{g.type} &middot; Fee: {g.fee}</div>
+                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{g.type} &middot; {t('settings.payments.fee')}: {g.fee}</div>
                         </div>
                         <button onClick={() => toggleGateway(g.id)} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: g.enabled ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
                             <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, left: g.enabled ? 23 : 3, transition: 'left 0.2s' }} />

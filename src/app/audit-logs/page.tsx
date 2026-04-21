@@ -3,6 +3,7 @@
 import React from 'react';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import type { AuditLog } from '@/types/system';
+import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
 const mockLogs: AuditLog[] = [
@@ -19,19 +20,20 @@ const mockLogs: AuditLog[] = [
 const actionColors: Record<string, string> = { block: 'var(--color-error)', soft_delete: 'var(--color-error)', hide: 'var(--color-warning)', approve: 'var(--color-success)', renew: 'var(--color-success)', update: 'var(--color-info)', add: 'var(--color-info)' };
 
 export default function AuditLogsPage() {
+    const { t } = useTranslation();
     const columns: Column<AuditLog>[] = [
-        { key: 'created_at', label: 'Time', sortable: true, render: r => <span style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-mono)' }}>{new Date(r.created_at).toLocaleString()}</span> },
-        { key: 'admin_name', label: 'Admin', sortable: true, render: r => <div><div style={{ fontWeight: 500 }}>{r.admin_name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.admin_role}</div></div> },
-        { key: 'action', label: 'Action', sortable: true, render: r => { const actionPart = r.action.split('.')[1] || r.action; return <span style={{ fontWeight: 600, color: actionColors[actionPart] || 'var(--text-primary)', fontSize: '0.8125rem' }}>{r.action}</span>; } },
-        { key: 'entity_type', label: 'Entity', sortable: true, render: r => <span style={{ textTransform: 'capitalize' }}>{r.entity_type} {r.entity_id ? `#${r.entity_id}` : ''}</span> },
-        { key: 'details', label: 'Details', render: r => <code style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: 4 }}>{JSON.stringify(r.details).slice(0, 60)}</code> },
-        { key: 'ip_address', label: 'IP', render: r => <span style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>{r.ip_address}</span> },
+        { key: 'created_at', label: t('auditLogs.time'), sortable: true, render: r => <span style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-mono)' }}>{new Date(r.created_at).toLocaleString()}</span> },
+        { key: 'admin_name', label: t('auditLogs.admin'), sortable: true, render: r => <div><div style={{ fontWeight: 500 }}>{r.admin_name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.admin_role}</div></div> },
+        { key: 'action', label: t('auditLogs.action'), sortable: true, render: r => { const actionPart = r.action.split('.')[1] || r.action; return <span style={{ fontWeight: 600, color: actionColors[actionPart] || 'var(--text-primary)', fontSize: '0.8125rem' }}>{r.action}</span>; } },
+        { key: 'entity_type', label: t('auditLogs.entity'), sortable: true, render: r => <span style={{ textTransform: 'capitalize' }}>{r.entity_type} {r.entity_id ? `#${r.entity_id}` : ''}</span> },
+        { key: 'details', label: t('auditLogs.details'), render: r => <code style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: 4 }}>{JSON.stringify(r.details).slice(0, 60)}</code> },
+        { key: 'ip_address', label: t('auditLogs.ip'), render: r => <span style={{ fontSize: '0.8125rem', fontFamily: 'var(--font-mono)', color: 'var(--text-tertiary)' }}>{r.ip_address}</span> },
     ];
 
     return (
         <div className={shared.page}>
-            <h1 className={shared.pageTitle}>Audit Logs</h1>
-            <DataTable<AuditLog> columns={columns} data={mockLogs} searchKeys={['admin_name', 'action', 'entity_type']} searchPlaceholder="Search logs..." getRowKey={r => r.id} />
+            <h1 className={shared.pageTitle}>{t('auditLogs.title')}</h1>
+            <DataTable<AuditLog> columns={columns} data={mockLogs} searchKeys={['admin_name', 'action', 'entity_type']} searchPlaceholder={t('auditLogs.searchPlaceholder')} getRowKey={r => r.id} />
         </div>
     );
 }
