@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui';
 import { mockProviders } from '@/mocks/providers';
 import { mockPlans } from '@/mocks/subscriptions';
 import type { Provider, ProviderStatus } from '@/types/provider';
+import { scoreProvider, assessChurnRisk } from '@/lib/analytics';
 import {
     ArrowLeft, Building2, Users, CalendarDays, DollarSign, MapPin, Mail, Phone,
     Ban, ShieldCheck, Trash2, RotateCcw, LogIn, Pause, Play, ExternalLink,
@@ -241,6 +242,70 @@ export default function ProviderDetailPage() {
             <div className={styles.tabContent}>
                 {activeTab === 'overview' && (
                     <div className={styles.overviewGrid}>
+                        {(() => {
+                            const score = scoreProvider(provider, mockProviders);
+                            const churn = assessChurnRisk(provider, mockProviders);
+                            const tierColor = score.tier === 'elite' ? 'var(--color-success)'
+                                : score.tier === 'strong' ? 'var(--color-info)'
+                                : score.tier === 'average' ? 'var(--color-warning)'
+                                : 'var(--color-error)';
+                            const riskColor = churn.risk === 'high' ? 'var(--color-error)'
+                                : churn.risk === 'watch' ? 'var(--color-warning)'
+                                : 'var(--color-success)';
+                            const breakdownRows: Array<[string, number]> = [
+                                [t('providers.score.breakdown.bookings'), score.breakdown.bookings],
+                                [t('providers.score.breakdown.revenue'), score.breakdown.revenue],
+                                [t('providers.score.breakdown.activity'), score.breakdown.activity],
+                                [t('providers.score.breakdown.subscription'), score.breakdown.subscription],
+                                [t('providers.score.breakdown.tenure'), score.breakdown.tenure],
+                            ];
+                            return (
+                                <>
+                                    <div className={styles.infoCard}>
+                                        <h3>{t('providers.score.title')}</h3>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4, marginBottom: 12 }}>
+                                            <span style={{ fontSize: '2.25rem', fontWeight: 700, color: tierColor }}>{score.score}</span>
+                                            <span style={{ color: 'var(--text-secondary)' }}>/100</span>
+                                            <span style={{ marginInlineStart: 'auto', padding: '3px 10px', borderRadius: 999, background: `color-mix(in srgb, ${tierColor} 14%, transparent)`, color: tierColor, fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase' }}>
+                                                {t(`providers.score.tier.${score.tier === 'at_risk' ? 'atRisk' : score.tier}`)}
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                            {breakdownRows.map(([label, value]) => (
+                                                <div key={label}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
+                                                        <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
+                                                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{value}/100</span>
+                                                    </div>
+                                                    <div style={{ height: 6, background: 'var(--bg-tertiary)', borderRadius: 999, overflow: 'hidden' }}>
+                                                        <div style={{ width: `${Math.min(100, Math.max(0, value))}%`, height: '100%', background: tierColor }} />
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className={styles.infoCard}>
+                                        <h3>{t('providers.churnRisk.title')}</h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, marginBottom: 12 }}>
+                                            <span style={{ padding: '4px 12px', borderRadius: 999, background: `color-mix(in srgb, ${riskColor} 14%, transparent)`, color: riskColor, fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase' }}>
+                                                {t(`providers.churnRisk.level.${churn.risk}`)}
+                                            </span>
+                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{churn.riskScore}/100</span>
+                                        </div>
+                                        {churn.reasons.length > 0 ? (
+                                            <>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 6, fontWeight: 500 }}>{t('providers.churnRisk.reasons')}</div>
+                                                <ul style={{ margin: 0, paddingInlineStart: 20, fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                    {churn.reasons.map((r, i) => <li key={i}>{r}</li>)}
+                                                </ul>
+                                            </>
+                                        ) : (
+                                            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: 0 }}>{t('providers.churnRisk.noReasons')}</p>
+                                        )}
+                                    </div>
+                                </>
+                            );
+                        })()}
                         <div className={styles.infoCard}>
                             <h3>{t('providers.businessInfo')}</h3>
                             <div className={styles.infoRows}>

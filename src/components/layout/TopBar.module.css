@@ -208,9 +208,20 @@
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     width: 380px;
+    max-width: calc(100vw - 24px);
     z-index: 200;
     animation: scaleIn var(--transition-fast) both;
     overflow: hidden;
+}
+
+@media (max-width: 480px) {
+    .notifDropdown {
+        position: fixed;
+        top: calc(var(--topbar-height, 64px) + 8px);
+        inset-inline: 8px;
+        width: auto;
+        max-width: none;
+    }
 }
 
 .notifHeader {
@@ -371,7 +382,7 @@
 .userInfo {
     display: flex;
     flex-direction: column;
-    text-align: left;
+    text-align: start;
 }
 
 .userName {

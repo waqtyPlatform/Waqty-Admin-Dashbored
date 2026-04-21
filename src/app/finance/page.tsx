@@ -4,7 +4,8 @@ import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { monthlyRevenueData, mockCommissions, mockPayouts } from '@/mocks/finance';
-import { DollarSign, TrendingUp, CreditCard, Wallet, FileText, Percent, Send, Receipt } from 'lucide-react';
+import { forecastRevenue } from '@/lib/analytics';
+import { DollarSign, TrendingUp, CreditCard, Wallet, FileText, Percent, Send, Receipt, LineChart as LineChartIcon } from 'lucide-react';
 import Link from 'next/link';
 import shared from '@/components/admin/shared.module.css';
 
@@ -13,12 +14,20 @@ export default function FinancePage() {
     const totalCommissions = mockCommissions.reduce((s, c) => s + c.commission_amount, 0);
     const pendingPayouts = mockPayouts.filter(p => p.status === 'pending' || p.status === 'processing').reduce((s, p) => s + p.amount, 0);
     const completedPayouts = mockPayouts.filter(p => p.status === 'completed').reduce((s, p) => s + p.amount, 0);
+    const forecast = forecastRevenue(monthlyRevenueData, 3);
+    const nextMonthForecast = forecast[0];
 
     const kpis = [
         { label: 'Total Revenue (Apr)', value: 'EGP 520K', icon: <DollarSign size={20} />, color: 'var(--color-primary-500)' },
         { label: 'Commissions Earned', value: `EGP ${totalCommissions.toLocaleString()}`, icon: <TrendingUp size={20} />, color: 'var(--color-success)' },
         { label: 'Pending Payouts', value: `EGP ${(pendingPayouts / 1000).toFixed(0)}K`, icon: <CreditCard size={20} />, color: 'var(--color-warning)' },
         { label: 'Completed Payouts', value: `EGP ${(completedPayouts / 1000).toFixed(0)}K`, icon: <Wallet size={20} />, color: 'var(--color-info)' },
+        ...(nextMonthForecast ? [{
+            label: `${t('reports.revenue.forecast.nextMonth')} (${nextMonthForecast.month})`,
+            value: `EGP ${Math.round(nextMonthForecast.total / 1000).toLocaleString()}K`,
+            icon: <LineChartIcon size={20} />,
+            color: 'var(--color-info)',
+        }] : []),
     ];
 
     const subNav = [

@@ -599,19 +599,29 @@ All audit items closed:
 - **Finance hub** — sub-nav cards (Commissions / Payouts / Invoices / Tax Reports)
 - **Correctness** — AuthContext microtask fix, useApiQuery stale-closure fix via `useRef`, permission auto-assignment on admin create, null-safe `formatDate`, stable React keys
 
-### Phase 3 — Backend Integration
+### Phase 3 — Backend Integration (Pending)
 - Wire `ApiClient` to real endpoints
 - Add server-side permission validation
 - Real authentication with OTP/MFA
 - WebSocket for real-time support + audit logs
 - Push notification delivery pipeline
 
-### Phase 4 — Advanced Features
-- Revenue forecasting (ML)
-- Anomaly detection on audit logs
-- A/B testing for ads
-- Provider performance scoring
-- Automated churn-risk alerts
+### Phase 4 — Advanced Features (Complete — mock heuristics)
+
+All 5 items shipped with deterministic heuristics in [src/lib/analytics.ts](src/lib/analytics.ts). Each function has a 1:1 backend endpoint it will call once Phase 3 lands — only the internals swap.
+
+- **Revenue forecasting** — least-squares linear regression over `monthlyRevenueData` projects the next 3 months with ±15% confidence band. Rendered on `/reports/revenue` (composed chart + R² disclaimer) and `/finance` (next-month KPI).
+- **Anomaly detection on audit logs** — rule-based scoring flags bursts (≥5 actions in 10 min), off-hours access (00:00–05:00), high-risk actions (block / soft-delete / settings / commission), and rapid reversals. Flags column + URL-persisted "Anomalies only" filter + severity summary strip on `/audit-logs`.
+- **A/B testing for ads** — new `/marketing/ads/experiments` route. Two-proportion z-test on conversion rates declares a Variant A / B winner at ≥95% confidence and ≥1000 samples. Per-experiment cards with lift %, confidence %, and inline detail modal.
+- **Provider performance scoring** — composite 0–100 score across bookings (30%), revenue (25%), activity recency (20%), subscription status (15%), tenure (10%). Sortable Score column on `/providers` index and breakdown bar-card on the detail page. Tiered: elite / strong / average / at-risk.
+- **Churn-risk alerts** — heuristic signals (inactivity, past-due, low engagement, low score) compute `risk: none | watch | high` with reasons. "Churn Risk Watch" widget on dashboard (top 5), dedicated filter + high-risk row indicator on `/providers`, reasons card on detail page.
+
+### Phase 5 — Polish after Phase 4 (Complete)
+
+- **Notifications center** — `NotificationsProvider` with 6 seeded cross-category items. TopBar bell → dropdown (unread badge, mark-all-read, category icons, relative time EN/AR, click-to-route). Full-page `/notifications` with tab filters and dismiss action.
+- **Responsive RTL hardening** — audited at 320 / 375 / 768 / 1280 px across EN + AR, 49 routes. Sidebar slides from the correct trailing edge in RTL, sub-nav indent mirrors direction, mobile X close button restored, notification dropdown fits narrow viewports, Dashboard `.chartCard` constrains its scrollable table-wrap, experiments variant grid stacks on narrow widths.
+- **Logical CSS properties** — `text-align: left/right` → `start/end`, `padding-left` → `padding-inline-start`, etc. across DataTable, UI dropdown, sidebar sub-nav, TopBar user info, dashboard, globals.
+- **MobileBottomNav i18n** — labels and aria-label now go through `useTranslation()`.
 
 ---
 
