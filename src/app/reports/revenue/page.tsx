@@ -33,8 +33,8 @@ export default function RevenueReportPage() {
                         <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => [`EGP ${Number(v).toLocaleString()}`, '']} />
                         <Legend />
-                        <Bar dataKey="subscriptions" fill="#00b166" name="Subscriptions" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="commissions" fill="#3b82f6" name="Commissions" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="subscriptions" fill="var(--color-primary-500)" name="Subscriptions" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="commissions" fill="var(--color-info)" name="Commissions" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

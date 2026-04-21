@@ -40,8 +40,8 @@ export default function ProviderReportsPage() {
                         <YAxis stroke="var(--text-tertiary)" fontSize={12} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
                         <Legend />
-                        <Bar dataKey="newProviders" fill="#00b166" name="New Providers" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="churned" fill="#ef4444" name="Churned" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="newProviders" fill="var(--color-primary-500)" name="New Providers" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="churned" fill="var(--color-error)" name="Churned" radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

@@ -28,7 +28,7 @@ export default function GeographicReportPage() {
                         <XAxis type="number" stroke="var(--text-tertiary)" fontSize={12} />
                         <YAxis dataKey="city" type="category" stroke="var(--text-tertiary)" fontSize={12} width={80} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                        <Bar dataKey="providers" fill="#00b166" name="Providers" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="providers" fill="var(--color-primary-500)" name="Providers" radius={[0, 4, 4, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

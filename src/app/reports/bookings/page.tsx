@@ -33,9 +33,9 @@ export default function BookingsReportPage() {
                         <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
                         <Legend />
-                        <Area type="monotone" dataKey="completed" stroke="#10b981" fill="#10b98130" name="Completed" />
-                        <Area type="monotone" dataKey="cancelled" stroke="#ef4444" fill="#ef444430" name="Cancelled" />
-                        <Area type="monotone" dataKey="noShow" stroke="#6b7280" fill="#6b728030" name="No Show" />
+                        <Area type="monotone" dataKey="completed" stroke="var(--color-success)" fill="var(--color-success)" fillOpacity={0.2} name="Completed" />
+                        <Area type="monotone" dataKey="cancelled" stroke="var(--color-error)" fill="var(--color-error)" fillOpacity={0.2} name="Cancelled" />
+                        <Area type="monotone" dataKey="noShow" stroke="var(--text-tertiary)" fill="var(--text-tertiary)" fillOpacity={0.2} name="No Show" />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

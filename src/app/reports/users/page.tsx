@@ -40,9 +40,9 @@ export default function UserReportsPage() {
                         <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
                         <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                        <Area type="monotone" dataKey="total" stroke="#00b166" fill="#00b16630" name="Total Users" />
-                        <Area type="monotone" dataKey="active" stroke="#3b82f6" fill="#3b82f630" name="Active Users" />
-                        <Area type="monotone" dataKey="new" stroke="#f59e0b" fill="#f59e0b30" name="New Users" />
+                        <Area type="monotone" dataKey="total" stroke="var(--color-primary-500)" fill="var(--color-primary-500)" fillOpacity={0.2} name="Total Users" />
+                        <Area type="monotone" dataKey="active" stroke="var(--color-info)" fill="var(--color-info)" fillOpacity={0.2} name="Active Users" />
+                        <Area type="monotone" dataKey="new" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} name="New Users" />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>
