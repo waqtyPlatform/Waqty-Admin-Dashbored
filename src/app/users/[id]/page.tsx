@@ -37,13 +37,13 @@ export default function UserDetailPage() {
         { id: `BK-${id}-05`, provider: 'Modern Barbershop', service: 'Beard Trim', date: '2026-03-20', status: 'cancelled', amount: 80 },
     ];
 
-    if (!user) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-tertiary)' }}>User not found</div>;
+    if (!user) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-tertiary)' }}>{t('users.notFound')}</div>;
 
     const stats = [
-        { label: 'Total Bookings', value: user.total_bookings, icon: <CalendarDays size={18} /> },
-        { label: 'Total Spent', value: `EGP ${user.total_spent.toLocaleString()}`, icon: <DollarSign size={18} /> },
-        { label: 'Wallet Balance', value: `EGP ${user.wallet_balance}`, icon: <Wallet size={18} /> },
-        { label: 'Reviews', value: userReviews.length, icon: <Star size={18} /> },
+        { label: t('users.totalBookings'), value: user.total_bookings, icon: <CalendarDays size={18} /> },
+        { label: t('users.totalSpent'), value: `EGP ${user.total_spent.toLocaleString()}`, icon: <DollarSign size={18} /> },
+        { label: t('users.walletBalance'), value: `EGP ${user.wallet_balance}`, icon: <Wallet size={18} /> },
+        { label: t('users.reviews'), value: userReviews.length, icon: <Star size={18} /> },
     ];
 
     const tabs = ['overview', 'bookings', 'reviews', 'wallet'];
@@ -67,27 +67,27 @@ export default function UserDetailPage() {
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={14} /> {user.email}</span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={14} /> {user.phone}</span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={14} /> {user.city}, {user.country}</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={14} /> Joined {new Date(user.registered_at).toLocaleDateString()}</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={14} /> {t('users.joined')} {new Date(user.registered_at).toLocaleDateString()}</span>
                         </div>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                     <PermissionGate module="users" action="edit">
                         {user.status === 'active' && <>
-                            <ActionBtn icon={<Pause size={14} />} label="Suspend" onClick={() => setConfirmAction('suspend')} />
-                            <ActionBtn icon={<Ban size={14} />} label="Block" onClick={() => setConfirmAction('block')} danger />
+                            <ActionBtn icon={<Pause size={14} />} label={t('users.suspend')} onClick={() => setConfirmAction('suspend')} />
+                            <ActionBtn icon={<Ban size={14} />} label={t('users.block')} onClick={() => setConfirmAction('block')} danger />
                         </>}
-                        {user.status === 'blocked' && <ActionBtn icon={<ShieldCheck size={14} />} label="Unblock" onClick={() => setConfirmAction('unblock')} />}
-                        {user.status === 'suspended' && <ActionBtn icon={<ShieldCheck size={14} />} label="Activate" onClick={() => setConfirmAction('activate')} />}
+                        {user.status === 'blocked' && <ActionBtn icon={<ShieldCheck size={14} />} label={t('users.unblock')} onClick={() => setConfirmAction('unblock')} />}
+                        {user.status === 'suspended' && <ActionBtn icon={<ShieldCheck size={14} />} label={t('providers.activate')} onClick={() => setConfirmAction('activate')} />}
                     </PermissionGate>
                     <PermissionGate module="wallets" action="edit">
-                        <ActionBtn icon={<Plus size={14} />} label="Add Funds" onClick={() => setWalletModal('add')} color="var(--color-success)" />
+                        <ActionBtn icon={<Plus size={14} />} label={t('users.addFunds')} onClick={() => setWalletModal('add')} color="var(--color-success)" />
                     </PermissionGate>
                     <PermissionGate module="users" action="delete">
-                        {user.status !== 'soft_deleted' && <ActionBtn icon={<Trash2 size={14} />} label="Delete" onClick={() => setConfirmAction('soft_delete')} danger />}
+                        {user.status !== 'soft_deleted' && <ActionBtn icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => setConfirmAction('soft_delete')} danger />}
                     </PermissionGate>
                     <PermissionGate module="marketing" action="create">
-                        <ActionBtn icon={<Send size={14} />} label="Notify" onClick={() => setShowNotify(true)} color="var(--color-info)" />
+                        <ActionBtn icon={<Send size={14} />} label={t('users.notify')} onClick={() => setShowNotify(true)} color="var(--color-info)" />
                     </PermissionGate>
                 </div>
             </div>
@@ -113,13 +113,13 @@ export default function UserDetailPage() {
             {activeTab === 'overview' && (
                 <div className={shared.formGrid2}>
                     <div className={shared.infoCard}>
-                        <h3 className={shared.infoCardHeader}>Personal Information</h3>
+                        <h3 className={shared.infoCardHeader}>{t('users.personalInformation')}</h3>
                         <div className={shared.infoRows}>
                             {[
-                                ['Gender', user.gender || 'Not set'],
-                                ['Date of Birth', user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : 'Not set'],
-                                ['Last Active', new Date(user.last_active_at).toLocaleDateString()],
-                                ['Last Booking', user.last_booking_at ? new Date(user.last_booking_at).toLocaleDateString() : 'Never'],
+                                [t('users.gender'), user.gender || t('users.notSet')],
+                                [t('users.dateOfBirth'), user.date_of_birth ? new Date(user.date_of_birth).toLocaleDateString() : t('users.notSet')],
+                                [t('users.lastActive'), new Date(user.last_active_at).toLocaleDateString()],
+                                [t('users.lastBooking'), user.last_booking_at ? new Date(user.last_booking_at).toLocaleDateString() : t('users.never')],
                             ].map(([k, v]) => (
                                 <div key={k} className={shared.infoRow}>
                                     <span>{k}</span>
@@ -129,13 +129,13 @@ export default function UserDetailPage() {
                         </div>
                     </div>
                     <div className={shared.infoCard}>
-                        <h3 className={shared.infoCardHeader}>Account Details</h3>
+                        <h3 className={shared.infoCardHeader}>{t('users.accountDetails')}</h3>
                         <div className={shared.infoRows}>
                             {[
-                                ['Status', user.status],
-                                ['Registered', new Date(user.registered_at).toLocaleDateString()],
-                                ['Total Spent', `EGP ${user.total_spent.toLocaleString()}`],
-                                ['Wallet Balance', `EGP ${user.wallet_balance}`],
+                                [t('common.status'), user.status],
+                                [t('users.registered'), new Date(user.registered_at).toLocaleDateString()],
+                                [t('users.totalSpent'), `EGP ${user.total_spent.toLocaleString()}`],
+                                [t('users.walletBalance'), `EGP ${user.wallet_balance}`],
                             ].map(([k, v]) => (
                                 <div key={k} className={shared.infoRow}>
                                     <span>{k}</span>
@@ -150,7 +150,7 @@ export default function UserDetailPage() {
             {activeTab === 'reviews' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {userReviews.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12 }}>No reviews from this user</div>
+                        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12 }}>{t('users.noReviews')}</div>
                     ) : userReviews.map(r => (
                         <div key={r.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -170,18 +170,18 @@ export default function UserDetailPage() {
             {activeTab === 'wallet' && (
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Wallet Transactions</h3>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>{t('users.walletTransactions')}</h3>
                         <div style={{ display: 'flex', gap: 8 }}>
-                            <button onClick={() => setWalletModal('add')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-success)', cursor: 'pointer', fontSize: '0.8125rem', fontFamily: 'var(--font-sans)' }}><Plus size={14} /> Add</button>
-                            <button onClick={() => setWalletModal('deduct')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: 'pointer', fontSize: '0.8125rem', fontFamily: 'var(--font-sans)' }}><Minus size={14} /> Deduct</button>
+                            <button onClick={() => setWalletModal('add')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-success)', cursor: 'pointer', fontSize: '0.8125rem', fontFamily: 'var(--font-sans)' }}><Plus size={14} /> {t('users.add')}</button>
+                            <button onClick={() => setWalletModal('deduct')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: 'pointer', fontSize: '0.8125rem', fontFamily: 'var(--font-sans)' }}><Minus size={14} /> {t('users.deduct')}</button>
                         </div>
                     </div>
                     {userWalletTxns.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>No wallet transactions</div>
+                        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>{t('users.noWalletTxns')}</div>
                     ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                             <thead><tr style={{ background: 'var(--bg-secondary)' }}>
-                                {['Date', 'Type', 'Action', 'Amount', 'Balance After', 'Description'].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
+                                {[t('common.date'), t('users.typeCol'), t('users.actionCol'), t('common.amount'), t('users.balanceAfter'), t('users.descriptionCol')].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
                             </tr></thead>
                             <tbody>{userWalletTxns.map(txn => (
                                 <tr key={txn.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -200,18 +200,18 @@ export default function UserDetailPage() {
 
             {activeTab === 'bookings' && (
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Booking History</h3>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('users.bookingHistory')}</h3>
                     {userBookings.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: 32, color: 'var(--text-tertiary)' }}>
                             <CreditCard size={36} strokeWidth={1} />
-                            <p style={{ marginTop: 8 }}>No bookings yet.</p>
+                            <p style={{ marginTop: 8 }}>{t('users.noBookings')}</p>
                         </div>
                     ) : (
                         <div style={{ overflowX: 'auto' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                                 <thead>
                                     <tr style={{ background: 'var(--bg-secondary)' }}>
-                                        {['ID', 'Provider', 'Service', 'Date', 'Status', 'Amount'].map(h => (
+                                        {[t('common.id'), t('subscriptions.provider'), t('common.service'), t('common.date'), t('common.status'), t('common.amount')].map(h => (
                                             <th key={h} style={{ textAlign: 'start', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
                                         ))}
                                     </tr>
@@ -235,10 +235,10 @@ export default function UserDetailPage() {
             )}
 
             {/* Wallet Modal */}
-            <FormModal open={!!walletModal} onClose={() => setWalletModal(null)} title={walletModal === 'add' ? `Add Funds to ${user.name}'s Wallet` : `Deduct from ${user.name}'s Wallet`} submitLabel={walletModal === 'add' ? 'Add Funds' : 'Deduct'} submitVariant={walletModal === 'deduct' ? 'danger' : 'primary'} onSubmit={e => { e.preventDefault(); setWalletModal(null); }}>
-                <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}><strong>Current Balance:</strong> EGP {user.wallet_balance}</div>
-                <FormField label="Amount (EGP)" required><input type="number" required min={1} className={shared.formInput} placeholder="Enter amount" /></FormField>
-                <FormField label="Reason" required><input type="text" required className={shared.formInput} placeholder={walletModal === 'add' ? 'e.g. Loyalty reward' : 'e.g. Correction'} /></FormField>
+            <FormModal open={!!walletModal} onClose={() => setWalletModal(null)} title={walletModal === 'add' ? `${t('users.addFunds')} — ${user.name}` : `${t('users.deduct')} — ${user.name}`} submitLabel={walletModal === 'add' ? t('users.addFunds') : t('users.deduct')} submitVariant={walletModal === 'deduct' ? 'danger' : 'primary'} onSubmit={e => { e.preventDefault(); setWalletModal(null); }}>
+                <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}><strong>{t('users.currentBalance')}:</strong> EGP {user.wallet_balance}</div>
+                <FormField label={t('users.amount')} required><input type="number" required min={1} className={shared.formInput} placeholder={t('users.enterAmount')} /></FormField>
+                <FormField label={t('common.reason')} required><input type="text" required className={shared.formInput} placeholder={walletModal === 'add' ? t('users.loyaltyReward') : t('users.correction')} /></FormField>
             </FormModal>
 
             {/* Confirm Modal */}
@@ -248,8 +248,8 @@ export default function UserDetailPage() {
             <FormModal
                 open={showNotify}
                 onClose={() => setShowNotify(false)}
-                title={`Send Notification — ${user.name}`}
-                submitLabel="Send"
+                title={`${t('users.sendNotification')} — ${user.name}`}
+                submitLabel={t('users.send')}
                 onSubmit={e => {
                     e.preventDefault();
                     if (!notifyForm.title.trim() || !notifyForm.body.trim()) return;
@@ -264,17 +264,17 @@ export default function UserDetailPage() {
                     setShowNotify(false);
                 }}
             >
-                <FormField label="Title" required>
-                    <input type="text" required value={notifyForm.title} onChange={e => setNotifyForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Your appointment reminder" className={shared.formInput} />
+                <FormField label={t('users.notificationTitle')} required>
+                    <input type="text" required value={notifyForm.title} onChange={e => setNotifyForm(f => ({ ...f, title: e.target.value }))} placeholder={t('users.notificationTitlePlaceholder')} className={shared.formInput} />
                 </FormField>
-                <FormField label="Message" required>
-                    <textarea required rows={3} value={notifyForm.body} onChange={e => setNotifyForm(f => ({ ...f, body: e.target.value }))} placeholder="Notification body" className={shared.formInput} style={{ resize: 'vertical' }} />
+                <FormField label={t('users.message')} required>
+                    <textarea required rows={3} value={notifyForm.body} onChange={e => setNotifyForm(f => ({ ...f, body: e.target.value }))} placeholder={t('users.notificationBody')} className={shared.formInput} style={{ resize: 'vertical' }} />
                 </FormField>
-                <FormField label="Send via" required>
+                <FormField label={t('users.sendVia')} required>
                     <select value={notifyForm.platform} onChange={e => setNotifyForm(f => ({ ...f, platform: e.target.value as 'user_app' | 'email' | 'both' }))} className={shared.formInput}>
-                        <option value="user_app">Push to User App</option>
-                        <option value="email">Email</option>
-                        <option value="both">Both</option>
+                        <option value="user_app">{t('users.pushToUserApp')}</option>
+                        <option value="email">{t('common.email')}</option>
+                        <option value="both">{t('users.both')}</option>
                     </select>
                 </FormField>
                 {sentNotifications.length > 0 && (

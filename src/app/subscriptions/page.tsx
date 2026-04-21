@@ -157,25 +157,25 @@ export default function SubscriptionsPage() {
     };
 
     const columns: Column<ProviderSubscription>[] = [
-        { key: 'provider_name', label: 'Provider', sortable: true, render: (row) => <span style={{ fontWeight: 500 }}>{row.provider_name}</span> },
-        { key: 'plan_name', label: 'Plan', sortable: true, render: (row) => <span style={{ padding: '2px 8px', borderRadius: 4, background: row.plan_tier === 'enterprise' ? 'var(--color-primary-50)' : row.plan_tier === 'pro' ? 'var(--color-info-light)' : 'var(--bg-tertiary)', fontSize: '0.75rem', fontWeight: 500 }}>{row.plan_name}</span> },
-        { key: 'billing_cycle', label: 'Cycle', sortable: true, render: (row) => <span style={{ textTransform: 'capitalize' }}>{row.billing_cycle}</span> },
-        { key: 'status', label: 'Status', sortable: true, render: (row) => <StatusBadge status={row.status} /> },
-        { key: 'amount', label: 'Amount', sortable: true, render: (row) => `EGP ${row.amount.toLocaleString()}` },
-        { key: 'current_period_end', label: 'Renews', sortable: true, render: (row) => new Date(row.current_period_end).toLocaleDateString() },
-        { key: 'auto_renew', label: 'Auto-Renew', render: (row) => row.auto_renew ? 'Yes' : 'No' },
+        { key: 'provider_name', label: t('subscriptions.provider'), sortable: true, render: (row) => <span style={{ fontWeight: 500 }}>{row.provider_name}</span> },
+        { key: 'plan_name', label: t('subscriptions.plan'), sortable: true, render: (row) => <span style={{ padding: '2px 8px', borderRadius: 4, background: row.plan_tier === 'enterprise' ? 'var(--color-primary-50)' : row.plan_tier === 'pro' ? 'var(--color-info-light)' : 'var(--bg-tertiary)', fontSize: '0.75rem', fontWeight: 500 }}>{row.plan_name}</span> },
+        { key: 'billing_cycle', label: t('subscriptions.cycle'), sortable: true, render: (row) => <span style={{ textTransform: 'capitalize' }}>{row.billing_cycle}</span> },
+        { key: 'status', label: t('common.status'), sortable: true, render: (row) => <StatusBadge status={row.status} /> },
+        { key: 'amount', label: t('common.amount'), sortable: true, render: (row) => `EGP ${row.amount.toLocaleString()}` },
+        { key: 'current_period_end', label: t('subscriptions.renews'), sortable: true, render: (row) => new Date(row.current_period_end).toLocaleDateString() },
+        { key: 'auto_renew', label: t('subscriptions.autoRenew'), render: (row) => row.auto_renew ? t('common.yes') : t('common.no') },
         {
             key: 'actions', label: '', width: '320px',
             render: (row) => (
                 <PermissionGate module="subscriptions" action="edit">
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {(row.status === 'active' || row.status === 'past_due') && <ActionBtn icon={<RefreshCw size={13} />} label="Renew" onClick={() => handleRenew(row.id)} color={row.status === 'past_due' ? 'var(--color-warning)' : undefined} />}
-                        {row.status === 'trial' && <ActionBtn icon={<ArrowUpCircle size={13} />} label="Upgrade" onClick={() => handleUpgrade(row.id)} />}
-                        {row.status === 'trial' && <ActionBtn icon={<Clock size={13} />} label="Extend Trial" onClick={() => openExtendTrial(row)} />}
-                        {(row.status === 'active' || row.status === 'past_due') && <ActionBtn icon={<Receipt size={13} />} label="Invoice" onClick={() => openGenerateInvoice(row)} />}
-                        <ActionBtn icon={<Undo2 size={13} />} label="Refund" onClick={() => openRefund(row)} color="var(--color-warning)" />
-                        {row.status !== 'cancelled' && <ActionBtn icon={<XCircle size={13} />} label="Cancel" onClick={() => setConfirmCancel(row)} color="var(--color-error)" />}
-                        <ActionBtn icon={<Percent size={13} />} label="Discount" onClick={() => { setDiscountModal(row); setDiscountValue(''); }} />
+                        {(row.status === 'active' || row.status === 'past_due') && <ActionBtn icon={<RefreshCw size={13} />} label={t('subscriptions.renew')} onClick={() => handleRenew(row.id)} color={row.status === 'past_due' ? 'var(--color-warning)' : undefined} />}
+                        {row.status === 'trial' && <ActionBtn icon={<ArrowUpCircle size={13} />} label={t('subscriptions.upgrade')} onClick={() => handleUpgrade(row.id)} />}
+                        {row.status === 'trial' && <ActionBtn icon={<Clock size={13} />} label={t('subscriptions.extendTrial')} onClick={() => openExtendTrial(row)} />}
+                        {(row.status === 'active' || row.status === 'past_due') && <ActionBtn icon={<Receipt size={13} />} label={t('subscriptions.invoice')} onClick={() => openGenerateInvoice(row)} />}
+                        <ActionBtn icon={<Undo2 size={13} />} label={t('subscriptions.refund')} onClick={() => openRefund(row)} color="var(--color-warning)" />
+                        {row.status !== 'cancelled' && <ActionBtn icon={<XCircle size={13} />} label={t('common.cancel')} onClick={() => setConfirmCancel(row)} color="var(--color-error)" />}
+                        <ActionBtn icon={<Percent size={13} />} label={t('subscriptions.discount')} onClick={() => { setDiscountModal(row); setDiscountValue(''); }} />
                     </div>
                 </PermissionGate>
             ),
@@ -188,11 +188,11 @@ export default function SubscriptionsPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16 }}>
                 {[
-                    { label: 'Active', value: summary.active, color: 'var(--color-success)' },
-                    { label: 'Trial', value: summary.trial, color: 'var(--color-info)' },
-                    { label: 'Past Due', value: summary.past_due, color: 'var(--color-warning)' },
-                    { label: 'Cancelled', value: summary.cancelled, color: 'var(--color-error)' },
-                    { label: 'MRR', value: `EGP ${Math.round(summary.mrr).toLocaleString()}`, color: 'var(--color-primary-500)' },
+                    { label: t('subscriptions.active'), value: summary.active, color: 'var(--color-success)' },
+                    { label: t('subscriptions.trial'), value: summary.trial, color: 'var(--color-info)' },
+                    { label: t('subscriptions.pastDue'), value: summary.past_due, color: 'var(--color-warning)' },
+                    { label: t('subscriptions.cancelled'), value: summary.cancelled, color: 'var(--color-error)' },
+                    { label: t('subscriptions.mrr'), value: `EGP ${Math.round(summary.mrr).toLocaleString()}`, color: 'var(--color-primary-500)' },
                 ].map(s => (
                     <div key={s.label} className={shared.summaryCard} style={{ borderTop: `3px solid ${s.color}` }}>
                         <div className={shared.summaryLabel}>{s.label}</div>
@@ -201,66 +201,66 @@ export default function SubscriptionsPage() {
                 ))}
             </div>
 
-            <DataTable<ProviderSubscription> columns={columns} data={filtered} searchKeys={['provider_name', 'plan_name']} searchPlaceholder="Search subscriptions..." getRowKey={row => row.id}
-                filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}><option value="all">All Status</option><option value="active">Active</option><option value="trial">Trial</option><option value="past_due">Past Due</option><option value="cancelled">Cancelled</option></select>}
+            <DataTable<ProviderSubscription> columns={columns} data={filtered} searchKeys={['provider_name', 'plan_name']} searchPlaceholder={t('subscriptions.searchPlaceholder')} getRowKey={row => row.id}
+                filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}><option value="all">{t('finance.allStatus')}</option><option value="active">{t('subscriptions.active')}</option><option value="trial">{t('subscriptions.trial')}</option><option value="past_due">{t('subscriptions.pastDue')}</option><option value="cancelled">{t('subscriptions.cancelled')}</option></select>}
             />
 
-            <ConfirmModal open={!!confirmCancel} onClose={() => setConfirmCancel(null)} onConfirm={handleCancel} title="Cancel Subscription" message={`Are you sure you want to cancel the subscription for "${confirmCancel?.provider_name}"? They will lose access at the end of the current billing period.`} confirmLabel="Cancel Subscription" variant="danger" />
+            <ConfirmModal open={!!confirmCancel} onClose={() => setConfirmCancel(null)} onConfirm={handleCancel} title={t('providers.cancelSubscription')} message={`Are you sure you want to cancel the subscription for "${confirmCancel?.provider_name}"? They will lose access at the end of the current billing period.`} confirmLabel={t('providers.cancelSubscription')} variant="danger" />
 
-            <FormModal open={!!discountModal} onClose={() => setDiscountModal(null)} title={`Apply Discount — ${discountModal?.provider_name}`} submitLabel="Apply Discount" onSubmit={e => { e.preventDefault(); handleDiscount(); }}>
+            <FormModal open={!!discountModal} onClose={() => setDiscountModal(null)} title={`${t('subscriptions.applyDiscount')} — ${discountModal?.provider_name}`} submitLabel={t('subscriptions.applyDiscount')} onSubmit={e => { e.preventDefault(); handleDiscount(); }}>
                 {discountModal && <>
-                    <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}><strong>Current Amount:</strong> EGP {discountModal.amount.toLocaleString()} / {discountModal.billing_cycle}</div>
-                    <FormField label="Discount Percentage" required>
+                    <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}><strong>{t('subscriptions.currentAmount')}:</strong> EGP {discountModal.amount.toLocaleString()} / {discountModal.billing_cycle}</div>
+                    <FormField label={t('subscriptions.discountPercentage')} required>
                         <input type="number" value={discountValue} onChange={e => setDiscountValue(e.target.value)} required min={1} max={100} className={shared.formInput} placeholder="e.g. 20" />
                     </FormField>
-                    {discountValue && <div style={{ padding: 8, background: 'var(--color-success-light)', borderRadius: 6, fontSize: '0.8125rem', color: '#065f46' }}>New amount: <strong>EGP {Math.round(discountModal.amount * (1 - Number(discountValue) / 100)).toLocaleString()}</strong> ({discountValue}% off)</div>}
+                    {discountValue && <div style={{ padding: 8, background: 'var(--color-success-light)', borderRadius: 6, fontSize: '0.8125rem', color: '#065f46' }}>{t('subscriptions.newAmount')}: <strong>EGP {Math.round(discountModal.amount * (1 - Number(discountValue) / 100)).toLocaleString()}</strong> ({discountValue}% {t('subscriptions.off')})</div>}
                 </>}
             </FormModal>
 
-            <FormModal open={!!extendTrialSub} onClose={() => setExtendTrialSub(null)} title={`Extend Trial — ${extendTrialSub?.provider_name}`} submitLabel="Extend Trial" onSubmit={e => { e.preventDefault(); handleExtendTrial(); }}>
+            <FormModal open={!!extendTrialSub} onClose={() => setExtendTrialSub(null)} title={`${t('subscriptions.extendTrial')} — ${extendTrialSub?.provider_name}`} submitLabel={t('subscriptions.extendTrial')} onSubmit={e => { e.preventDefault(); handleExtendTrial(); }}>
                 {extendTrialSub && <>
                     <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                        <strong>Current trial ends:</strong> {extendTrialSub.trial_end ? new Date(extendTrialSub.trial_end).toLocaleDateString() : '—'}
+                        <strong>{t('subscriptions.currentTrialEnds')}:</strong> {extendTrialSub.trial_end ? new Date(extendTrialSub.trial_end).toLocaleDateString() : '—'}
                     </div>
-                    <FormField label="Additional days" required>
+                    <FormField label={t('subscriptions.additionalDays')} required>
                         <input type="number" value={extendDays} onChange={e => setExtendDays(e.target.value)} required min={1} max={90} className={shared.formInput} />
                     </FormField>
-                    <FormField label="Reason" required>
+                    <FormField label={t('common.reason')} required>
                         <select value={extendReason} onChange={e => setExtendReason(e.target.value)} className={shared.formInput}>
-                            <option value="customer_request">Customer request</option>
-                            <option value="onboarding_delay">Onboarding delay</option>
-                            <option value="technical_issue">Technical issue</option>
-                            <option value="goodwill">Goodwill gesture</option>
-                            <option value="sales_hold">Sales team hold</option>
+                            <option value="customer_request">{t('subscriptions.customerRequest')}</option>
+                            <option value="onboarding_delay">{t('subscriptions.onboardingDelay')}</option>
+                            <option value="technical_issue">{t('subscriptions.technicalIssue')}</option>
+                            <option value="goodwill">{t('subscriptions.goodwill')}</option>
+                            <option value="sales_hold">{t('subscriptions.salesHold')}</option>
                         </select>
                     </FormField>
                 </>}
             </FormModal>
 
-            <FormModal open={!!invoiceSub} onClose={() => setInvoiceSub(null)} title={`Generate Invoice — ${invoiceSub?.provider_name}`} submitLabel="Generate Invoice" onSubmit={e => { e.preventDefault(); handleGenerateInvoice(); }} width="lg">
+            <FormModal open={!!invoiceSub} onClose={() => setInvoiceSub(null)} title={`${t('subscriptions.generateInvoice')} — ${invoiceSub?.provider_name}`} submitLabel={t('subscriptions.generateInvoice')} onSubmit={e => { e.preventDefault(); handleGenerateInvoice(); }} width="lg">
                 {invoiceSub && <>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 120px 36px', gap: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', padding: '4px 0' }}>
-                            <div>Description</div>
-                            <div>Qty</div>
-                            <div>Unit price</div>
+                            <div>{t('subscriptions.description')}</div>
+                            <div>{t('subscriptions.qty')}</div>
+                            <div>{t('subscriptions.unitPrice')}</div>
                             <div></div>
                         </div>
                         {lineItems.map(line => (
                             <div key={line.id} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 120px 36px', gap: 8 }}>
-                                <input value={line.description} onChange={e => updateLineItem(line.id, { description: e.target.value })} placeholder="Description" className={shared.formInput} />
+                                <input value={line.description} onChange={e => updateLineItem(line.id, { description: e.target.value })} placeholder={t('subscriptions.description')} className={shared.formInput} />
                                 <input type="number" min={1} value={line.quantity} onChange={e => updateLineItem(line.id, { quantity: Math.max(1, Number(e.target.value) || 0) })} className={shared.formInput} />
                                 <input type="number" min={0} step="0.01" value={line.unit_price} onChange={e => updateLineItem(line.id, { unit_price: Math.max(0, Number(e.target.value) || 0) })} className={shared.formInput} />
                                 <button type="button" onClick={() => setLineItems(prev => prev.filter(l => l.id !== line.id))} disabled={lineItems.length === 1} style={{ padding: '0 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: lineItems.length === 1 ? 'not-allowed' : 'pointer', opacity: lineItems.length === 1 ? 0.4 : 1 }} aria-label="Remove line"><Trash2 size={14} /></button>
                             </div>
                         ))}
                         <button type="button" onClick={() => setLineItems(prev => [...prev, emptyLineItem()])} style={{ alignSelf: 'flex-start', padding: '6px 10px', border: '1px dashed var(--border-color)', borderRadius: 6, background: 'transparent', color: 'var(--text-secondary)', fontSize: '0.8125rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <Plus size={14} /> Add line item
+                            <Plus size={14} /> {t('subscriptions.addLineItem')}
                         </button>
                         <div style={{ borderTop: '1px solid var(--border-color)', marginTop: 8, paddingTop: 8, display: 'grid', gap: 4, fontSize: '0.875rem' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Subtotal</span><strong>EGP {invoiceSubtotal.toLocaleString()}</strong></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>VAT ({Math.round(VAT_RATE * 100)}%)</span><strong>EGP {invoiceTax.toLocaleString()}</strong></div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}><span>Total</span><strong>EGP {invoiceTotal.toLocaleString()}</strong></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>{t('subscriptions.subtotal')}</span><strong>EGP {invoiceSubtotal.toLocaleString()}</strong></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>{t('subscriptions.vat')} ({Math.round(VAT_RATE * 100)}%)</span><strong>EGP {invoiceTax.toLocaleString()}</strong></div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}><span>{t('common.total')}</span><strong>EGP {invoiceTotal.toLocaleString()}</strong></div>
                         </div>
                         {generatedInvoices.length > 0 && (
                             <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{generatedInvoices.length} invoice(s) generated this session</div>
@@ -269,34 +269,34 @@ export default function SubscriptionsPage() {
                 </>}
             </FormModal>
 
-            <FormModal open={!!refundSub} onClose={() => setRefundSub(null)} title={`Refund — ${refundSub?.provider_name}`} submitLabel="Process Refund" submitVariant="danger" onSubmit={e => { e.preventDefault(); handleRefund(); }}>
+            <FormModal open={!!refundSub} onClose={() => setRefundSub(null)} title={`${t('subscriptions.refund')} — ${refundSub?.provider_name}`} submitLabel={t('subscriptions.processRefund')} submitVariant="danger" onSubmit={e => { e.preventDefault(); handleRefund(); }}>
                 {refundSub && <>
                     <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                        <strong>Last charge:</strong> EGP {refundSub.amount.toLocaleString()} ({refundSub.billing_cycle})
+                        <strong>{t('subscriptions.lastCharge')}:</strong> EGP {refundSub.amount.toLocaleString()} ({refundSub.billing_cycle})
                     </div>
-                    <FormField label="Refund type" required>
+                    <FormField label={t('subscriptions.refundType')} required>
                         <div style={{ display: 'flex', gap: 16 }}>
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <input type="radio" checked={refundType === 'partial'} onChange={() => setRefundType('partial')} /> Partial
+                                <input type="radio" checked={refundType === 'partial'} onChange={() => setRefundType('partial')} /> {t('subscriptions.partial')}
                             </label>
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <input type="radio" checked={refundType === 'full'} onChange={() => setRefundType('full')} /> Full ({refundSub.amount.toLocaleString()} EGP)
+                                <input type="radio" checked={refundType === 'full'} onChange={() => setRefundType('full')} /> {t('subscriptions.full')} ({refundSub.amount.toLocaleString()} EGP)
                             </label>
                         </div>
                     </FormField>
                     {refundType === 'partial' && (
-                        <FormField label="Refund amount (EGP)" required>
+                        <FormField label={t('subscriptions.refundAmount')} required>
                             <input type="number" min={1} max={refundSub.amount} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} required className={shared.formInput} placeholder={`Max ${refundSub.amount}`} />
                         </FormField>
                     )}
-                    <FormField label="Refund destination" required>
+                    <FormField label={t('subscriptions.refundDestination')} required>
                         <select value={refundDest} onChange={e => setRefundDest(e.target.value as 'wallet' | 'original')} className={shared.formInput}>
-                            <option value="original">Original payment method</option>
-                            <option value="wallet">Provider wallet credit</option>
+                            <option value="original">{t('subscriptions.originalPaymentMethod')}</option>
+                            <option value="wallet">{t('subscriptions.walletCredit')}</option>
                         </select>
                     </FormField>
-                    <FormField label="Reason" required>
-                        <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} required rows={3} className={shared.formInput} style={{ resize: 'vertical' }} placeholder="Why is this refund being issued?" />
+                    <FormField label={t('common.reason')} required>
+                        <textarea value={refundReason} onChange={e => setRefundReason(e.target.value)} required rows={3} className={shared.formInput} style={{ resize: 'vertical' }} placeholder={t('subscriptions.refundReasonPlaceholder')} />
                     </FormField>
                 </>}
             </FormModal>

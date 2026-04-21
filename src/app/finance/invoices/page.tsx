@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal } from '@/components/admin/FormModal';
@@ -21,6 +22,7 @@ const initialInvoices: Invoice[] = [
 ];
 
 export default function FinanceInvoicesPage() {
+    const { t } = useTranslation();
     const [invoices] = useState(initialInvoices);
     const [statusFilter, setStatusFilter] = useState('all');
     const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
@@ -53,14 +55,14 @@ export default function FinanceInvoicesPage() {
     };
 
     const columns: Column<Invoice>[] = [
-        { key: 'id', label: 'Invoice', sortable: true, render: r => <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', fontWeight: 500 }}>{r.id}</code> },
-        { key: 'provider_name', label: 'Provider', sortable: true, render: r => <span style={{ fontWeight: 500 }}>{r.provider_name}</span> },
-        { key: 'amount', label: 'Amount', sortable: true, render: r => `EGP ${r.amount.toLocaleString()}` },
-        { key: 'tax', label: 'Tax', sortable: true, render: r => `EGP ${r.tax.toLocaleString()}` },
-        { key: 'total', label: 'Total', sortable: true, render: r => <strong>EGP {r.total.toLocaleString()}</strong> },
-        { key: 'status', label: 'Status', sortable: true, render: r => <StatusBadge status={r.status} /> },
-        { key: 'issued_at', label: 'Issued', sortable: true, render: r => new Date(r.issued_at).toLocaleDateString() },
-        { key: 'due_at', label: 'Due', sortable: true, render: r => new Date(r.due_at).toLocaleDateString() },
+        { key: 'id', label: t('finance.invoice'), sortable: true, render: r => <code style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8125rem', fontWeight: 500 }}>{r.id}</code> },
+        { key: 'provider_name', label: t('finance.provider'), sortable: true, render: r => <span style={{ fontWeight: 500 }}>{r.provider_name}</span> },
+        { key: 'amount', label: t('common.amount'), sortable: true, render: r => `EGP ${r.amount.toLocaleString()}` },
+        { key: 'tax', label: t('finance.tax'), sortable: true, render: r => `EGP ${r.tax.toLocaleString()}` },
+        { key: 'total', label: t('common.total'), sortable: true, render: r => <strong>EGP {r.total.toLocaleString()}</strong> },
+        { key: 'status', label: t('common.status'), sortable: true, render: r => <StatusBadge status={r.status} /> },
+        { key: 'issued_at', label: t('finance.issued'), sortable: true, render: r => new Date(r.issued_at).toLocaleDateString() },
+        { key: 'due_at', label: t('finance.due'), sortable: true, render: r => new Date(r.due_at).toLocaleDateString() },
         {
             key: 'actions', label: '', width: '100px',
             render: r => (
@@ -75,16 +77,16 @@ export default function FinanceInvoicesPage() {
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
-                <h1 className={shared.pageTitle}>Invoices</h1>
-                <button onClick={handleExportAll} className={shared.exportBtn}><Download size={16} /> Export All</button>
+                <h1 className={shared.pageTitle}>{t('finance.invoicesTitle')}</h1>
+                <button onClick={handleExportAll} className={shared.exportBtn}><Download size={16} /> {t('finance.exportAll')}</button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                 {[
-                    { label: 'Total Collected', value: `EGP ${summary.totalRevenue.toLocaleString()}`, icon: <FileText size={20} />, color: 'var(--color-success)' },
-                    { label: 'Paid', value: summary.paid, icon: <FileText size={20} />, color: 'var(--color-success)' },
-                    { label: 'Pending', value: summary.pending, icon: <FileText size={20} />, color: 'var(--color-warning)' },
-                    { label: 'Overdue', value: `EGP ${summary.overdueAmount.toLocaleString()}`, icon: <FileText size={20} />, color: 'var(--color-error)' },
+                    { label: t('finance.totalCollected'), value: `EGP ${summary.totalRevenue.toLocaleString()}`, icon: <FileText size={20} />, color: 'var(--color-success)' },
+                    { label: t('finance.paid'), value: summary.paid, icon: <FileText size={20} />, color: 'var(--color-success)' },
+                    { label: t('finance.pending'), value: summary.pending, icon: <FileText size={20} />, color: 'var(--color-warning)' },
+                    { label: t('finance.overdue'), value: `EGP ${summary.overdueAmount.toLocaleString()}`, icon: <FileText size={20} />, color: 'var(--color-error)' },
                 ].map(k => (
                     <div key={k.label} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
                         <div style={{ width: 44, height: 44, borderRadius: 10, background: `color-mix(in srgb, ${k.color} 12%, transparent)`, color: k.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{k.icon}</div>
@@ -93,9 +95,9 @@ export default function FinanceInvoicesPage() {
                 ))}
             </div>
 
-            <DataTable<Invoice> columns={columns} data={filtered} searchKeys={['id', 'provider_name']} searchPlaceholder="Search invoices..." getRowKey={r => r.id}
+            <DataTable<Invoice> columns={columns} data={filtered} searchKeys={['id', 'provider_name']} searchPlaceholder={t('finance.searchPlaceholder')} getRowKey={r => r.id}
                 filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)' }}>
-                    <option value="all">All Status</option><option value="paid">Paid</option><option value="pending">Pending</option><option value="overdue">Overdue</option><option value="refunded">Refunded</option>
+                    <option value="all">{t('finance.allStatus')}</option><option value="paid">{t('finance.paid')}</option><option value="pending">{t('finance.pending')}</option><option value="overdue">{t('finance.overdue')}</option><option value="refunded">{t('finance.refunded')}</option>
                 </select>}
             />
 
@@ -103,39 +105,39 @@ export default function FinanceInvoicesPage() {
             <FormModal
                 open={!!viewInvoice}
                 onClose={() => setViewInvoice(null)}
-                title={viewInvoice ? `Invoice ${viewInvoice.id}` : 'Invoice'}
-                submitLabel="Close"
+                title={viewInvoice ? `${t('finance.invoice')} ${viewInvoice.id}` : t('finance.invoice')}
+                submitLabel={t('common.close')}
                 onSubmit={e => { e.preventDefault(); setViewInvoice(null); }}
             >
                 {viewInvoice && (
                     <>
                         <div className={shared.formGrid2}>
-                            <InvoiceField label="Provider" value={viewInvoice.provider_name} />
-                            <InvoiceField label="Status" value={viewInvoice.status} capitalize />
-                            <InvoiceField label="Issued" value={new Date(viewInvoice.issued_at).toLocaleDateString()} />
-                            <InvoiceField label="Due" value={new Date(viewInvoice.due_at).toLocaleDateString()} />
-                            <InvoiceField label="Paid" value={viewInvoice.paid_at ? new Date(viewInvoice.paid_at).toLocaleDateString() : '—'} />
-                            <InvoiceField label="Subscription" value={viewInvoice.subscription_id} />
+                            <InvoiceField label={t('finance.provider')} value={viewInvoice.provider_name} />
+                            <InvoiceField label={t('common.status')} value={viewInvoice.status} capitalize />
+                            <InvoiceField label={t('finance.issued')} value={new Date(viewInvoice.issued_at).toLocaleDateString()} />
+                            <InvoiceField label={t('finance.due')} value={new Date(viewInvoice.due_at).toLocaleDateString()} />
+                            <InvoiceField label={t('finance.paidAt')} value={viewInvoice.paid_at ? new Date(viewInvoice.paid_at).toLocaleDateString() : '—'} />
+                            <InvoiceField label={t('finance.subscription')} value={viewInvoice.subscription_id} />
                         </div>
                         <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                                 <thead>
                                     <tr style={{ background: 'var(--bg-secondary)' }}>
-                                        <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Description</th>
-                                        <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Amount</th>
+                                        <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>{t('finance.description')}</th>
+                                        <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>{t('common.amount')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr style={{ borderTop: '1px solid var(--border-color)' }}>
-                                        <td style={{ padding: '10px 12px' }}>Subscription ({viewInvoice.subscription_id})</td>
+                                        <td style={{ padding: '10px 12px' }}>{t('finance.subscription')} ({viewInvoice.subscription_id})</td>
                                         <td style={{ padding: '10px 12px', textAlign: 'right' }}>EGP {viewInvoice.amount.toLocaleString()}</td>
                                     </tr>
                                     <tr style={{ borderTop: '1px solid var(--border-color)' }}>
-                                        <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>Tax (14% VAT)</td>
+                                        <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{t('finance.tax')} (14% {t('subscriptions.vat')})</td>
                                         <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>EGP {viewInvoice.tax.toLocaleString()}</td>
                                     </tr>
                                     <tr style={{ borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
-                                        <td style={{ padding: '10px 12px', fontWeight: 700 }}>Total</td>
+                                        <td style={{ padding: '10px 12px', fontWeight: 700 }}>{t('common.total')}</td>
                                         <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700 }}>EGP {viewInvoice.total.toLocaleString()} {viewInvoice.currency}</td>
                                     </tr>
                                 </tbody>
@@ -143,7 +145,7 @@ export default function FinanceInvoicesPage() {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                             <button type="button" onClick={() => handleDownload(viewInvoice)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-info)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                                <Download size={14} /> Download PDF
+                                <Download size={14} /> {t('finance.downloadPDF')}
                             </button>
                         </div>
                     </>

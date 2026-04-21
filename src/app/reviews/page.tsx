@@ -65,12 +65,12 @@ export default function ReviewsPage() {
 
             <div className={styles.summaryGrid}>
                 {[
-                    { label: 'Total', value: summary.total, color: 'var(--text-primary)' },
-                    { label: 'Published', value: summary.published, color: 'var(--color-success)' },
-                    { label: 'Flagged', value: summary.flagged, color: 'var(--color-warning)' },
-                    { label: 'Hidden', value: summary.hidden, color: 'var(--color-error)' },
-                    { label: 'Pending', value: summary.pending, color: 'var(--color-info)' },
-                    { label: 'Avg Rating', value: summary.avgRating, color: '#f59e0b' },
+                    { label: t('reviews.total'), value: summary.total, color: 'var(--text-primary)' },
+                    { label: t('reviews.published'), value: summary.published, color: 'var(--color-success)' },
+                    { label: t('reviews.flagged'), value: summary.flagged, color: 'var(--color-warning)' },
+                    { label: t('reviews.hidden'), value: summary.hidden, color: 'var(--color-error)' },
+                    { label: t('reviews.pending'), value: summary.pending, color: 'var(--color-info)' },
+                    { label: t('reviews.avgRating'), value: summary.avgRating, color: '#f59e0b' },
                 ].map(s => (
                     <div key={s.label} className={styles.summaryCard}>
                         <span className={styles.summaryLabel}>{s.label}</span>
@@ -81,11 +81,11 @@ export default function ReviewsPage() {
 
             <div className={styles.filters}>
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={styles.filterSelect}>
-                    <option value="all">All Status</option>
-                    <option value="published">Published</option>
-                    <option value="flagged">Flagged</option>
-                    <option value="hidden">Hidden</option>
-                    <option value="pending">Pending</option>
+                    <option value="all">{t('reviews.allStatus')}</option>
+                    <option value="published">{t('reviews.published')}</option>
+                    <option value="flagged">{t('reviews.flagged')}</option>
+                    <option value="hidden">{t('reviews.hidden')}</option>
+                    <option value="pending">{t('reviews.pending')}</option>
                 </select>
             </div>
 
@@ -111,7 +111,7 @@ export default function ReviewsPage() {
                                 <StatusBadge status={review.status} />
                                 {review.reported_count > 0 && (
                                     <span className={styles.reportCount}>
-                                        <AlertTriangle size={12} /> {review.reported_count} reports
+                                        <AlertTriangle size={12} /> {review.reported_count} {t('reviews.reports')}
                                     </span>
                                 )}
                             </div>
@@ -127,7 +127,7 @@ export default function ReviewsPage() {
 
                         {review.admin_response && (
                             <div className={styles.adminResponse}>
-                                <MessageSquare size={14} /> <strong>Admin:</strong> {review.admin_response}
+                                <MessageSquare size={14} /> <strong>{t('reviews.admin')}:</strong> {review.admin_response}
                             </div>
                         )}
 
@@ -135,26 +135,26 @@ export default function ReviewsPage() {
                             <div className={styles.reviewActions}>
                                 {review.status !== 'published' && (
                                     <button className={styles.actionBtn} onClick={() => handleAction(review.id, 'published')}>
-                                        <Check size={14} /> Publish
+                                        <Check size={14} /> {t('reviews.publish')}
                                     </button>
                                 )}
                                 {review.status !== 'flagged' && review.status !== 'hidden' && (
                                     <button className={`${styles.actionBtn} ${styles.warnBtn}`} onClick={() => handleAction(review.id, 'flagged')}>
-                                        <Flag size={14} /> Flag
+                                        <Flag size={14} /> {t('reviews.flag')}
                                     </button>
                                 )}
                                 {review.status !== 'hidden' && (
                                     <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => handleAction(review.id, 'hidden')}>
-                                        <EyeOff size={14} /> Hide
+                                        <EyeOff size={14} /> {t('reviews.hide')}
                                     </button>
                                 )}
                                 {review.status === 'hidden' && (
                                     <button className={styles.actionBtn} onClick={() => handleAction(review.id, 'published')}>
-                                        <Eye size={14} /> Unhide
+                                        <Eye size={14} /> {t('reviews.unhide')}
                                     </button>
                                 )}
                                 <button className={styles.actionBtn} onClick={() => openRespond(review)}>
-                                    <Reply size={14} /> {review.admin_response ? 'Edit Response' : 'Respond'}
+                                    <Reply size={14} /> {review.admin_response ? t('reviews.editResponse') : t('reviews.respond')}
                                 </button>
                             </div>
                         </PermissionGate>
@@ -165,9 +165,9 @@ export default function ReviewsPage() {
             <FormModal
                 open={!!respondTo}
                 onClose={() => { setRespondTo(null); setResponseText(''); }}
-                title={respondTo?.admin_response ? 'Edit Platform Response' : 'Respond to Review'}
+                title={respondTo?.admin_response ? t('reviews.editPlatformResponse') : t('reviews.respondToReview')}
                 onSubmit={handleSubmitResponse}
-                submitLabel="Save response"
+                submitLabel={t('reviews.saveResponse')}
             >
                 {respondTo && (
                     <>
@@ -175,11 +175,11 @@ export default function ReviewsPage() {
                             <div style={{ fontWeight: 600, marginBottom: 4 }}>{respondTo.user_name} on {respondTo.provider_name}</div>
                             <div style={{ color: 'var(--text-secondary)' }}>{respondTo.comment}</div>
                         </div>
-                        <FormField label="Platform response" required>
+                        <FormField label={t('reviews.platformResponseLabel')} required>
                             <textarea
                                 value={responseText}
                                 onChange={e => setResponseText(e.target.value)}
-                                placeholder="Respond on behalf of Hagzy..."
+                                placeholder={t('reviews.responsePlaceholder')}
                                 rows={5}
                                 style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none', resize: 'vertical' }}
                             />

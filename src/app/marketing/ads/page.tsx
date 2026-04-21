@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, FormField, ConfirmModal } from '@/components/admin/FormModal';
@@ -37,6 +38,7 @@ const emptyAdForm = (): AdFormState => ({
 });
 
 export default function AdsPage() {
+    const { t } = useTranslation();
     const [ads, setAds] = useState(mockAds);
     const [showCreate, setShowCreate] = useState(false);
     const [editingAd, setEditingAd] = useState<Ad | null>(null);
@@ -102,20 +104,20 @@ export default function AdsPage() {
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
-                <h1 className={shared.pageTitle}>Ads Management</h1>
+                <h1 className={shared.pageTitle}>{t('marketing.ads.management')}</h1>
                 <PermissionGate module="ads" action="create">
                     <button onClick={openCreate} className={shared.addBtn}>
-                        <Plus size={16} /> Create Ad
+                        <Plus size={16} /> {t('marketing.ads.createAd')}
                     </button>
                 </PermissionGate>
             </div>
 
             <div className={shared.kpiGrid}>
                 {[
-                    { label: 'Active Ads', value: ads.filter(a => a.status === 'active').length },
-                    { label: 'Total Impressions', value: ads.reduce((s, a) => s + a.analytics.impressions, 0).toLocaleString() },
-                    { label: 'Total Clicks', value: ads.reduce((s, a) => s + a.analytics.clicks, 0).toLocaleString() },
-                    { label: 'Avg CTR', value: `${(ads.filter(a => a.analytics.ctr > 0).reduce((s, a) => s + a.analytics.ctr, 0) / ads.filter(a => a.analytics.ctr > 0).length).toFixed(1)}%` },
+                    { label: t('marketing.ads.activeAds'), value: ads.filter(a => a.status === 'active').length },
+                    { label: t('marketing.ads.totalImpressions'), value: ads.reduce((s, a) => s + a.analytics.impressions, 0).toLocaleString() },
+                    { label: t('marketing.ads.totalClicks'), value: ads.reduce((s, a) => s + a.analytics.clicks, 0).toLocaleString() },
+                    { label: t('marketing.ads.avgCTR'), value: `${(ads.filter(a => a.analytics.ctr > 0).reduce((s, a) => s + a.analytics.ctr, 0) / ads.filter(a => a.analytics.ctr > 0).length).toFixed(1)}%` },
                 ].map(k => (
                     <div key={k.label} className={shared.summaryCard} style={{ textAlign: 'center' }}>
                         <div className={shared.summaryLabel}>{k.label}</div>
@@ -127,7 +129,7 @@ export default function AdsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {ads.map(ad => (
                     <div key={ad.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <div style={{ width: 80, height: 60, borderRadius: 8, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '0.75rem', flexShrink: 0 }}>Ad Image</div>
+                        <div style={{ width: 80, height: 60, borderRadius: 8, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '0.75rem', flexShrink: 0 }}>{t('marketing.ads.adImage')}</div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>{ad.title}</span>
@@ -164,27 +166,27 @@ export default function AdsPage() {
             </div>
 
             {/* Create/Edit Ad Modal */}
-            <FormModal open={showCreate} onClose={closeForm} title={editingAd ? `Edit Ad — ${editingAd.title}` : 'Create New Ad'} submitLabel={editingAd ? 'Save Changes' : 'Create Ad'} onSubmit={handleSubmit}>
-                <FormField label="Title (EN)" required><input type="text" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={shared.formInput} placeholder="e.g. Summer Sale 50% OFF" /></FormField>
-                <FormField label="Title (AR)" required><input type="text" required value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} className={shared.formInput} placeholder="العنوان بالعربي" dir="rtl" /></FormField>
+            <FormModal open={showCreate} onClose={closeForm} title={editingAd ? `${t('marketing.ads.editAd')} — ${editingAd.title}` : t('marketing.ads.createNewAd')} submitLabel={editingAd ? t('marketing.ads.saveChanges') : t('marketing.ads.createAd')} onSubmit={handleSubmit}>
+                <FormField label={t('marketing.ads.titleEn')} required><input type="text" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={shared.formInput} placeholder="e.g. Summer Sale 50% OFF" /></FormField>
+                <FormField label={t('marketing.ads.titleAr')} required><input type="text" required value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} className={shared.formInput} placeholder="العنوان بالعربي" dir="rtl" /></FormField>
                 <div className={shared.formGrid2}>
-                    <FormField label="Placement"><select value={form.placement} onChange={e => setForm(f => ({ ...f, placement: e.target.value as Ad['placement'] }))} className={shared.formInput}><option value="home_banner">Home Banner</option><option value="category_banner">Category Banner</option><option value="search_promoted">Search Promoted</option><option value="between_listings">Between Listings</option></select></FormField>
-                    <FormField label="Ad Type"><select value={form.ad_type} onChange={e => setForm(f => ({ ...f, ad_type: e.target.value as Ad['ad_type'] }))} className={shared.formInput}><option value="image_banner">Image Banner</option><option value="promotional_card">Promotional Card</option><option value="featured_provider">Featured Provider</option></select></FormField>
+                    <FormField label={t('marketing.ads.placement')}><select value={form.placement} onChange={e => setForm(f => ({ ...f, placement: e.target.value as Ad['placement'] }))} className={shared.formInput}><option value="home_banner">Home Banner</option><option value="category_banner">Category Banner</option><option value="search_promoted">Search Promoted</option><option value="between_listings">Between Listings</option></select></FormField>
+                    <FormField label={t('marketing.ads.adType')}><select value={form.ad_type} onChange={e => setForm(f => ({ ...f, ad_type: e.target.value as Ad['ad_type'] }))} className={shared.formInput}><option value="image_banner">Image Banner</option><option value="promotional_card">Promotional Card</option><option value="featured_provider">Featured Provider</option></select></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label="Start Date"><input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} className={shared.formInput} /></FormField>
-                    <FormField label="End Date"><input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} className={shared.formInput} /></FormField>
+                    <FormField label={t('marketing.ads.startDate')}><input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} className={shared.formInput} /></FormField>
+                    <FormField label={t('marketing.ads.endDate')}><input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} className={shared.formInput} /></FormField>
                 </div>
-                <FormField label="Target URL"><input type="url" value={form.target_url} onChange={e => setForm(f => ({ ...f, target_url: e.target.value }))} className={shared.formInput} placeholder="https://..." /></FormField>
+                <FormField label={t('marketing.ads.targetUrl')}><input type="url" value={form.target_url} onChange={e => setForm(f => ({ ...f, target_url: e.target.value }))} className={shared.formInput} placeholder="https://..." /></FormField>
             </FormModal>
 
             {/* Delete Confirm */}
-            <ConfirmModal open={!!deleteAd} onClose={() => setDeleteAd(null)} onConfirm={handleDelete} title="Delete Ad" message={`Are you sure you want to delete "${deleteAd?.title}"? This action cannot be undone.`} confirmLabel="Delete" variant="danger" />
+            <ConfirmModal open={!!deleteAd} onClose={() => setDeleteAd(null)} onConfirm={handleDelete} title={t('marketing.ads.deleteAdTitle')} message={`Are you sure you want to delete "${deleteAd?.title}"? This action cannot be undone.`} confirmLabel={t('common.delete')} variant="danger" />
 
             {/* Analytics Detail */}
-            <FormModal open={!!analyticsAd} onClose={() => setAnalyticsAd(null)} title={`Analytics — ${analyticsAd?.title}`} submitLabel="Close" onSubmit={e => { e.preventDefault(); setAnalyticsAd(null); }}>
+            <FormModal open={!!analyticsAd} onClose={() => setAnalyticsAd(null)} title={`${t('marketing.ads.analytics')} — ${analyticsAd?.title}`} submitLabel={t('common.close')} onSubmit={e => { e.preventDefault(); setAnalyticsAd(null); }}>
                 {analyticsAd && <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    {[{ label: 'Impressions', value: analyticsAd.analytics.impressions.toLocaleString() }, { label: 'Clicks', value: analyticsAd.analytics.clicks.toLocaleString() }, { label: 'CTR', value: `${analyticsAd.analytics.ctr}%` }, { label: 'Conversions', value: analyticsAd.analytics.conversions.toLocaleString() }].map(s => (
+                    {[{ label: t('marketing.ads.impressions'), value: analyticsAd.analytics.impressions.toLocaleString() }, { label: t('marketing.ads.clicks'), value: analyticsAd.analytics.clicks.toLocaleString() }, { label: t('marketing.ads.ctr'), value: `${analyticsAd.analytics.ctr}%` }, { label: t('marketing.ads.conversions'), value: analyticsAd.analytics.conversions.toLocaleString() }].map(s => (
                         <div key={s.label} style={{ padding: 16, background: 'var(--bg-tertiary)', borderRadius: 8, textAlign: 'center' }}>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, textTransform: 'uppercase' }}>{s.label}</div>
                             <div style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: 4 }}>{s.value}</div>

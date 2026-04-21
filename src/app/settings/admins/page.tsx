@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, FormField } from '@/components/admin/FormModal';
@@ -31,6 +32,7 @@ const roleColors: Record<SuperAdminRole, string> = {
 };
 
 export default function AdminsPage() {
+    const { t } = useTranslation();
     const [admins, setAdmins] = useState(initialAdmins);
     const [showCreate, setShowCreate] = useState(false);
     const form = useValidatedForm<AdminCreateInput>({
@@ -51,45 +53,45 @@ export default function AdminsPage() {
     });
 
     const columns: Column<SuperAdminUser>[] = [
-        { key: 'name', label: 'Name', sortable: true, render: r => <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 36, height: 36, borderRadius: '50%', background: `color-mix(in srgb, ${roleColors[r.role]} 15%, transparent)`, color: roleColors[r.role], display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>{r.name.charAt(0)}</div><div><div style={{ fontWeight: 500 }}>{r.name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.email}</div></div></div> },
-        { key: 'role', label: 'Role', sortable: true, render: r => <span style={{ color: roleColors[r.role], fontWeight: 600, fontSize: '0.8125rem', textTransform: 'capitalize' }}>{r.role.replace('_', ' ')}</span> },
-        { key: 'active', label: 'Status', render: r => <StatusBadge status={r.active ? 'active' : 'deactivated'} /> },
-        { key: 'last_login_at', label: 'Last Login', sortable: true, render: r => r.last_login_at ? new Date(r.last_login_at).toLocaleDateString() : 'Never' },
-        { key: 'created_at', label: 'Created', sortable: true, render: r => new Date(r.created_at).toLocaleDateString() },
+        { key: 'name', label: t('common.name'), sortable: true, render: r => <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 36, height: 36, borderRadius: '50%', background: `color-mix(in srgb, ${roleColors[r.role]} 15%, transparent)`, color: roleColors[r.role], display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>{r.name.charAt(0)}</div><div><div style={{ fontWeight: 500 }}>{r.name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.email}</div></div></div> },
+        { key: 'role', label: t('common.role'), sortable: true, render: r => <span style={{ color: roleColors[r.role], fontWeight: 600, fontSize: '0.8125rem', textTransform: 'capitalize' }}>{r.role.replace('_', ' ')}</span> },
+        { key: 'active', label: t('common.status'), render: r => <StatusBadge status={r.active ? 'active' : 'deactivated'} /> },
+        { key: 'last_login_at', label: t('settings.admins.lastLogin'), sortable: true, render: r => r.last_login_at ? new Date(r.last_login_at).toLocaleDateString() : t('settings.admins.never') },
+        { key: 'created_at', label: t('settings.admins.created'), sortable: true, render: r => new Date(r.created_at).toLocaleDateString() },
     ];
 
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Shield size={24} /><h1 className={shared.pageTitle}>Admin Users</h1></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Shield size={24} /><h1 className={shared.pageTitle}>{t('settings.admins.adminUsers')}</h1></div>
                 <PermissionGate module="settings" action="create">
                     <button onClick={() => setShowCreate(true)} className={shared.addBtn}>
-                        <Plus size={16} /> Add Admin
+                        <Plus size={16} /> {t('settings.admins.addNew')}
                     </button>
                 </PermissionGate>
             </div>
-            <DataTable<SuperAdminUser> columns={columns} data={admins} searchKeys={['name', 'email', 'role']} searchPlaceholder="Search admins..." getRowKey={r => r.id} />
+            <DataTable<SuperAdminUser> columns={columns} data={admins} searchKeys={['name', 'email', 'role']} searchPlaceholder={t('settings.admins.searchPlaceholder')} getRowKey={r => r.id} />
 
-            <FormModal open={showCreate} onClose={() => { setShowCreate(false); form.reset(); }} title="Add Admin User" submitLabel="Create Admin" onSubmit={onCreateAdmin}>
+            <FormModal open={showCreate} onClose={() => { setShowCreate(false); form.reset(); }} title={t('settings.admins.addAdminTitle')} submitLabel={t('settings.admins.createAdmin')} onSubmit={onCreateAdmin}>
                 <div className={shared.formGrid2}>
-                    <FormField label="Full Name" required error={form.getError('name')}>
-                        <input {...form.register('name')} type="text" className={shared.formInput} placeholder="Admin name" />
+                    <FormField label={t('settings.admins.fullName')} required error={form.getError('name')}>
+                        <input {...form.register('name')} type="text" className={shared.formInput} placeholder={t('settings.admins.adminName')} />
                     </FormField>
-                    <FormField label="Email" required error={form.getError('email')}>
+                    <FormField label={t('common.email')} required error={form.getError('email')}>
                         <input {...form.register('email')} type="email" className={shared.formInput} placeholder="admin@hagzy.com" />
                     </FormField>
                 </div>
-                <FormField label="Role" required error={form.getError('role')}>
+                <FormField label={t('common.role')} required error={form.getError('role')}>
                     <select {...form.register('role')} className={shared.formInput}>
-                        <option value="admin">Admin</option>
-                        <option value="moderator">Moderator</option>
-                        <option value="support">Support Agent</option>
-                        <option value="finance">Finance</option>
-                        <option value="viewer">Viewer</option>
+                        <option value="admin">{t('settings.admins.admin')}</option>
+                        <option value="moderator">{t('settings.admins.moderator')}</option>
+                        <option value="support">{t('settings.admins.support')}</option>
+                        <option value="finance">{t('settings.admins.finance')}</option>
+                        <option value="viewer">{t('settings.admins.viewer')}</option>
                     </select>
                 </FormField>
-                <FormField label="Temporary Password" required error={form.getError('password')}>
-                    <input {...form.register('password')} type="password" className={shared.formInput} placeholder="Min 8, upper, number, special" />
+                <FormField label={t('settings.admins.tempPassword')} required error={form.getError('password')}>
+                    <input {...form.register('password')} type="password" className={shared.formInput} placeholder={t('settings.admins.passwordHint')} />
                 </FormField>
             </FormModal>
         </div>
