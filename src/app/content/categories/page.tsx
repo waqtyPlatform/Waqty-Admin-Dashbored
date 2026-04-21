@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import type { ServiceCategory } from '@/types/content';
 import { Plus, Edit } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const mockCategories: ServiceCategory[] = [
     { id: '1', name: 'Haircuts', name_ar: 'قص الشعر', icon: '✂️', parent_id: null, order: 1, active: true, subcategories_count: 8, services_count: 45 },
@@ -29,11 +30,11 @@ export default function CategoriesPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Service Categories</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Service Categories</h1>
                 <PermissionGate module="content" action="create">
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Category</button>
+                    <button className={shared.addBtn}><Plus size={16} /> Add Category</button>
                 </PermissionGate>
             </div>
             <DataTable<ServiceCategory> columns={columns} data={mockCategories} searchKeys={['name', 'name_ar']} searchPlaceholder="Search categories..." getRowKey={r => r.id} />

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { CreditCard, Wallet, Smartphone } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const initialGateways = [
     { id: '1', name: 'Stripe', icon: <CreditCard size={20} />, status: 'active', type: 'Credit/Debit Cards', fee: '2.9% + EGP 1', enabled: true },
@@ -22,7 +23,7 @@ export default function PaymentsPage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Payment Gateways</h1>
+            <h1 className={shared.pageTitle}>Payment Gateways</h1>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {gateways.map(g => (
                     <div key={g.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', alignItems: 'center', gap: 16 }}>

@@ -7,6 +7,9 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import type { PushNotification } from '@/types/marketing';
 import { Plus, Send, Bell } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
+
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 const initialNotifs: PushNotification[] = [
     { id: '1', title: 'Summer Sale is here!', title_ar: 'تخفيضات الصيف هنا!', body: 'Get 50% off all salon services this week', body_ar: 'احصل على خصم 50% على جميع خدمات الصالون هذا الأسبوع', target_app: 'user', target_segment: 'active', scheduled_at: null, sent_at: '2026-04-12T10:00:00Z', status: 'sent', recipients_count: 32000, opened_count: 8500, created_at: '2026-04-12T09:00:00Z' },
@@ -15,7 +18,6 @@ const initialNotifs: PushNotification[] = [
     { id: '4', title: 'Rate your last visit', title_ar: 'قيم زيارتك الأخيرة', body: 'Help us improve by rating your experience', body_ar: 'ساعدنا في التحسين بتقييم تجربتك', target_app: 'user', target_segment: 'active', scheduled_at: null, sent_at: null, status: 'draft', recipients_count: 0, opened_count: 0, created_at: '2026-04-13T11:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function PushNotificationsPage() {
     const [notifs, setNotifs] = useState(initialNotifs);
@@ -33,14 +35,14 @@ export default function PushNotificationsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Bell size={24} />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Push Notifications</h1>
+                    <h1 className={shared.pageTitle}>Push Notifications</h1>
                 </div>
                 <PermissionGate module="marketing" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}>
                         <Plus size={16} /> Create Notification
                     </button>
                 </PermissionGate>
@@ -58,17 +60,17 @@ export default function PushNotificationsPage() {
                 setForm({ title: '', title_ar: '', body: '', body_ar: '', target_app: 'user', target_segment: 'all' });
                 setShowCreate(false);
             }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Title (English)" required><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required style={inputStyle} placeholder="Notification title" /></FormField>
-                    <FormField label="Title (Arabic)" required><input type="text" value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} required style={inputStyle} placeholder="عنوان الإشعار" dir="rtl" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Title (English)" required><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required className={shared.formInput} placeholder="Notification title" /></FormField>
+                    <FormField label="Title (Arabic)" required><input type="text" value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} required className={shared.formInput} placeholder="عنوان الإشعار" dir="rtl" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className={shared.formGrid2}>
                     <FormField label="Body (English)" required><textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="Notification body" /></FormField>
                     <FormField label="Body (Arabic)" required><textarea value={form.body_ar} onChange={e => setForm(f => ({ ...f, body_ar: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="نص الإشعار" dir="rtl" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Target App"><select value={form.target_app} onChange={e => setForm(f => ({ ...f, target_app: e.target.value }))} style={inputStyle}><option value="user">User App</option><option value="employee">Employee App</option><option value="all">All Apps</option></select></FormField>
-                    <FormField label="Target Segment"><select value={form.target_segment} onChange={e => setForm(f => ({ ...f, target_segment: e.target.value }))} style={inputStyle}><option value="all">All Users</option><option value="active">Active Users</option><option value="inactive">Inactive Users</option><option value="new">New Users</option></select></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Target App"><select value={form.target_app} onChange={e => setForm(f => ({ ...f, target_app: e.target.value }))} className={shared.formInput}><option value="user">User App</option><option value="employee">Employee App</option><option value="all">All Apps</option></select></FormField>
+                    <FormField label="Target Segment"><select value={form.target_segment} onChange={e => setForm(f => ({ ...f, target_segment: e.target.value }))} className={shared.formInput}><option value="all">All Users</option><option value="active">Active Users</option><option value="inactive">Inactive Users</option><option value="new">New Users</option></select></FormField>
                 </div>
             </FormModal>
         </div>

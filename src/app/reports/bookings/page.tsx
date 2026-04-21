@@ -3,13 +3,14 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { bookingTrendsData } from '@/mocks/finance';
+import shared from '@/components/admin/shared.module.css';
 
 export default function BookingsReportPage() {
     const latest = bookingTrendsData[bookingTrendsData.length - 1];
     const completionRate = ((latest.completed / latest.bookings) * 100).toFixed(1);
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Booking Reports</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Booking Reports</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                 {[
                     { label: 'Total Bookings (Apr)', value: latest.bookings.toLocaleString(), color: 'var(--text-primary)' },

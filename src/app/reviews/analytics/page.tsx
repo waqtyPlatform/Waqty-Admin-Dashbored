@@ -4,13 +4,14 @@ import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { mockReviews } from '@/mocks/reviews';
 import { Star, TrendingUp, AlertTriangle, MessageSquare } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const ratingDist = [1, 2, 3, 4, 5].map(r => ({ rating: `${r} Star`, count: mockReviews.filter(rv => rv.rating === r).length }));
 const statusDist = [
-    { name: 'Published', count: mockReviews.filter(r => r.status === 'published').length, color: '#10b981' },
-    { name: 'Flagged', count: mockReviews.filter(r => r.status === 'flagged').length, color: '#f59e0b' },
-    { name: 'Hidden', count: mockReviews.filter(r => r.status === 'hidden').length, color: '#ef4444' },
-    { name: 'Pending', count: mockReviews.filter(r => r.status === 'pending').length, color: '#3b82f6' },
+    { name: 'Published', count: mockReviews.filter(r => r.status === 'published').length, color: 'var(--color-success)' },
+    { name: 'Flagged', count: mockReviews.filter(r => r.status === 'flagged').length, color: 'var(--color-warning)' },
+    { name: 'Hidden', count: mockReviews.filter(r => r.status === 'hidden').length, color: 'var(--color-error)' },
+    { name: 'Pending', count: mockReviews.filter(r => r.status === 'pending').length, color: 'var(--color-info)' },
 ];
 const avgRating = (mockReviews.reduce((s, r) => s + r.rating, 0) / mockReviews.length).toFixed(1);
 const topProviders = Array.from(new Set(mockReviews.map(r => r.provider_name))).map(name => {
@@ -20,8 +21,8 @@ const topProviders = Array.from(new Set(mockReviews.map(r => r.provider_name))).
 
 export default function ReviewAnalyticsPage() {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Review Analytics</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Review Analytics</h1>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                 {[

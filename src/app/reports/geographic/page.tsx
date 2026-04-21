@@ -4,6 +4,7 @@ import React from 'react';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { geographicData } from '@/mocks/finance';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import shared from '@/components/admin/shared.module.css';
 
 type GeoRow = typeof geographicData[0];
 
@@ -17,8 +18,8 @@ export default function GeographicReportPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Geographic Reports</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Geographic Reports</h1>
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Providers by City</h3>
                 <ResponsiveContainer width="100%" height={300}>

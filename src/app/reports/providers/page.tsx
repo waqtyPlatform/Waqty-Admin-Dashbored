@@ -3,6 +3,7 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Building2, TrendingUp, Star, AlertTriangle } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const providerStats = [
     { month: 'Oct', newProviders: 45, churned: 8, active: 1050 },
@@ -15,8 +16,8 @@ const providerStats = [
 
 export default function ProviderReportsPage() {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Provider Reports</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Provider Reports</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                 {[
                     { label: 'Total Providers', value: '1,247', icon: <Building2 size={20} />, color: 'var(--color-primary-500)' },

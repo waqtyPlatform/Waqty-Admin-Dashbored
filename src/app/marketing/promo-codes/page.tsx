@@ -8,6 +8,7 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { copyToClipboard } from '@/lib/utils';
 import type { PromoCode } from '@/types/marketing';
 import { Plus, Copy } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const initialCodes: PromoCode[] = [
     { id: '1', code: 'WELCOME20', type: 'percentage', value: 20, min_order: 100, max_discount: 200, usage_limit: 1000, used_count: 487, valid_from: '2026-01-01', valid_until: '2026-12-31', active: true, created_at: '2026-01-01T00:00:00Z' },
@@ -17,7 +18,6 @@ const initialCodes: PromoCode[] = [
     { id: '5', code: 'FIRST100', type: 'fixed', value: 100, min_order: 300, max_discount: null, usage_limit: 100, used_count: 100, valid_from: '2026-02-01', valid_until: '2026-03-31', active: false, created_at: '2026-02-01T00:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function PromoCodesPage() {
     const [codes, setCodes] = useState(initialCodes);
@@ -33,11 +33,11 @@ export default function PromoCodesPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Promo Codes</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Promo Codes</h1>
                 <PermissionGate module="marketing" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Create Code</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> Create Code</button>
                 </PermissionGate>
             </div>
             <DataTable<PromoCode> columns={columns} data={codes} searchKeys={['code']} searchPlaceholder="Search promo codes..." getRowKey={r => r.id} />
@@ -62,18 +62,18 @@ export default function PromoCodesPage() {
                 setCodes(prev => [newCode, ...prev]);
                 setShowCreate(false);
             }}>
-                <FormField label="Code" required><input name="code" type="text" required style={inputStyle} placeholder="e.g. SUMMER50" /></FormField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Type"><select name="type" style={inputStyle}><option value="percentage">Percentage</option><option value="fixed">Fixed Amount</option></select></FormField>
-                    <FormField label="Value" required><input name="value" type="number" required style={inputStyle} placeholder="e.g. 20" /></FormField>
+                <FormField label="Code" required><input name="code" type="text" required className={shared.formInput} placeholder="e.g. SUMMER50" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Type"><select name="type" className={shared.formInput}><option value="percentage">Percentage</option><option value="fixed">Fixed Amount</option></select></FormField>
+                    <FormField label="Value" required><input name="value" type="number" required className={shared.formInput} placeholder="e.g. 20" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Min Order (EGP)"><input name="min_order" type="number" style={inputStyle} placeholder="0" /></FormField>
-                    <FormField label="Max Discount"><input name="max_discount" type="number" style={inputStyle} placeholder="Leave empty for none" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Min Order (EGP)"><input name="min_order" type="number" className={shared.formInput} placeholder="0" /></FormField>
+                    <FormField label="Max Discount"><input name="max_discount" type="number" className={shared.formInput} placeholder="Leave empty for none" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Usage Limit"><input name="usage_limit" type="number" style={inputStyle} placeholder="Leave empty for unlimited" /></FormField>
-                    <FormField label="Valid Until" required><input name="valid_until" type="date" required style={inputStyle} /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Usage Limit"><input name="usage_limit" type="number" className={shared.formInput} placeholder="Leave empty for unlimited" /></FormField>
+                    <FormField label="Valid Until" required><input name="valid_until" type="date" required className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

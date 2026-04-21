@@ -3,6 +3,7 @@
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Users, UserPlus, UserCheck, UserX } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const growthData = [
     { month: 'Oct', total: 35000, new: 3200, active: 28000 },
@@ -16,8 +17,8 @@ const growthData = [
 
 export default function UserReportsPage() {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>User Reports</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>User Reports</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                 {[
                     { label: 'Total Users', value: '48,392', icon: <Users size={20} />, color: 'var(--color-primary-500)' },

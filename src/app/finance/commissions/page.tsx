@@ -5,6 +5,7 @@ import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { mockCommissions } from '@/mocks/finance';
 import type { CommissionRecord } from '@/types/finance';
+import shared from '@/components/admin/shared.module.css';
 
 export default function CommissionsPage() {
     const columns: Column<CommissionRecord>[] = [
@@ -18,8 +19,8 @@ export default function CommissionsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Commissions</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Commissions</h1>
             <DataTable<CommissionRecord> columns={columns} data={mockCommissions} searchKeys={['provider_name', 'booking_id']} searchPlaceholder="Search commissions..." getRowKey={r => r.id} />
         </div>
     );

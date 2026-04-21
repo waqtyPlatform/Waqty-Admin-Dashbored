@@ -4,7 +4,9 @@ import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { monthlyRevenueData, mockCommissions, mockPayouts } from '@/mocks/finance';
-import { DollarSign, TrendingUp, CreditCard, Wallet } from 'lucide-react';
+import { DollarSign, TrendingUp, CreditCard, Wallet, FileText, Percent, Send, Receipt } from 'lucide-react';
+import Link from 'next/link';
+import shared from '@/components/admin/shared.module.css';
 
 export default function FinancePage() {
     const { t } = useTranslation();
@@ -19,30 +21,53 @@ export default function FinancePage() {
         { label: 'Completed Payouts', value: `EGP ${(completedPayouts / 1000).toFixed(0)}K`, icon: <Wallet size={20} />, color: 'var(--color-info)' },
     ];
 
+    const subNav = [
+        { label: t('finance.commissions'), href: '/finance/commissions', icon: <Percent size={18} />, description: 'Bookings commission ledger' },
+        { label: t('finance.payouts'), href: '/finance/payouts', icon: <Send size={18} />, description: 'Provider payout batches' },
+        { label: t('finance.invoices'), href: '/finance/invoices', icon: <Receipt size={18} />, description: 'Subscription invoices' },
+        { label: t('finance.taxReports'), href: '/finance/tax-reports', icon: <FileText size={18} />, description: 'VAT & withholding' },
+    ];
+
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{t('sidebar.finance')} - {t('sidebar.overview')}</h1>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-                {kpis.map(k => (
-                    <div key={k.label} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <div style={{ width: 44, height: 44, borderRadius: 10, background: `color-mix(in srgb, ${k.color} 12%, transparent)`, color: k.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{k.icon}</div>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>{t('finance.title')} - {t('sidebar.overview')}</h1>
+            <div className={shared.kpiGrid}>
+                {subNav.map(item => (
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={shared.infoCard}
+                        style={{ display: 'flex', gap: 12, alignItems: 'center', padding: 16, color: 'var(--text-primary)', textDecoration: 'none' }}
+                    >
+                        <div className={shared.kpiIcon} style={{ background: 'var(--bg-tertiary)', color: 'var(--color-primary-500)', width: 40, height: 40 }}>{item.icon}</div>
                         <div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500 }}>{k.label}</div>
-                            <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>{k.value}</div>
+                            <div style={{ fontWeight: 600 }}>{item.label}</div>
+                            <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>{item.description}</div>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+            <div className={shared.kpiGrid}>
+                {kpis.map(k => (
+                    <div key={k.label} className={shared.kpiCard}>
+                        <div className={shared.kpiIcon} style={{ background: `color-mix(in srgb, ${k.color} 12%, transparent)`, color: k.color }}>{k.icon}</div>
+                        <div>
+                            <div className={shared.kpiLabel}>{k.label}</div>
+                            <div className={shared.kpiValue}>{k.value}</div>
                         </div>
                     </div>
                 ))}
             </div>
-            <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Revenue Trend (Subscriptions vs Commissions)</h3>
+            <div className={shared.infoCard}>
+                <h3 className={shared.infoCardHeader}>Revenue Trend (Subscriptions vs Commissions)</h3>
                 <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={monthlyRevenueData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
                         <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
                         <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => [`EGP ${Number(v).toLocaleString()}`, '']} />
-                        <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="#00b166" fill="#00b16640" name="Subscriptions" />
-                        <Area type="monotone" dataKey="commissions" stackId="1" stroke="#3b82f6" fill="#3b82f640" name="Commissions" />
+                        <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="var(--color-primary-500)" fill="color-mix(in srgb, var(--color-primary-500) 25%, transparent)" name="Subscriptions" />
+                        <Area type="monotone" dataKey="commissions" stackId="1" stroke="var(--color-info)" fill="color-mix(in srgb, var(--color-info) 25%, transparent)" name="Commissions" />
                     </AreaChart>
                 </ResponsiveContainer>
             </div>

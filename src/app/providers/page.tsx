@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermission } from '@/hooks/usePermission';
 import { DataTable, type Column } from '@/components/tables/DataTable';
@@ -27,11 +27,19 @@ import styles from './page.module.css';
 
 export default function ProvidersPage() {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const { t } = useTranslation();
     const { can } = usePermission();
     const [providers, setProviders] = useState(mockProviders);
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [categoryFilter, setCategoryFilter] = useState<string>('all');
+    const statusFilter = searchParams.get('status') || 'all';
+    const categoryFilter = searchParams.get('category') || 'all';
+    const setFilter = useCallback((key: string, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value === 'all') params.delete(key);
+        else params.set(key, value);
+        router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
+    }, [searchParams, pathname, router]);
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [confirmAction, setConfirmAction] = useState<{ id: string; action: string; name: string } | null>(null);
@@ -194,7 +202,7 @@ export default function ProvidersPage() {
                     <div className={styles.filterGroup}>
                         <select
                             value={statusFilter}
-                            onChange={e => setStatusFilter(e.target.value)}
+                            onChange={e => setFilter('status', e.target.value)}
                             className={styles.filterSelect}
                         >
                             <option value="all">{t('common.all')} Status</option>
@@ -206,7 +214,7 @@ export default function ProvidersPage() {
                         </select>
                         <select
                             value={categoryFilter}
-                            onChange={e => setCategoryFilter(e.target.value)}
+                            onChange={e => setFilter('category', e.target.value)}
                             className={styles.filterSelect}
                         >
                             <option value="all">{t('common.all')} Category</option>

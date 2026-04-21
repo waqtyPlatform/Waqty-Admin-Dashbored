@@ -3,6 +3,7 @@
 import React from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Sun, Moon, Monitor } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 export default function AppearancePage() {
     const { theme, setTheme } = useTheme();
@@ -15,10 +16,10 @@ export default function AppearancePage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 600 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Appearance</h1>
+            <h1 className={shared.pageTitle}>Appearance</h1>
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Theme</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+                <div className={shared.formGrid3}>
                     {themes.map(t => (
                         <button key={t.value} onClick={() => setTheme(t.value as 'light' | 'dark' | 'system')} style={{ padding: 20, border: `2px solid ${theme === t.value ? 'var(--color-primary-500)' : 'var(--border-color)'}`, borderRadius: 12, background: theme === t.value ? 'var(--color-primary-50)' : 'var(--bg-primary)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, transition: 'all 0.15s' }}>
                             <span style={{ color: theme === t.value ? 'var(--color-primary-500)' : 'var(--text-secondary)' }}>{t.icon}</span>

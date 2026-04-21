@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { exportToCSV } from '@/lib/utils';
 import type { Invoice } from '@/types/subscription';
 import { Download, FileText } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const mockInvoices: Invoice[] = [
     { id: 'INV-001', provider_id: '1', provider_name: 'Glamour Studio', subscription_id: 'sub-1', amount: 12990, tax: 1818, total: 14808, currency: 'EGP', status: 'paid', issued_at: '2026-01-01T00:00:00Z', due_at: '2026-01-15T00:00:00Z', paid_at: '2026-01-03T10:00:00Z', pdf_url: '#' },
@@ -32,10 +33,10 @@ export default function InvoicesPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Invoices</h1>
-                <button onClick={() => exportToCSV(mockInvoices, 'invoices', [{key:'id',label:'Invoice ID'},{key:'provider_name',label:'Provider'},{key:'amount',label:'Amount'},{key:'tax',label:'Tax'},{key:'total',label:'Total'},{key:'status',label:'Status'},{key:'issued_at',label:'Issued'},{key:'paid_at',label:'Paid'}])} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Download size={16} /> Export All</button>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Invoices</h1>
+                <button onClick={() => exportToCSV(mockInvoices, 'invoices', [{key:'id',label:'Invoice ID'},{key:'provider_name',label:'Provider'},{key:'amount',label:'Amount'},{key:'tax',label:'Tax'},{key:'total',label:'Total'},{key:'status',label:'Status'},{key:'issued_at',label:'Issued'},{key:'paid_at',label:'Paid'}])} className={shared.exportBtn}><Download size={16} /> Export All</button>
             </div>
             <DataTable<Invoice> columns={columns} data={mockInvoices} searchKeys={['id', 'provider_name']} searchPlaceholder="Search invoices..." getRowKey={r => r.id} />
         </div>

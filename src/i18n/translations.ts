@@ -174,9 +174,75 @@ const translations: Translations = {
     'subscriptions.renew': { en: 'Renew', ar: 'تجديد' },
     'subscriptions.extendTrial': { en: 'Extend Trial', ar: 'تمديد الفترة التجريبية' },
     'subscriptions.upgrade': { en: 'Upgrade', ar: 'ترقية' },
-    'subscriptions.downgrade': { en: 'تخفيض', ar: 'Downgrade' },
+    'subscriptions.downgrade': { en: 'Downgrade', ar: 'تخفيض' },
     'subscriptions.cancelSub': { en: 'Cancel', ar: 'إلغاء' },
     'subscriptions.applyDiscount': { en: 'Apply Discount', ar: 'تطبيق خصم' },
+    'subscriptions.generateInvoice': { en: 'Generate Invoice', ar: 'إنشاء فاتورة' },
+    'subscriptions.refund': { en: 'Refund', ar: 'استرداد' },
+
+    // ── Reviews ──
+    'reviews.title': { en: 'Reviews & Moderation', ar: 'التقييمات والإشراف' },
+    'reviews.analyticsTitle': { en: 'Review Analytics', ar: 'تحليلات التقييمات' },
+    'reviews.publish': { en: 'Publish', ar: 'نشر' },
+    'reviews.flag': { en: 'Flag', ar: 'وضع علامة' },
+    'reviews.hide': { en: 'Hide', ar: 'إخفاء' },
+    'reviews.respond': { en: 'Respond', ar: 'الرد' },
+    'reviews.editResponse': { en: 'Edit Response', ar: 'تعديل الرد' },
+    'reviews.platformResponse': { en: 'Platform Response', ar: 'رد المنصة' },
+
+    // ── Finance ──
+    'finance.title': { en: 'Finance', ar: 'المالية' },
+    'finance.commissions': { en: 'Commissions', ar: 'العمولات' },
+    'finance.payouts': { en: 'Payouts', ar: 'المدفوعات' },
+    'finance.invoices': { en: 'Invoices', ar: 'الفواتير' },
+    'finance.taxReports': { en: 'Tax Reports', ar: 'تقارير الضرائب' },
+    'finance.totalRevenue': { en: 'Total Revenue', ar: 'إجمالي الإيرادات' },
+    'finance.commissionsEarned': { en: 'Commissions Earned', ar: 'العمولات المكتسبة' },
+    'finance.pendingPayouts': { en: 'Pending Payouts', ar: 'المدفوعات المعلقة' },
+
+    // ── Support ──
+    'support.title': { en: 'Support Tickets', ar: 'تذاكر الدعم' },
+    'support.priority': { en: 'Priority', ar: 'الأولوية' },
+    'support.category': { en: 'Category', ar: 'الفئة' },
+    'support.assignedTo': { en: 'Assigned To', ar: 'مُسند إلى' },
+    'support.reassign': { en: 'Reassign', ar: 'إعادة تعيين' },
+    'support.resolve': { en: 'Resolve', ar: 'حل' },
+    'support.reopen': { en: 'Reopen', ar: 'إعادة فتح' },
+
+    // ── Marketing ──
+    'marketing.ads.title': { en: 'Ads', ar: 'الإعلانات' },
+    'marketing.ads.addNew': { en: 'Create Ad', ar: 'إنشاء إعلان' },
+    'marketing.promoCodes.title': { en: 'Promo Codes', ar: 'أكواد الخصم' },
+    'marketing.campaigns.title': { en: 'Campaigns', ar: 'الحملات' },
+    'marketing.featured.title': { en: 'Featured Providers', ar: 'مقدمو الخدمة المميزون' },
+    'marketing.banners.title': { en: 'Banners', ar: 'البانرات' },
+
+    // ── Settings ──
+    'settings.security.title': { en: 'Security Settings', ar: 'إعدادات الأمان' },
+    'settings.security.mfa': { en: 'Multi-Factor Authentication', ar: 'المصادقة متعددة العوامل' },
+    'settings.security.passwordPolicy': { en: 'Password Policy', ar: 'سياسة كلمة المرور' },
+    'settings.localization.title': { en: 'Localization', ar: 'التوطين' },
+    'settings.localization.addLanguage': { en: 'Add Language', ar: 'إضافة لغة' },
+    'settings.localization.currency': { en: 'Currency', ar: 'العملة' },
+    'settings.localization.timezone': { en: 'Timezone', ar: 'المنطقة الزمنية' },
+    'settings.admins.title': { en: 'Admins', ar: 'المشرفين' },
+    'settings.admins.addNew': { en: 'Add Admin', ar: 'إضافة مشرف' },
+
+    // ── Common extras ──
+    'common.city': { en: 'City', ar: 'المدينة' },
+    'common.country': { en: 'Country', ar: 'الدولة' },
+    'common.role': { en: 'Role', ar: 'الدور' },
+    'common.password': { en: 'Password', ar: 'كلمة المرور' },
+    'common.reason': { en: 'Reason', ar: 'السبب' },
+    'common.description': { en: 'Description', ar: 'الوصف' },
+    'common.submit': { en: 'Submit', ar: 'إرسال' },
+    'common.required': { en: 'Required', ar: 'مطلوب' },
+    'common.optional': { en: 'Optional', ar: 'اختياري' },
+
+    // ── Providers extras ──
+    'providers.businessInfo': { en: 'Business Information', ar: 'معلومات النشاط' },
+    'providers.subscriptionDetails': { en: 'Subscription Details', ar: 'تفاصيل الاشتراك' },
+    'providers.adjustCommission': { en: 'Adjust Commission', ar: 'تعديل العمولة' },
 };
 
 export default translations;

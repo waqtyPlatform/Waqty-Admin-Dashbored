@@ -4,27 +4,28 @@ import React from 'react';
 import { ROLE_PERMISSIONS, ALL_MODULES } from '@/lib/permissions';
 import type { SuperAdminRole } from '@/types/admin';
 import { Shield, Check, X } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const roleLabels: Record<SuperAdminRole, { name: string; desc: string; color: string }> = {
-    super_admin: { name: 'Super Admin', desc: 'Full access including impersonation', color: '#dc2626' },
-    admin: { name: 'Admin', desc: 'Full CRUD, no impersonation', color: '#00b166' },
+    super_admin: { name: 'Super Admin', desc: 'Full access including impersonation', color: 'var(--color-error)' },
+    admin: { name: 'Admin', desc: 'Full CRUD, no impersonation', color: 'var(--color-primary-500)' },
     moderator: { name: 'Moderator', desc: 'Reviews, content, support management', color: '#8b5cf6' },
-    support: { name: 'Support Agent', desc: 'Support tickets and user viewing', color: '#3b82f6' },
-    finance: { name: 'Finance', desc: 'Subscriptions, finance, reports', color: '#f59e0b' },
-    viewer: { name: 'Viewer', desc: 'Read-only access to all modules', color: '#6b7280' },
+    support: { name: 'Support Agent', desc: 'Support tickets and user viewing', color: 'var(--color-info)' },
+    finance: { name: 'Finance', desc: 'Subscriptions, finance, reports', color: 'var(--color-warning)' },
+    viewer: { name: 'Viewer', desc: 'Read-only access to all modules', color: 'var(--text-tertiary)' },
 };
 
 const roles = Object.keys(ROLE_PERMISSIONS) as SuperAdminRole[];
 
 export default function RolesPage() {
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className={shared.page}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <Shield size={24} />
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Roles & Permissions</h1>
+                <h1 className={shared.pageTitle}>Roles & Permissions</h1>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+            <div className={shared.formGrid3}>
                 {roles.map(role => {
                     const info = roleLabels[role];
                     const perms = ROLE_PERMISSIONS[role];

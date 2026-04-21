@@ -4,17 +4,18 @@ import React from 'react';
 import { monthlyRevenueData } from '@/mocks/finance';
 import { exportToCSV } from '@/lib/utils';
 import { Download } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 export default function TaxReportsPage() {
     const taxRate = 0.14;
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Tax Reports</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Tax Reports</h1>
                 <button onClick={() => {
                     const data = monthlyRevenueData.map(row => ({ month: `${row.month} 2026`, subscriptions: row.subscriptions, commissions: row.commissions, total: row.total, vat: Math.round(row.total * taxRate), net: row.total - Math.round(row.total * taxRate) }));
                     exportToCSV(data, 'tax-reports', [{key:'month',label:'Month'},{key:'subscriptions',label:'Subscription Revenue'},{key:'commissions',label:'Commission Revenue'},{key:'total',label:'Total Revenue'},{key:'vat',label:'VAT'},{key:'net',label:'Net Revenue'}]);
-                }} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Download size={16} /> Export CSV</button>
+                }} className={shared.exportBtn}><Download size={16} /> Export CSV</button>
             </div>
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, overflow: 'hidden' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>

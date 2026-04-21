@@ -3,9 +3,11 @@
 import React, { useState } from 'react';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
+import { FormModal } from '@/components/admin/FormModal';
 import { exportToCSV } from '@/lib/utils';
 import type { Invoice } from '@/types/subscription';
 import { Download, FileText, Eye } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const initialInvoices: Invoice[] = [
     { id: 'INV-10001', provider_id: '1', provider_name: 'Glamour Studio', subscription_id: 'sub-1', amount: 12990, tax: 1819, total: 14809, currency: 'EGP', status: 'paid', issued_at: '2026-01-01T00:00:00Z', due_at: '2026-01-15T00:00:00Z', paid_at: '2026-01-03T10:00:00Z', pdf_url: '#' },
@@ -21,6 +23,7 @@ const initialInvoices: Invoice[] = [
 export default function FinanceInvoicesPage() {
     const [invoices] = useState(initialInvoices);
     const [statusFilter, setStatusFilter] = useState('all');
+    const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
     const filtered = invoices.filter(i => statusFilter === 'all' || i.status === statusFilter);
 
     const summary = {
@@ -62,7 +65,7 @@ export default function FinanceInvoicesPage() {
             key: 'actions', label: '', width: '100px',
             render: r => (
                 <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={e => { e.stopPropagation(); alert(`View invoice ${r.id}`); }} title="View" style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Eye size={14} /></button>
+                    <button onClick={e => { e.stopPropagation(); setViewInvoice(r); }} title="View" style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Eye size={14} /></button>
                     <button onClick={e => { e.stopPropagation(); handleDownload(r); }} title="Download PDF" style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-info)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Download size={14} /></button>
                 </div>
             ),
@@ -70,10 +73,10 @@ export default function FinanceInvoicesPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Invoices</h1>
-                <button onClick={handleExportAll} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Download size={16} /> Export All</button>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Invoices</h1>
+                <button onClick={handleExportAll} className={shared.exportBtn}><Download size={16} /> Export All</button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
@@ -95,6 +98,66 @@ export default function FinanceInvoicesPage() {
                     <option value="all">All Status</option><option value="paid">Paid</option><option value="pending">Pending</option><option value="overdue">Overdue</option><option value="refunded">Refunded</option>
                 </select>}
             />
+
+            {/* View Invoice Modal */}
+            <FormModal
+                open={!!viewInvoice}
+                onClose={() => setViewInvoice(null)}
+                title={viewInvoice ? `Invoice ${viewInvoice.id}` : 'Invoice'}
+                submitLabel="Close"
+                onSubmit={e => { e.preventDefault(); setViewInvoice(null); }}
+            >
+                {viewInvoice && (
+                    <>
+                        <div className={shared.formGrid2}>
+                            <InvoiceField label="Provider" value={viewInvoice.provider_name} />
+                            <InvoiceField label="Status" value={viewInvoice.status} capitalize />
+                            <InvoiceField label="Issued" value={new Date(viewInvoice.issued_at).toLocaleDateString()} />
+                            <InvoiceField label="Due" value={new Date(viewInvoice.due_at).toLocaleDateString()} />
+                            <InvoiceField label="Paid" value={viewInvoice.paid_at ? new Date(viewInvoice.paid_at).toLocaleDateString() : '—'} />
+                            <InvoiceField label="Subscription" value={viewInvoice.subscription_id} />
+                        </div>
+                        <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                                <thead>
+                                    <tr style={{ background: 'var(--bg-secondary)' }}>
+                                        <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Description</th>
+                                        <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style={{ borderTop: '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '10px 12px' }}>Subscription ({viewInvoice.subscription_id})</td>
+                                        <td style={{ padding: '10px 12px', textAlign: 'right' }}>EGP {viewInvoice.amount.toLocaleString()}</td>
+                                    </tr>
+                                    <tr style={{ borderTop: '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>Tax (14% VAT)</td>
+                                        <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>EGP {viewInvoice.tax.toLocaleString()}</td>
+                                    </tr>
+                                    <tr style={{ borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
+                                        <td style={{ padding: '10px 12px', fontWeight: 700 }}>Total</td>
+                                        <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700 }}>EGP {viewInvoice.total.toLocaleString()} {viewInvoice.currency}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <button type="button" onClick={() => handleDownload(viewInvoice)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-info)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                                <Download size={14} /> Download PDF
+                            </button>
+                        </div>
+                    </>
+                )}
+            </FormModal>
+        </div>
+    );
+}
+
+function InvoiceField({ label, value, capitalize }: { label: string; value: string; capitalize?: boolean }) {
+    return (
+        <div style={{ padding: 10, background: 'var(--bg-tertiary)', borderRadius: 8 }}>
+            <div style={{ fontSize: '0.6875rem', textTransform: 'uppercase', color: 'var(--text-tertiary)', fontWeight: 600 }}>{label}</div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 500, marginTop: 2, textTransform: capitalize ? 'capitalize' : 'none' }}>{value}</div>
         </div>
     );
 }

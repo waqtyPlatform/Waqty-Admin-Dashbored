@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermission } from '@/hooks/usePermission';
 import { DataTable, type Column } from '@/components/tables/DataTable';
@@ -13,17 +13,25 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { exportToCSV } from '@/lib/utils';
 import { Plus, MoreHorizontal, Ban, ShieldCheck, Trash2, RotateCcw, Pause, Download, Wallet } from 'lucide-react';
 import styles from './page.module.css';
+import shared from '@/components/admin/shared.module.css';
 
 export default function UsersPage() {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const { t } = useTranslation();
     const { can } = usePermission();
     const [users, setUsers] = useState(mockUsers);
-    const [statusFilter, setStatusFilter] = useState('all');
+    const statusFilter = searchParams.get('status') || 'all';
+    const setStatusFilter = useCallback((value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value === 'all') params.delete('status');
+        else params.set('status', value);
+        router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
+    }, [searchParams, pathname, router]);
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
     const [showCreateUser, setShowCreateUser] = useState(false);
 
-    const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
     const filtered = users.filter(u => statusFilter === 'all' || u.status === statusFilter);
 
@@ -91,11 +99,11 @@ export default function UsersPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>{t('users.title')}</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>{t('users.title')}</h1>
                 <PermissionGate module="users" action="create">
-                    <button onClick={() => setShowCreateUser(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    <button onClick={() => setShowCreateUser(true)} className={shared.addBtn}>
                         <Plus size={16} /> {t('users.addNew')}
                     </button>
                 </PermissionGate>
@@ -107,8 +115,8 @@ export default function UsersPage() {
                 getRowKey={row => row.id}
                 onRowClick={row => router.push(`/users/${row.id}`)}
                 filters={
-                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)' }}>
-                        <option value="all">All Status</option>
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}>
+                        <option value="all">{t('common.all')} {t('common.status')}</option>
                         <option value="active">Active</option>
                         <option value="blocked">Blocked</option>
                         <option value="suspended">Suspended</option>
@@ -117,8 +125,8 @@ export default function UsersPage() {
                 }
                 actions={
                     <PermissionGate module="users" action="export">
-                        <button onClick={() => exportToCSV(filtered, 'users', [{key:'name',label:'Name'},{key:'email',label:'Email'},{key:'phone',label:'Phone'},{key:'city',label:'City'},{key:'status',label:'Status'},{key:'total_bookings',label:'Bookings'},{key:'total_spent',label:'Spent'}])} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                            <Download size={16} /> Export
+                        <button onClick={() => exportToCSV(filtered, 'users', [{key:'name',label:'Name'},{key:'email',label:'Email'},{key:'phone',label:'Phone'},{key:'city',label:'City'},{key:'status',label:'Status'},{key:'total_bookings',label:'Bookings'},{key:'total_spent',label:'Spent'}])} className={shared.exportBtn}>
+                            <Download size={16} /> {t('common.export')}
                         </button>
                     </PermissionGate>
                 }
@@ -133,17 +141,17 @@ export default function UsersPage() {
                     id, uuid: `user-${id}`, name: String(fd.get('name') || ''), email: String(fd.get('email') || ''),
                     phone: String(fd.get('phone') || ''), city: String(fd.get('city') || ''), country: 'Egypt',
                     status: 'active' as const, total_bookings: 0, total_spent: 0, wallet_balance: 0, preferred_language: 'en' as const,
-                    registered_at: now, last_active_at: now, created_at: now, updated_at: now, deleted_at: null,
-                } as unknown as PlatformUser, ...prev]);
+                    last_booking_at: null, registered_at: now, last_active_at: now, created_at: now, updated_at: now, deleted_at: null,
+                } satisfies PlatformUser, ...prev]);
                 setShowCreateUser(false);
             }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Full Name" required><input name="name" type="text" required style={inputStyle} placeholder="User name" /></FormField>
-                    <FormField label="Email" required><input name="email" type="email" required style={inputStyle} placeholder="email@example.com" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Full Name" required><input name="name" type="text" required className={shared.formInput} placeholder="User name" /></FormField>
+                    <FormField label="Email" required><input name="email" type="email" required className={shared.formInput} placeholder="email@example.com" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Phone" required><input name="phone" type="tel" required style={inputStyle} placeholder="+201012345678" /></FormField>
-                    <FormField label="City"><input name="city" type="text" style={inputStyle} placeholder="Cairo" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Phone" required><input name="phone" type="tel" required className={shared.formInput} placeholder="+201012345678" /></FormField>
+                    <FormField label="City"><input name="city" type="text" className={shared.formInput} placeholder="Cairo" /></FormField>
                 </div>
             </FormModal>
         </div>

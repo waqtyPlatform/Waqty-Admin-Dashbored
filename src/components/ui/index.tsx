@@ -137,13 +137,21 @@ export function Checkbox({ checked = false, onChange, label }: CheckboxProps) {
 interface ModalProps { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; }
 
 export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+    useEffect(() => {
+        if (!open) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        window.addEventListener('keydown', onKey);
+        const prev = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+    }, [open, onClose]);
     if (!open) return null;
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modal} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
                     <div className={styles.modalTitle}>{title}</div>
-                    <button className={styles.modalClose} onClick={onClose}><X size={18} /></button>
+                    <button className={styles.modalClose} onClick={onClose} aria-label="Close"><X size={18} /></button>
                 </div>
                 <div className={styles.modalBody}>{children}</div>
                 {footer && <div className={styles.modalFooter}>{footer}</div>}

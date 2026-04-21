@@ -4,6 +4,7 @@ import React from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import type { SystemHealthMetric } from '@/types/system';
 import { Activity, Server, Database, Wifi, Smartphone } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const mockHealth: SystemHealthMetric[] = [
     { service: 'API Server', status: 'healthy', uptime_percent: 99.97, avg_response_ms: 45, error_rate: 0.02, last_checked_at: '2026-04-13T12:00:00Z' },
@@ -21,9 +22,9 @@ const icons: Record<string, React.ReactNode> = { 'API Server': <Server size={20}
 export default function SystemHealthPage() {
     const allHealthy = mockHealth.every(m => m.status === 'healthy');
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className={shared.page}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>System Health</h1>
+                <h1 className={shared.pageTitle}>System Health</h1>
                 <StatusBadge status={allHealthy ? 'healthy' : 'degraded'} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>

@@ -2,18 +2,23 @@
 
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
-import { ConfirmModal } from '@/components/admin/FormModal';
+import { ConfirmModal, FormModal, FormField } from '@/components/admin/FormModal';
+import { useToast } from '@/components/ui';
 import { mockProviders } from '@/mocks/providers';
+import { mockPlans } from '@/mocks/subscriptions';
 import type { Provider, ProviderStatus } from '@/types/provider';
 import {
     ArrowLeft, Building2, Users, CalendarDays, DollarSign, MapPin, Mail, Phone,
     Ban, ShieldCheck, Trash2, RotateCcw, LogIn, Pause, Play, ExternalLink,
-    Clock, Star, CreditCard, Scissors,
+    Clock, Star, CreditCard, Scissors, Percent, Download, ChevronDown,
 } from 'lucide-react';
+import { exportToCSV } from '@/lib/utils';
 import styles from './page.module.css';
+import shared from '@/components/admin/shared.module.css';
 
 // Mock branch/employee/service/booking data for tabs
 const mockBranches = [
@@ -47,10 +52,22 @@ const mockBookings = [
 export default function ProviderDetailPage() {
     const { id } = useParams();
     const router = useRouter();
+    const { startImpersonating } = useAuth();
+    const { addToast } = useToast();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('overview');
     const [provider, setProvider] = useState<Provider | undefined>(() => mockProviders.find(p => p.id === id));
     const [confirmAction, setConfirmAction] = useState<{ action: string; label: string } | null>(null);
+    const [showRenew, setShowRenew] = useState(false);
+    const [showChangePlan, setShowChangePlan] = useState(false);
+    const [showCancelSub, setShowCancelSub] = useState(false);
+    const [renewCycle, setRenewCycle] = useState<'monthly' | 'yearly'>('monthly');
+    const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+    const [showCommission, setShowCommission] = useState(false);
+    const [commissionRate, setCommissionRate] = useState('');
+    const [commissionDate, setCommissionDate] = useState('');
+    const [commissionReason, setCommissionReason] = useState('');
+    const [exportOpen, setExportOpen] = useState(false);
 
     if (!provider) {
         return (
@@ -67,7 +84,69 @@ export default function ProviderDetailPage() {
     };
 
     const handleImpersonate = () => {
-        window.open(`https://hagzy.com/impersonate/${provider.uuid}`, '_blank');
+        startImpersonating(provider.id, provider.business_name || provider.name);
+        addToast('info', `Now impersonating ${provider.business_name}`);
+    };
+
+    const handleRenewSubscription = () => {
+        setProvider(prev => prev ? { ...prev, subscription_status: 'active' } : prev);
+        setShowRenew(false);
+        addToast('success', 'Subscription renewed');
+    };
+
+    const handleChangePlan = () => {
+        if (!selectedPlanId) return;
+        const plan = mockPlans.find(p => p.id === selectedPlanId);
+        if (!plan) return;
+        setProvider(prev => prev ? { ...prev, subscription_plan_id: plan.id, subscription_status: 'active' } : prev);
+        setShowChangePlan(false);
+        setSelectedPlanId('');
+        addToast('success', `Plan changed to ${plan.name}`);
+    };
+
+    const handleCancelSubscription = () => {
+        setProvider(prev => prev ? { ...prev, subscription_status: 'cancelled' } : prev);
+        setShowCancelSub(false);
+        addToast('warning', 'Subscription cancelled');
+    };
+
+    const openCommission = () => {
+        setCommissionRate(String(provider?.commission_rate ?? ''));
+        setCommissionDate(new Date().toISOString().slice(0, 10));
+        setCommissionReason('');
+        setShowCommission(true);
+    };
+
+    const handleCommission = () => {
+        const rate = Number(commissionRate);
+        if (!Number.isFinite(rate) || rate < 0 || rate > 50) {
+            addToast('error', 'Commission must be between 0 and 50%');
+            return;
+        }
+        setProvider(prev => prev ? { ...prev, commission_rate: rate, updated_at: new Date().toISOString() } : prev);
+        setShowCommission(false);
+        addToast('success', `Commission set to ${rate}%`);
+    };
+
+    const handleExport = (type: 'bookings' | 'employees' | 'financial') => {
+        if (!provider) return;
+        setExportOpen(false);
+        if (type === 'bookings') {
+            exportToCSV(mockBookings, `provider-${provider.id}-bookings`);
+        } else if (type === 'employees') {
+            exportToCSV(mockEmployees, `provider-${provider.id}-employees`);
+        } else {
+            const summary = [{
+                provider: provider.business_name,
+                total_bookings: provider.total_bookings,
+                total_revenue: provider.total_revenue,
+                commission_rate: provider.commission_rate,
+                commission_earned: Math.round(provider.total_revenue * provider.commission_rate / 100),
+                subscription_status: provider.subscription_status,
+                generated_at: new Date().toISOString(),
+            }];
+            exportToCSV(summary, `provider-${provider.id}-financial-summary`);
+        }
     };
 
     const stats = [
@@ -113,6 +192,22 @@ export default function ProviderDetailPage() {
                     <PermissionGate module="providers" action="impersonate">
                         {provider.status === 'active' && <button className={`${styles.actionBtn} ${styles.impersonateBtn}`} onClick={handleImpersonate}><LogIn size={14} /> {t('providers.impersonate')}</button>}
                     </PermissionGate>
+                    <PermissionGate module="providers" action="edit">
+                        <button className={styles.actionBtn} onClick={openCommission}><Percent size={14} /> Adjust Commission</button>
+                    </PermissionGate>
+                    <div style={{ position: 'relative' }}>
+                        <button className={styles.actionBtn} onClick={() => setExportOpen(o => !o)}><Download size={14} /> Export <ChevronDown size={14} /></button>
+                        {exportOpen && (
+                            <>
+                                <div style={{ position: 'fixed', inset: 0, zIndex: 10 }} onClick={() => setExportOpen(false)} />
+                                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', insetInlineEnd: 0, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', minWidth: 220, zIndex: 11, padding: 4 }}>
+                                    <button onClick={() => handleExport('bookings')} style={{ width: '100%', textAlign: 'start', padding: '8px 12px', background: 'transparent', color: 'var(--text-primary)', fontSize: '0.8125rem', borderRadius: 6 }}>Bookings CSV</button>
+                                    <button onClick={() => handleExport('employees')} style={{ width: '100%', textAlign: 'start', padding: '8px 12px', background: 'transparent', color: 'var(--text-primary)', fontSize: '0.8125rem', borderRadius: 6 }}>Employees CSV</button>
+                                    <button onClick={() => handleExport('financial')} style={{ width: '100%', textAlign: 'start', padding: '8px 12px', background: 'transparent', color: 'var(--text-primary)', fontSize: '0.8125rem', borderRadius: 6 }}>Financial Summary CSV</button>
+                                </div>
+                            </>
+                        )}
+                    </div>
                     <PermissionGate module="providers" action="delete">
                         {provider.status !== 'soft_deleted' && <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'soft_deleted', label: 'Delete' })}><Trash2 size={14} /> {t('providers.softDelete')}</button>}
                     </PermissionGate>
@@ -261,9 +356,9 @@ export default function ProviderDetailPage() {
                         <div className={styles.infoCard}>
                             <h3>Subscription Actions</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                                <button style={{ padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => alert('Renew subscription initiated')}><CreditCard size={16} /> Renew Subscription</button>
-                                <button style={{ padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-info)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => alert('Upgrade/downgrade flow')}><ExternalLink size={16} /> Change Plan</button>
-                                <button style={{ padding: '10px 16px', border: '1px solid var(--color-error-light)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-error)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => alert('Cancel subscription')}><Trash2 size={16} /> Cancel Subscription</button>
+                                <button style={{ padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => setShowRenew(true)}><CreditCard size={16} /> Renew Subscription</button>
+                                <button style={{ padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-info)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => { setSelectedPlanId(provider.subscription_plan_id || ''); setShowChangePlan(true); }}><ExternalLink size={16} /> Change Plan</button>
+                                <button style={{ padding: '10px 16px', border: '1px solid var(--color-error-light)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-error)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => setShowCancelSub(true)}><Trash2 size={16} /> Cancel Subscription</button>
                             </div>
                         </div>
                     </div>
@@ -280,6 +375,82 @@ export default function ProviderDetailPage() {
                 confirmLabel={confirmAction?.label || 'Confirm'}
                 variant={confirmAction?.action === 'soft_deleted' || confirmAction?.action === 'blocked' ? 'danger' : 'warning'}
             />
+
+            {/* Renew Subscription Modal */}
+            <FormModal
+                open={showRenew}
+                onClose={() => setShowRenew(false)}
+                title={`Renew Subscription — ${provider.business_name}`}
+                submitLabel="Renew"
+                onSubmit={e => { e.preventDefault(); handleRenewSubscription(); }}
+            >
+                <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
+                    <strong>Current status:</strong> {provider.subscription_status}
+                </div>
+                <FormField label="Billing Cycle" required>
+                    <select value={renewCycle} onChange={e => setRenewCycle(e.target.value as 'monthly' | 'yearly')} className={shared.formInput}>
+                        <option value="monthly">Monthly (30 days)</option>
+                        <option value="yearly">Yearly (365 days)</option>
+                    </select>
+                </FormField>
+                <div style={{ padding: 8, background: 'var(--color-success-light)', borderRadius: 6, fontSize: '0.8125rem', color: '#065f46' }}>
+                    New period ends: <strong>{new Date(Date.now() + (renewCycle === 'yearly' ? 365 : 30) * 86400000).toLocaleDateString()}</strong>
+                </div>
+            </FormModal>
+
+            {/* Change Plan Modal */}
+            <FormModal
+                open={showChangePlan}
+                onClose={() => { setShowChangePlan(false); setSelectedPlanId(''); }}
+                title={`Change Plan — ${provider.business_name}`}
+                submitLabel="Apply Change"
+                onSubmit={e => { e.preventDefault(); handleChangePlan(); }}
+            >
+                <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
+                    <strong>Current plan:</strong> {mockPlans.find(p => p.id === provider.subscription_plan_id)?.name || 'No plan'}
+                </div>
+                <FormField label="New Plan" required>
+                    <select value={selectedPlanId} onChange={e => setSelectedPlanId(e.target.value)} required className={shared.formInput}>
+                        <option value="">Select a plan...</option>
+                        {mockPlans.filter(p => p.active).map(p => (
+                            <option key={p.id} value={p.id}>{p.name} — EGP {p.price_monthly}/mo (EGP {p.price_yearly}/yr)</option>
+                        ))}
+                    </select>
+                </FormField>
+            </FormModal>
+
+            {/* Cancel Subscription Confirm */}
+            <ConfirmModal
+                open={showCancelSub}
+                onClose={() => setShowCancelSub(false)}
+                onConfirm={handleCancelSubscription}
+                title={`Cancel Subscription — ${provider.business_name}`}
+                message={`Are you sure you want to cancel the subscription for "${provider.business_name}"? They will lose access at the end of the current billing period.`}
+                confirmLabel="Cancel Subscription"
+                variant="danger"
+            />
+
+            {/* Adjust Commission */}
+            <FormModal
+                open={showCommission}
+                onClose={() => setShowCommission(false)}
+                title={`Adjust Commission — ${provider.business_name}`}
+                submitLabel="Save commission"
+                onSubmit={e => { e.preventDefault(); handleCommission(); }}
+            >
+                <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
+                    <strong>Current rate:</strong> {provider.commission_rate}%
+                </div>
+                <FormField label="New commission rate (%)" required>
+                    <input type="number" min={0} max={50} step="0.5" value={commissionRate} onChange={e => setCommissionRate(e.target.value)} required className={shared.formInput} />
+                </FormField>
+                <FormField label="Effective date" required>
+                    <input type="date" value={commissionDate} onChange={e => setCommissionDate(e.target.value)} required className={shared.formInput} />
+                </FormField>
+                <FormField label="Reason" required>
+                    <textarea value={commissionReason} onChange={e => setCommissionReason(e.target.value)} required rows={3} className={shared.formInput} style={{ resize: 'vertical' }} placeholder="Why is the commission rate changing?" />
+                </FormField>
+            </FormModal>
         </div>
     );
 }

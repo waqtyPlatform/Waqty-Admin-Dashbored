@@ -7,8 +7,10 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import type { AppVersion } from '@/types/system';
 import { Smartphone, Plus } from 'lucide-react';
 import { PermissionGate } from '@/components/admin/PermissionGate';
+import shared from '@/components/admin/shared.module.css';
 
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
+
 
 const initialVersions: AppVersion[] = [
     { id: '1', app: 'user_ios', version: '2.1.58', build_number: 158, min_required_version: '2.0.0', force_update: false, release_notes: 'Bug fixes and performance improvements', release_notes_ar: 'إصلاح الأخطاء وتحسين الأداء', released_at: '2026-04-10T10:00:00Z', created_at: '2026-04-10T10:00:00Z' },
@@ -35,11 +37,11 @@ export default function AppVersionsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>App Versions</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>App Versions</h1>
                 <PermissionGate module="app_versions" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Version</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> Add Version</button>
                 </PermissionGate>
             </div>
             <DataTable<AppVersion> columns={columns} data={versions} searchKeys={['app', 'version', 'release_notes']} searchPlaceholder="Search versions..." getRowKey={r => r.id} />
@@ -51,15 +53,15 @@ export default function AppVersionsPage() {
                 setVersions(prev => [{ id: String(Date.now()), app: String(fd.get('app') || 'user_ios') as AppVersion['app'], version: String(fd.get('version') || ''), build_number: Number(fd.get('build_number') || 0), min_required_version: String(fd.get('min_required_version') || '1.0.0'), force_update: fd.get('force_update') === 'true', release_notes: String(fd.get('release_notes') || ''), release_notes_ar: String(fd.get('release_notes_ar') || ''), released_at: now, created_at: now }, ...prev]);
                 setShowCreate(false);
             }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="App" required><select name="app" required style={inputStyle}><option value="user_ios">User (iOS)</option><option value="user_android">User (Android)</option><option value="employee_ios">Employee (iOS)</option><option value="employee_android">Employee (Android)</option></select></FormField>
-                    <FormField label="Version" required><input name="version" type="text" required style={inputStyle} placeholder="e.g. 2.1.59" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="App" required><select name="app" required className={shared.formInput}><option value="user_ios">User (iOS)</option><option value="user_android">User (Android)</option><option value="employee_ios">Employee (iOS)</option><option value="employee_android">Employee (Android)</option></select></FormField>
+                    <FormField label="Version" required><input name="version" type="text" required className={shared.formInput} placeholder="e.g. 2.1.59" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Build Number" required><input name="build_number" type="number" required style={inputStyle} placeholder="e.g. 159" /></FormField>
-                    <FormField label="Min Required Version"><input name="min_required_version" type="text" style={inputStyle} placeholder="e.g. 2.0.0" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Build Number" required><input name="build_number" type="number" required className={shared.formInput} placeholder="e.g. 159" /></FormField>
+                    <FormField label="Min Required Version"><input name="min_required_version" type="text" className={shared.formInput} placeholder="e.g. 2.0.0" /></FormField>
                 </div>
-                <FormField label="Force Update"><select name="force_update" style={inputStyle}><option value="false">No</option><option value="true">Yes</option></select></FormField>
+                <FormField label="Force Update"><select name="force_update" className={shared.formInput}><option value="false">No</option><option value="true">Yes</option></select></FormField>
                 <FormField label="Release Notes (EN)"><textarea name="release_notes" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="What's new in this version" /></FormField>
                 <FormField label="Release Notes (AR)"><textarea name="release_notes_ar" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="ملاحظات الإصدار" dir="rtl" /></FormField>
             </FormModal>

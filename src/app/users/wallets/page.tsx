@@ -8,6 +8,7 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { mockWallets } from '@/mocks/users';
 import type { Wallet } from '@/types/wallet';
 import { Wallet as WalletIcon, Lock, Unlock, Plus, Minus } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 export default function WalletsPage() {
     const { t } = useTranslation();
@@ -59,10 +60,10 @@ export default function WalletsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div className={shared.page}>
+            <div className={shared.pageHeader} style={{ justifyContent: 'flex-start' }}>
                 <WalletIcon size={24} />
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{t('sidebar.wallets')}</h1>
+                <h1 className={shared.pageTitle}>{t('sidebar.wallets')}</h1>
             </div>
             <DataTable<Wallet>
                 columns={columns} data={filtered}
@@ -70,7 +71,7 @@ export default function WalletsPage() {
                 searchPlaceholder="Search wallets..."
                 getRowKey={row => row.id}
                 filters={
-                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)' }}>
+                    <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}>
                         <option value="all">All Status</option>
                         <option value="active">Active</option>
                         <option value="frozen">Frozen</option>
@@ -105,10 +106,10 @@ export default function WalletsPage() {
                             <strong>Current Balance:</strong> EGP {walletAction.wallet.balance.toLocaleString()}
                         </div>
                         <FormField label="Amount (EGP)" required>
-                            <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)} required min={1} max={walletAction.type === 'deduct' ? walletAction.wallet.balance : 100000} style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' }} placeholder="Enter amount" />
+                            <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)} required min={1} max={walletAction.type === 'deduct' ? walletAction.wallet.balance : 100000} className={shared.formInput} placeholder="Enter amount" />
                         </FormField>
                         <FormField label="Reason" required>
-                            <input type="text" value={actionReason} onChange={e => setActionReason(e.target.value)} required style={{ width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' }} placeholder={walletAction.type === 'add' ? 'e.g. Loyalty reward, Refund' : 'e.g. Duplicate refund correction'} />
+                            <input type="text" value={actionReason} onChange={e => setActionReason(e.target.value)} required className={shared.formInput} placeholder={walletAction.type === 'add' ? 'e.g. Loyalty reward, Refund' : 'e.g. Duplicate refund correction'} />
                         </FormField>
                     </>
                 )}

@@ -120,8 +120,8 @@ export default function DashboardPage() {
                                 dataKey="count"
                                 nameKey="name"
                             >
-                                {mockCategoryBreakdown.map((entry, i) => (
-                                    <Cell key={i} fill={entry.color} />
+                                {mockCategoryBreakdown.map(entry => (
+                                    <Cell key={entry.name} fill={entry.color} />
                                 ))}
                             </Pie>
                             <Tooltip

@@ -5,6 +5,9 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { Plus, Megaphone } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
+
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 interface Announcement { id: string; title: string; title_ar: string; message: string; message_ar: string; target: 'all' | 'users' | 'providers' | 'employees'; priority: 'low' | 'normal' | 'high'; active: boolean; start_date: string; end_date: string; created_at: string; }
 
@@ -14,7 +17,6 @@ const initialAnnouncements: Announcement[] = [
     { id: '3', title: 'Commission Rate Update', title_ar: 'تحديث نسبة العمولة', message: 'Effective May 1, commission rates will be adjusted.', message_ar: 'اعتباراً من 1 مايو، سيتم تعديل نسب العمولة.', target: 'providers', priority: 'high', active: false, start_date: '2026-05-01', end_date: '2026-05-15', created_at: '2026-04-12T10:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 const priorityColors: Record<string, string> = { low: 'var(--text-tertiary)', normal: 'var(--color-info)', high: 'var(--color-error)' };
 
 export default function AnnouncementsPage() {
@@ -22,11 +24,11 @@ export default function AnnouncementsPage() {
     const [showCreate, setShowCreate] = useState(false);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Megaphone size={24} /><h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Announcements</h1></div>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Megaphone size={24} /><h1 className={shared.pageTitle}>Announcements</h1></div>
                 <PermissionGate module="content" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> New Announcement</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> New Announcement</button>
                 </PermissionGate>
             </div>
 
@@ -61,18 +63,18 @@ export default function AnnouncementsPage() {
                 }, ...prev]);
                 setShowCreate(false);
             }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Title (EN)" required><input name="title_en" type="text" required style={inputStyle} /></FormField>
-                    <FormField label="Title (AR)" required><input name="title_ar" type="text" required style={inputStyle} dir="rtl" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Title (EN)" required><input name="title_en" type="text" required className={shared.formInput} /></FormField>
+                    <FormField label="Title (AR)" required><input name="title_ar" type="text" required className={shared.formInput} dir="rtl" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div className={shared.formGrid2}>
                     <FormField label="Message (EN)" required><textarea name="message_en" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} /></FormField>
                     <FormField label="Message (AR)" required><textarea name="message_ar" required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} dir="rtl" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                    <FormField label="Target"><select name="target" style={inputStyle}><option value="all">All</option><option value="users">Users</option><option value="providers">Providers</option><option value="employees">Employees</option></select></FormField>
-                    <FormField label="Priority"><select name="priority" style={inputStyle}><option value="normal">Normal</option><option value="low">Low</option><option value="high">High</option></select></FormField>
-                    <FormField label="End Date"><input name="end_date" type="date" style={inputStyle} /></FormField>
+                <div className={shared.formGrid3}>
+                    <FormField label="Target"><select name="target" className={shared.formInput}><option value="all">All</option><option value="users">Users</option><option value="providers">Providers</option><option value="employees">Employees</option></select></FormField>
+                    <FormField label="Priority"><select name="priority" className={shared.formInput}><option value="normal">Normal</option><option value="low">Low</option><option value="high">High</option></select></FormField>
+                    <FormField label="End Date"><input name="end_date" type="date" className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

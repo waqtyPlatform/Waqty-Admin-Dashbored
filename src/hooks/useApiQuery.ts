@@ -28,23 +28,23 @@ export function useApiQuery<T = any>(
     const [loading, setLoading] = useState(enabled);
     const [error, setError] = useState<string | null>(null);
     const mountedRef = useRef(true);
+    const fetcherRef = useRef(fetcher);
+    fetcherRef.current = fetcher;
 
     const fetchData = useCallback(async () => {
         if (!enabled) return;
         setLoading(true);
         setError(null);
         try {
-            const response = await fetcher();
+            const response = await fetcherRef.current();
             if (mountedRef.current) {
                 setData(response.data ?? null);
             }
         } catch (err: unknown) {
             if (mountedRef.current) {
                 if (fallbackData !== undefined) {
-                    // API unavailable — silently use fallback data, no error shown
                     setData(fallbackData as T);
                 } else {
-                    // No fallback — show error to user
                     const message =
                         err && typeof err === 'object' && 'message' in err
                             ? (err as { message: string }).message

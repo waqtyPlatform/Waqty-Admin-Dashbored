@@ -5,6 +5,7 @@ import { DataTable, type Column } from '@/components/tables/DataTable';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { Plus, Edit, Globe } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 interface TranslationEntry { id: string; key: string; en: string; ar: string; module: string; updated_at: string; }
 
@@ -23,7 +24,6 @@ const initialTranslations: TranslationEntry[] = [
     { id: '12', key: 'notification.newBooking', en: 'New booking received', ar: 'تم استلام حجز جديد', module: 'notification', updated_at: '2026-03-25T10:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 export default function LocalizationPage() {
     const [translations, setTranslations] = useState(initialTranslations);
     const [showCreate, setShowCreate] = useState(false);
@@ -41,11 +41,11 @@ export default function LocalizationPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Globe size={24} /><h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Localization Manager</h1></div>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Globe size={24} /><h1 className={shared.pageTitle}>Localization Manager</h1></div>
                 <PermissionGate module="localization" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Key</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> Add Key</button>
                 </PermissionGate>
             </div>
 
@@ -76,10 +76,10 @@ export default function LocalizationPage() {
                 }
                 setShowCreate(false); setEditEntry(null);
             }}>
-                <FormField label="Key" required><input name="key" type="text" required defaultValue={editEntry?.key || ''} style={inputStyle} placeholder="e.g. booking.confirmTitle" /></FormField>
-                <FormField label="Module"><input name="module" type="text" defaultValue={editEntry?.module || ''} style={inputStyle} placeholder="e.g. booking" /></FormField>
-                <FormField label="English" required><input name="en" type="text" required defaultValue={editEntry?.en || ''} style={inputStyle} placeholder="English translation" /></FormField>
-                <FormField label="Arabic" required><input name="ar" type="text" required defaultValue={editEntry?.ar || ''} style={inputStyle} placeholder="الترجمة العربية" dir="rtl" /></FormField>
+                <FormField label="Key" required><input name="key" type="text" required defaultValue={editEntry?.key || ''} className={shared.formInput} placeholder="e.g. booking.confirmTitle" /></FormField>
+                <FormField label="Module"><input name="module" type="text" defaultValue={editEntry?.module || ''} className={shared.formInput} placeholder="e.g. booking" /></FormField>
+                <FormField label="English" required><input name="en" type="text" required defaultValue={editEntry?.en || ''} className={shared.formInput} placeholder="English translation" /></FormField>
+                <FormField label="Arabic" required><input name="ar" type="text" required defaultValue={editEntry?.ar || ''} className={shared.formInput} placeholder="الترجمة العربية" dir="rtl" /></FormField>
             </FormModal>
         </div>
     );

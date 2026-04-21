@@ -3,12 +3,13 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { monthlyRevenueData } from '@/mocks/finance';
+import shared from '@/components/admin/shared.module.css';
 
 export default function RevenueReportPage() {
     const totalRev = monthlyRevenueData.reduce((s, r) => s + r.total, 0);
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Revenue Reports</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Revenue Reports</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, textTransform: 'uppercase' }}>Total Revenue (7 months)</div>

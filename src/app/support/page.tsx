@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import type { SupportTicket } from '@/types/ticket';
@@ -20,7 +20,15 @@ const priorityColors: Record<string, string> = { low: 'var(--text-tertiary)', me
 
 export default function SupportPage() {
     const router = useRouter();
-    const [statusFilter, setStatusFilter] = useState('all');
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const statusFilter = searchParams.get('status') || 'all';
+    const setStatusFilter = useCallback((value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value === 'all') params.delete('status');
+        else params.set('status', value);
+        router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
+    }, [searchParams, pathname, router]);
     const filtered = mockTickets.filter(t => statusFilter === 'all' || t.status === statusFilter);
 
     const columns: Column<SupportTicket>[] = [

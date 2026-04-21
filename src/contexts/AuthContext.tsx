@@ -5,6 +5,12 @@ import { useRouter, usePathname } from 'next/navigation';
 import type { SuperAdminUser, SuperAdminRole } from '@/types/admin';
 import { getPermissionsForRole } from '@/lib/permissions';
 
+interface ImpersonationState {
+    providerId: string;
+    providerName: string;
+    startedAt: string;
+}
+
 interface AuthContextType {
     user: SuperAdminUser | null;
     login: (email: string, password: string) => Promise<{ success: boolean; user?: SuperAdminUser; error?: string }>;
@@ -13,6 +19,9 @@ interface AuthContextType {
     resetPassword: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
     logout: () => void;
     loading: boolean;
+    impersonating: ImpersonationState | null;
+    startImpersonating: (providerId: string, providerName: string) => void;
+    stopImpersonating: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +54,7 @@ function buildMockUser(email: string, info: { name: string; role: SuperAdminRole
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<SuperAdminUser | null>(null);
     const [loading, setLoading] = useState(true);
+    const [impersonating, setImpersonating] = useState<ImpersonationState | null>(null);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -65,17 +75,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = localStorage.getItem('hagzy_superadmin_token');
         if (storedUser && storedToken) {
             const parsed = JSON.parse(storedUser) as SuperAdminUser;
-            queueMicrotask(() => {
-                setUser(parsed);
-                setAuthCookie(true, parsed.role);
-                setLoading(false);
-            });
+            setUser(parsed);
+            setAuthCookie(true, parsed.role);
         } else {
             localStorage.removeItem('hagzy_superadmin_user');
             localStorage.removeItem('hagzy_superadmin_token');
             setAuthCookie(false);
-            queueMicrotask(() => setLoading(false));
         }
+        const storedImpersonation = localStorage.getItem('hagzy_superadmin_impersonating');
+        if (storedImpersonation) {
+            try {
+                setImpersonating(JSON.parse(storedImpersonation) as ImpersonationState);
+            } catch {
+                localStorage.removeItem('hagzy_superadmin_impersonating');
+            }
+        }
+        setLoading(false);
     }, []);
 
     useEffect(() => {
@@ -142,13 +157,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = () => {
         localStorage.removeItem('hagzy_superadmin_token');
         localStorage.removeItem('hagzy_superadmin_user');
+        localStorage.removeItem('hagzy_superadmin_impersonating');
         setUser(null);
+        setImpersonating(null);
         setAuthCookie(false);
         router.push('/login');
     };
 
+    const startImpersonating = (providerId: string, providerName: string) => {
+        const state: ImpersonationState = { providerId, providerName, startedAt: new Date().toISOString() };
+        localStorage.setItem('hagzy_superadmin_impersonating', JSON.stringify(state));
+        setImpersonating(state);
+    };
+
+    const stopImpersonating = () => {
+        localStorage.removeItem('hagzy_superadmin_impersonating');
+        setImpersonating(null);
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, forgotPassword, verifyOtpCode, resetPassword, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, forgotPassword, verifyOtpCode, resetPassword, logout, loading, impersonating, startImpersonating, stopImpersonating }}>
             {!loading && children}
         </AuthContext.Provider>
     );

@@ -7,6 +7,9 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import type { EmailTemplate } from '@/types/content';
 import { Plus, Edit, Mail, MessageSquare } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
+
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 const initialTemplates: EmailTemplate[] = [
     { id: '1', name: 'Welcome Email', slug: 'welcome', subject: 'Welcome to Hagzy!', subject_ar: 'مرحباً في هاقزي!', body_html: '<h1>Welcome {{name}}!</h1><p>Your account is ready.</p>', body_html_ar: '<h1>مرحباً {{name}}!</h1><p>حسابك جاهز.</p>', variables: ['name', 'email'], type: 'email', active: true, created_at: '2023-01-01T00:00:00Z', updated_at: '2026-04-01T10:00:00Z' },
@@ -16,7 +19,6 @@ const initialTemplates: EmailTemplate[] = [
     { id: '5', name: 'Review Request', slug: 'review_request', subject: 'How was your visit?', subject_ar: 'كيف كانت زيارتك؟', body_html: '<p>Hi {{name}}, please rate your experience at {{provider}}.</p>', body_html_ar: '<p>مرحباً {{name}}، يرجى تقييم تجربتك في {{provider}}.</p>', variables: ['name', 'provider', 'booking_id'], type: 'email', active: false, created_at: '2024-01-01T00:00:00Z', updated_at: '2026-03-01T10:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function TemplatesPage() {
     const [templates, setTemplates] = useState(initialTemplates);
@@ -32,11 +34,11 @@ export default function TemplatesPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Email & SMS Templates</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Email & SMS Templates</h1>
                 <PermissionGate module="content" action="create">
-                    <button style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Template</button>
+                    <button className={shared.addBtn}><Plus size={16} /> Add Template</button>
                 </PermissionGate>
             </div>
             <DataTable<EmailTemplate> columns={columns} data={templates} searchKeys={['name', 'slug', 'subject']} searchPlaceholder="Search templates..." getRowKey={r => r.id} />
@@ -57,10 +59,10 @@ export default function TemplatesPage() {
                 setEditTpl(null);
             }}>
                 {editTpl && <>
-                    <FormField label="Template Name"><input name="name" type="text" defaultValue={editTpl.name} style={inputStyle} /></FormField>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <FormField label="Subject (EN)"><input name="subject" type="text" defaultValue={editTpl.subject} style={inputStyle} /></FormField>
-                        <FormField label="Subject (AR)"><input name="subject_ar" type="text" defaultValue={editTpl.subject_ar} style={inputStyle} dir="rtl" /></FormField>
+                    <FormField label="Template Name"><input name="name" type="text" defaultValue={editTpl.name} className={shared.formInput} /></FormField>
+                    <div className={shared.formGrid2}>
+                        <FormField label="Subject (EN)"><input name="subject" type="text" defaultValue={editTpl.subject} className={shared.formInput} /></FormField>
+                        <FormField label="Subject (AR)"><input name="subject_ar" type="text" defaultValue={editTpl.subject_ar} className={shared.formInput} dir="rtl" /></FormField>
                     </div>
                     <FormField label="Body (EN)"><textarea name="body_html" defaultValue={editTpl.body_html} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} /></FormField>
                     <FormField label="Body (AR)"><textarea name="body_html_ar" defaultValue={editTpl.body_html_ar} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} dir="rtl" /></FormField>

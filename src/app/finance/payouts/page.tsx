@@ -5,6 +5,7 @@ import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { mockPayouts } from '@/mocks/finance';
 import type { PayoutRecord } from '@/types/finance';
+import shared from '@/components/admin/shared.module.css';
 
 export default function PayoutsPage() {
     const columns: Column<PayoutRecord>[] = [
@@ -17,8 +18,8 @@ export default function PayoutsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Payouts</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Payouts</h1>
             <DataTable<PayoutRecord> columns={columns} data={mockPayouts} searchKeys={['provider_name']} searchPlaceholder="Search payouts..." getRowKey={r => r.id} />
         </div>
     );

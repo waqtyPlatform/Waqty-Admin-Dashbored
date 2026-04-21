@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Save } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 export default function PlatformSettingsPage() {
     const { t } = useTranslation();
@@ -22,11 +23,11 @@ export default function PlatformSettingsPage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 700 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Platform Settings</h1>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Platform Settings</h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {saved && <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: 500 }}>Settings saved!</span>}
-                    <button onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Save size={16} /> {t('common.save')}</button>
+                    <button onClick={handleSave} className={shared.addBtn}><Save size={16} /> {t('common.save')}</button>
                 </div>
             </div>
             {[

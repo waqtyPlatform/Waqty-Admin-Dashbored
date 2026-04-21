@@ -5,8 +5,8 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { Plus, Star, ArrowUp, ArrowDown } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 const initialFeatured = [
     { id: '1', provider: 'Glamour Studio', category: 'Salon', city: 'Cairo', position: 1, active: true, start: '2026-04-01', end: '2026-04-30', impressions: 12500, clicks: 980 },
@@ -33,11 +33,11 @@ export default function FeaturedPage() {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Star size={24} /><h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Featured Providers</h1></div>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Star size={24} /><h1 className={shared.pageTitle}>Featured Providers</h1></div>
                 <PermissionGate module="marketing" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Featured</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> Add Featured</button>
                 </PermissionGate>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -73,14 +73,14 @@ export default function FeaturedPage() {
                 setFeatured(prev => [...prev, { id: String(Date.now()), provider: String(fd.get('provider') || ''), category: String(fd.get('category') || 'Salon'), city: String(fd.get('city') || ''), position: newPos, active: true, start: String(fd.get('start') || ''), end: String(fd.get('end') || ''), impressions: 0, clicks: 0 }]);
                 setShowCreate(false);
             }}>
-                <FormField label="Provider Name" required><input name="provider" type="text" required style={inputStyle} placeholder="e.g. Glamour Studio" /></FormField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Category"><select name="category" style={inputStyle}><option value="Salon">Salon</option><option value="Barber">Barber</option><option value="Clinic">Clinic</option><option value="Spa">Spa</option></select></FormField>
-                    <FormField label="City" required><input name="city" type="text" required style={inputStyle} placeholder="Cairo" /></FormField>
+                <FormField label="Provider Name" required><input name="provider" type="text" required className={shared.formInput} placeholder="e.g. Glamour Studio" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Category"><select name="category" className={shared.formInput}><option value="Salon">Salon</option><option value="Barber">Barber</option><option value="Clinic">Clinic</option><option value="Spa">Spa</option></select></FormField>
+                    <FormField label="City" required><input name="city" type="text" required className={shared.formInput} placeholder="Cairo" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Start Date" required><input name="start" type="date" required style={inputStyle} /></FormField>
-                    <FormField label="End Date" required><input name="end" type="date" required style={inputStyle} /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Start Date" required><input name="start" type="date" required className={shared.formInput} /></FormField>
+                    <FormField label="End Date" required><input name="end" type="date" required className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

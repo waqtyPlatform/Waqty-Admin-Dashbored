@@ -12,6 +12,7 @@ export interface PlatformUser {
     date_of_birth?: string;
     country: string;
     city: string;
+    preferred_language?: 'en' | 'ar';
     total_bookings: number;
     total_spent: number;
     wallet_balance: number;

@@ -3,6 +3,7 @@
 import React from 'react';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import type { AuditLog } from '@/types/system';
+import shared from '@/components/admin/shared.module.css';
 
 const mockLogs: AuditLog[] = [
     { id: '1', admin_id: 'SA-SUPER_ADMIN', admin_name: 'Super Admin', admin_role: 'super_admin', action: 'provider.block', entity_type: 'provider', entity_id: '7', details: { reason: 'Policy violation' }, ip_address: '102.45.12.89', user_agent: 'Chrome/120', created_at: '2026-04-13T10:30:00Z' },
@@ -28,8 +29,8 @@ export default function AuditLogsPage() {
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Audit Logs</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>Audit Logs</h1>
             <DataTable<AuditLog> columns={columns} data={mockLogs} searchKeys={['admin_name', 'action', 'entity_type']} searchPlaceholder="Search logs..." getRowKey={r => r.id} />
         </div>
     );

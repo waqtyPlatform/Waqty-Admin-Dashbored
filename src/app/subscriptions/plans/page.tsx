@@ -7,8 +7,7 @@ import { FormModal, FormField } from '@/components/admin/FormModal';
 import { mockPlans } from '@/mocks/subscriptions';
 import type { SubscriptionPlan } from '@/types/subscription';
 import { Check, X, Plus, Edit, Users } from 'lucide-react';
-
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
+import shared from '@/components/admin/shared.module.css';
 
 export default function PlansPage() {
     const { t } = useTranslation();
@@ -17,11 +16,11 @@ export default function PlansPage() {
     const [editPlan, setEditPlan] = useState<SubscriptionPlan | null>(null);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{t('sidebar.plans')}</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>{t('sidebar.plans')}</h1>
                 <PermissionGate module="subscriptions" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}>
                         <Plus size={16} /> {t('subscriptions.addPlan')}
                     </button>
                 </PermissionGate>
@@ -72,7 +71,7 @@ export default function PlansPage() {
                         </div>
 
                         <PermissionGate module="subscriptions" action="edit">
-                            <button onClick={() => setEditPlan(plan)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)', width: '100%' }}>
+                            <button onClick={() => setEditPlan(plan)} className={shared.actionBtn} style={{ justifyContent: 'center', width: '100%', padding: '10px' }}>
                                 <Edit size={14} /> Edit Plan
                             </button>
                         </PermissionGate>
@@ -94,21 +93,21 @@ export default function PlansPage() {
                 }]);
                 setShowCreate(false);
             }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Plan Name (EN)" required><input name="name" type="text" required style={inputStyle} placeholder="e.g. Business" /></FormField>
-                    <FormField label="Plan Name (AR)" required><input name="name_ar" type="text" required style={inputStyle} placeholder="الباقة" dir="rtl" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Plan Name (EN)" required><input name="name" type="text" required className={shared.formInput} placeholder="e.g. Business" /></FormField>
+                    <FormField label="Plan Name (AR)" required><input name="name_ar" type="text" required className={shared.formInput} placeholder="الباقة" dir="rtl" /></FormField>
                 </div>
-                <FormField label="Tier"><select name="tier" style={inputStyle}><option value="basic">Basic</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select></FormField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Monthly Price (EGP)" required><input name="price_monthly" type="number" required style={inputStyle} /></FormField>
-                    <FormField label="Yearly Price (EGP)" required><input name="price_yearly" type="number" required style={inputStyle} /></FormField>
+                <FormField label="Tier"><select name="tier" className={shared.formInput}><option value="basic">Basic</option><option value="pro">Pro</option><option value="enterprise">Enterprise</option></select></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Monthly Price (EGP)" required><input name="price_monthly" type="number" required className={shared.formInput} /></FormField>
+                    <FormField label="Yearly Price (EGP)" required><input name="price_yearly" type="number" required className={shared.formInput} /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                    <FormField label="Max Branches"><input name="max_branches" type="number" style={inputStyle} placeholder="-1 for unlimited" /></FormField>
-                    <FormField label="Max Employees"><input name="max_employees" type="number" style={inputStyle} placeholder="-1 for unlimited" /></FormField>
-                    <FormField label="Max Bookings/mo"><input name="max_bookings" type="number" style={inputStyle} placeholder="-1 for unlimited" /></FormField>
+                <div className={shared.formGrid3}>
+                    <FormField label="Max Branches"><input name="max_branches" type="number" className={shared.formInput} placeholder="-1 for unlimited" /></FormField>
+                    <FormField label="Max Employees"><input name="max_employees" type="number" className={shared.formInput} placeholder="-1 for unlimited" /></FormField>
+                    <FormField label="Max Bookings/mo"><input name="max_bookings" type="number" className={shared.formInput} placeholder="-1 for unlimited" /></FormField>
                 </div>
-                <FormField label="Trial Days"><input name="trial_days" type="number" style={inputStyle} defaultValue={14} /></FormField>
+                <FormField label="Trial Days"><input name="trial_days" type="number" className={shared.formInput} defaultValue={14} /></FormField>
             </FormModal>
 
             {/* Edit Plan Modal */}
@@ -128,20 +127,20 @@ export default function PlansPage() {
                 setEditPlan(null);
             }}>
                 {editPlan && <>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <FormField label="Plan Name (EN)"><input name="name" type="text" defaultValue={editPlan.name} style={inputStyle} /></FormField>
-                        <FormField label="Plan Name (AR)"><input name="name_ar" type="text" defaultValue={editPlan.name_ar} style={inputStyle} dir="rtl" /></FormField>
+                    <div className={shared.formGrid2}>
+                        <FormField label="Plan Name (EN)"><input name="name" type="text" defaultValue={editPlan.name} className={shared.formInput} /></FormField>
+                        <FormField label="Plan Name (AR)"><input name="name_ar" type="text" defaultValue={editPlan.name_ar} className={shared.formInput} dir="rtl" /></FormField>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <FormField label="Monthly Price (EGP)"><input name="price_monthly" type="number" defaultValue={editPlan.price_monthly} style={inputStyle} /></FormField>
-                        <FormField label="Yearly Price (EGP)"><input name="price_yearly" type="number" defaultValue={editPlan.price_yearly} style={inputStyle} /></FormField>
+                    <div className={shared.formGrid2}>
+                        <FormField label="Monthly Price (EGP)"><input name="price_monthly" type="number" defaultValue={editPlan.price_monthly} className={shared.formInput} /></FormField>
+                        <FormField label="Yearly Price (EGP)"><input name="price_yearly" type="number" defaultValue={editPlan.price_yearly} className={shared.formInput} /></FormField>
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-                        <FormField label="Max Branches"><input name="max_branches" type="number" defaultValue={editPlan.limits.max_branches} style={inputStyle} /></FormField>
-                        <FormField label="Max Employees"><input name="max_employees" type="number" defaultValue={editPlan.limits.max_employees} style={inputStyle} /></FormField>
-                        <FormField label="Max Bookings/mo"><input name="max_bookings" type="number" defaultValue={editPlan.limits.max_bookings_per_month} style={inputStyle} /></FormField>
+                    <div className={shared.formGrid3}>
+                        <FormField label="Max Branches"><input name="max_branches" type="number" defaultValue={editPlan.limits.max_branches} className={shared.formInput} /></FormField>
+                        <FormField label="Max Employees"><input name="max_employees" type="number" defaultValue={editPlan.limits.max_employees} className={shared.formInput} /></FormField>
+                        <FormField label="Max Bookings/mo"><input name="max_bookings" type="number" defaultValue={editPlan.limits.max_bookings_per_month} className={shared.formInput} /></FormField>
                     </div>
-                    <FormField label="Trial Days"><input name="trial_days" type="number" defaultValue={editPlan.trial_days} style={inputStyle} /></FormField>
+                    <FormField label="Trial Days"><input name="trial_days" type="number" defaultValue={editPlan.trial_days} className={shared.formInput} /></FormField>
                 </>}
             </FormModal>
         </div>

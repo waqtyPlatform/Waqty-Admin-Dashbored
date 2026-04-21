@@ -6,6 +6,9 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import type { Campaign } from '@/types/marketing';
 import { Plus, Eye, MousePointerClick, Target, DollarSign } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
+
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 const initialCampaigns: Campaign[] = [
     { id: '1', name: 'Summer Promotion 2026', description: 'Platform-wide summer discount campaign', type: 'push', status: 'active', start_date: '2026-04-01', end_date: '2026-06-30', budget: 50000, spent: 18500, impressions: 125000, clicks: 9800, conversions: 1250, created_at: '2026-03-25T10:00:00Z' },
@@ -14,18 +17,17 @@ const initialCampaigns: Campaign[] = [
     { id: '4', name: 'Q1 Email Newsletter', description: 'Quarterly email to all users', type: 'email', status: 'completed', start_date: '2026-01-15', end_date: '2026-01-15', budget: 5000, spent: 4200, impressions: 48000, clicks: 6100, conversions: 890, created_at: '2026-01-10T10:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState(initialCampaigns);
     const [showCreate, setShowCreate] = useState(false);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Campaigns</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Campaigns</h1>
                 <PermissionGate module="marketing" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}>
                         <Plus size={16} /> Create Campaign
                     </button>
                 </PermissionGate>
@@ -65,15 +67,15 @@ export default function CampaignsPage() {
                 }, ...prev]);
                 setShowCreate(false);
             }}>
-                <FormField label="Campaign Name" required><input name="name" type="text" required style={inputStyle} placeholder="e.g. Summer Promotion 2026" /></FormField>
+                <FormField label="Campaign Name" required><input name="name" type="text" required className={shared.formInput} placeholder="e.g. Summer Promotion 2026" /></FormField>
                 <FormField label="Description"><textarea name="description" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Campaign description" /></FormField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Type"><select name="type" style={inputStyle}><option value="push">Push Notification</option><option value="email">Email</option><option value="banner">Banner</option><option value="featured_listing">Featured Listing</option></select></FormField>
-                    <FormField label="Budget (EGP)"><input name="budget" type="number" style={inputStyle} placeholder="0 for unlimited" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Type"><select name="type" className={shared.formInput}><option value="push">Push Notification</option><option value="email">Email</option><option value="banner">Banner</option><option value="featured_listing">Featured Listing</option></select></FormField>
+                    <FormField label="Budget (EGP)"><input name="budget" type="number" className={shared.formInput} placeholder="0 for unlimited" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Start Date" required><input name="start_date" type="date" required style={inputStyle} /></FormField>
-                    <FormField label="End Date" required><input name="end_date" type="date" required style={inputStyle} /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Start Date" required><input name="start_date" type="date" required className={shared.formInput} /></FormField>
+                    <FormField label="End Date" required><input name="end_date" type="date" required className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
+import { FormModal, FormField } from '@/components/admin/FormModal';
 import { Save, Globe, Plus } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const initialLanguages = [
     { code: 'en', name: 'English', native: 'English', rtl: false, active: true, completion: 100, isDefault: true },
@@ -27,6 +29,8 @@ export default function LocalizationSettingsPage() {
     const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
     const [firstDayOfWeek, setFirstDayOfWeek] = useState('saturday');
     const [saved, setSaved] = useState(false);
+    const [showAdd, setShowAdd] = useState(false);
+    const [newLang, setNewLang] = useState({ code: '', name: '', native: '', rtl: false, completion: 0 });
 
     const toggleLangActive = (code: string) => {
         setLanguages(prev => prev.map(l => l.code === code ? { ...l, active: !l.active } : l));
@@ -39,16 +43,29 @@ export default function LocalizationSettingsPage() {
 
     const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
+    const handleAddLanguage = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newLang.code || !newLang.name) return;
+        if (languages.some(l => l.code.toLowerCase() === newLang.code.toLowerCase())) return;
+        setLanguages(prev => [...prev, {
+            code: newLang.code.toLowerCase(), name: newLang.name, native: newLang.native || newLang.name,
+            rtl: newLang.rtl, active: false, completion: Math.max(0, Math.min(100, Number(newLang.completion) || 0)),
+            isDefault: false,
+        }]);
+        setShowAdd(false);
+        setNewLang({ code: '', name: '', native: '', rtl: false, completion: 0 });
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 900 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className={shared.pageHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Globe size={24} />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Localization Settings</h1>
+                    <h1 className={shared.pageTitle}>Localization Settings</h1>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {saved && <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: 500 }}>Saved!</span>}
-                    <button onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Save size={16} /> Save</button>
+                    <button onClick={handleSave} className={shared.addBtn}><Save size={16} /> Save</button>
                 </div>
             </div>
 
@@ -56,7 +73,7 @@ export default function LocalizationSettingsPage() {
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Supported Languages</h3>
-                    <button onClick={() => alert('Add language flow')} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={14} /> Add Language</button>
+                    <button onClick={() => setShowAdd(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={14} /> Add Language</button>
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                     <thead><tr style={{ background: 'var(--bg-secondary)' }}>
@@ -137,6 +154,32 @@ export default function LocalizationSettingsPage() {
                     ))}
                 </div>
             </div>
+
+            {/* Add Language Modal */}
+            <FormModal open={showAdd} onClose={() => setShowAdd(false)} title="Add Language" submitLabel="Add Language" onSubmit={handleAddLanguage}>
+                <div className={shared.formGrid2}>
+                    <FormField label="Code (ISO 639-1)" required>
+                        <input type="text" required maxLength={5} value={newLang.code} onChange={e => setNewLang(l => ({ ...l, code: e.target.value }))} placeholder="e.g. de" style={selectStyle} />
+                    </FormField>
+                    <FormField label="Name (EN)" required>
+                        <input type="text" required value={newLang.name} onChange={e => setNewLang(l => ({ ...l, name: e.target.value }))} placeholder="e.g. German" style={selectStyle} />
+                    </FormField>
+                </div>
+                <FormField label="Native Name">
+                    <input type="text" value={newLang.native} onChange={e => setNewLang(l => ({ ...l, native: e.target.value }))} placeholder="e.g. Deutsch" style={selectStyle} dir={newLang.rtl ? 'rtl' : 'ltr'} />
+                </FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Translation Completion (%)">
+                        <input type="number" min={0} max={100} value={newLang.completion} onChange={e => setNewLang(l => ({ ...l, completion: Number(e.target.value) }))} style={selectStyle} />
+                    </FormField>
+                    <FormField label="Right-to-Left">
+                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', padding: '8px 12px' }}>
+                            <input type="checkbox" checked={newLang.rtl} onChange={e => setNewLang(l => ({ ...l, rtl: e.target.checked }))} />
+                            RTL language
+                        </label>
+                    </FormField>
+                </div>
+            </FormModal>
         </div>
     );
 }

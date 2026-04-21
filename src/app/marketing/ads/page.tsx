@@ -6,8 +6,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, FormField, ConfirmModal } from '@/components/admin/FormModal';
 import { Plus, Eye, Pause, Play, Trash2, BarChart3, Edit } from 'lucide-react';
 import type { Ad } from '@/types/marketing';
-
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
+import shared from '@/components/admin/shared.module.css';
 
 const mockAds: Ad[] = [
     { id: 'ad-1', title: 'Summer Sale 50% OFF', title_ar: 'تخفيضات الصيف 50%', description: 'Get 50% off on all salon services', description_ar: 'خصم 50% على جميع خدمات الصالون', image_url: '#', target_url: '/offers/summer', placement: 'home_banner', ad_type: 'image_banner', targeting: { cities: ['Cairo', 'Alexandria'], categories: ['salon'], user_segments: ['active'] }, schedule: { start_date: '2026-04-01', end_date: '2026-04-30' }, priority: 1, status: 'active', analytics: { impressions: 45200, clicks: 3890, ctr: 8.6, conversions: 412 }, created_at: '2026-03-28T10:00:00Z', updated_at: '2026-04-13T10:00:00Z' },
@@ -17,11 +16,77 @@ const mockAds: Ad[] = [
     { id: 'ad-5', title: 'Spring Refresh', title_ar: 'تجديد الربيع', description: 'Fresh looks for spring season', description_ar: 'إطلالات جديدة لموسم الربيع', image_url: '#', target_url: '/offers/spring', placement: 'between_listings', ad_type: 'promotional_card', targeting: { cities: ['Cairo', 'Giza'], categories: ['salon', 'spa'], user_segments: ['active'] }, schedule: { start_date: '2026-03-01', end_date: '2026-03-31' }, priority: 2, status: 'expired', analytics: { impressions: 52000, clicks: 4100, ctr: 7.9, conversions: 380 }, created_at: '2026-02-25T10:00:00Z', updated_at: '2026-04-01T10:00:00Z' },
 ];
 
+type AdFormState = {
+    title: string;
+    title_ar: string;
+    placement: Ad['placement'];
+    ad_type: Ad['ad_type'];
+    start_date: string;
+    end_date: string;
+    target_url: string;
+};
+
+const emptyAdForm = (): AdFormState => ({
+    title: '',
+    title_ar: '',
+    placement: 'home_banner',
+    ad_type: 'image_banner',
+    start_date: new Date().toISOString().slice(0, 10),
+    end_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10),
+    target_url: '',
+});
+
 export default function AdsPage() {
     const [ads, setAds] = useState(mockAds);
     const [showCreate, setShowCreate] = useState(false);
+    const [editingAd, setEditingAd] = useState<Ad | null>(null);
+    const [form, setForm] = useState<AdFormState>(emptyAdForm());
     const [deleteAd, setDeleteAd] = useState<Ad | null>(null);
     const [analyticsAd, setAnalyticsAd] = useState<Ad | null>(null);
+
+    const openCreate = () => { setEditingAd(null); setForm(emptyAdForm()); setShowCreate(true); };
+    const openEdit = (ad: Ad) => {
+        setEditingAd(ad);
+        setForm({
+            title: ad.title,
+            title_ar: ad.title_ar,
+            placement: ad.placement,
+            ad_type: ad.ad_type,
+            start_date: ad.schedule.start_date,
+            end_date: ad.schedule.end_date,
+            target_url: ad.target_url,
+        });
+        setShowCreate(true);
+    };
+    const closeForm = () => { setShowCreate(false); setEditingAd(null); };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (editingAd) {
+            setAds(prev => prev.map(a => a.id === editingAd.id ? {
+                ...a,
+                title: form.title, title_ar: form.title_ar,
+                placement: form.placement, ad_type: form.ad_type,
+                target_url: form.target_url,
+                schedule: { start_date: form.start_date, end_date: form.end_date },
+                updated_at: new Date().toISOString(),
+            } : a));
+        } else {
+            setAds(prev => [{
+                id: `ad-${Date.now()}`,
+                title: form.title, title_ar: form.title_ar,
+                description: '', description_ar: '',
+                image_url: '#', target_url: form.target_url,
+                placement: form.placement, ad_type: form.ad_type,
+                targeting: { cities: [], categories: [], user_segments: ['all'] },
+                schedule: { start_date: form.start_date, end_date: form.end_date },
+                priority: 1, status: 'draft',
+                analytics: { impressions: 0, clicks: 0, ctr: 0, conversions: 0 },
+                created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+            }, ...prev]);
+        }
+        closeForm();
+    };
 
     const toggleStatus = (id: string) => {
         setAds(prev => prev.map(a => a.id === id ? { ...a, status: a.status === 'active' ? 'paused' as const : 'active' as const } : a));
@@ -35,26 +100,26 @@ export default function AdsPage() {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Ads Management</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>Ads Management</h1>
                 <PermissionGate module="ads" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
+                    <button onClick={openCreate} className={shared.addBtn}>
                         <Plus size={16} /> Create Ad
                     </button>
                 </PermissionGate>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div className={shared.kpiGrid}>
                 {[
                     { label: 'Active Ads', value: ads.filter(a => a.status === 'active').length },
                     { label: 'Total Impressions', value: ads.reduce((s, a) => s + a.analytics.impressions, 0).toLocaleString() },
                     { label: 'Total Clicks', value: ads.reduce((s, a) => s + a.analytics.clicks, 0).toLocaleString() },
                     { label: 'Avg CTR', value: `${(ads.filter(a => a.analytics.ctr > 0).reduce((s, a) => s + a.analytics.ctr, 0) / ads.filter(a => a.analytics.ctr > 0).length).toFixed(1)}%` },
                 ].map(k => (
-                    <div key={k.label} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, textAlign: 'center' }}>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 500, textTransform: 'uppercase' }}>{k.label}</div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: 700, marginTop: 4, color: 'var(--text-primary)' }}>{k.value}</div>
+                    <div key={k.label} className={shared.summaryCard} style={{ textAlign: 'center' }}>
+                        <div className={shared.summaryLabel}>{k.label}</div>
+                        <div className={shared.summaryValue}>{k.value}</div>
                     </div>
                 ))}
             </div>
@@ -83,7 +148,7 @@ export default function AdsPage() {
                             </div>
                             <PermissionGate module="ads" action="edit">
                                 <div style={{ display: 'flex', gap: 4 }}>
-                                    <button title="Edit" onClick={() => alert(`Edit ad: ${ad.title}`)} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Edit size={14} /></button>
+                                    <button title="Edit" onClick={() => openEdit(ad)} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Edit size={14} /></button>
                                     {(ad.status === 'active' || ad.status === 'paused') && (
                                         <button onClick={() => toggleStatus(ad.id)} title={ad.status === 'active' ? 'Pause' : 'Resume'} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: ad.status === 'active' ? 'var(--color-warning)' : 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                             {ad.status === 'active' ? <Pause size={14} /> : <Play size={14} />}
@@ -98,19 +163,19 @@ export default function AdsPage() {
                 ))}
             </div>
 
-            {/* Create Ad Modal */}
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create New Ad" submitLabel="Create Ad" onSubmit={e => { e.preventDefault(); setAds(prev => [{ id: `ad-${Date.now()}`, title: 'New Ad', title_ar: 'إعلان جديد', description: 'New ad description', description_ar: 'وصف الإعلان', image_url: '#', target_url: '/', placement: 'home_banner', ad_type: 'image_banner', targeting: { cities: [], categories: [], user_segments: ['all'] }, schedule: { start_date: new Date().toISOString().slice(0, 10), end_date: new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10) }, priority: 1, status: 'draft', analytics: { impressions: 0, clicks: 0, ctr: 0, conversions: 0 }, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }, ...prev]); setShowCreate(false); }}>
-                <FormField label="Title (EN)" required><input type="text" required style={inputStyle} placeholder="e.g. Summer Sale 50% OFF" /></FormField>
-                <FormField label="Title (AR)" required><input type="text" required style={inputStyle} placeholder="العنوان بالعربي" dir="rtl" /></FormField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Placement"><select style={inputStyle}><option value="home_banner">Home Banner</option><option value="category_banner">Category Banner</option><option value="search_promoted">Search Promoted</option><option value="between_listings">Between Listings</option></select></FormField>
-                    <FormField label="Ad Type"><select style={inputStyle}><option value="image_banner">Image Banner</option><option value="promotional_card">Promotional Card</option><option value="featured_provider">Featured Provider</option></select></FormField>
+            {/* Create/Edit Ad Modal */}
+            <FormModal open={showCreate} onClose={closeForm} title={editingAd ? `Edit Ad — ${editingAd.title}` : 'Create New Ad'} submitLabel={editingAd ? 'Save Changes' : 'Create Ad'} onSubmit={handleSubmit}>
+                <FormField label="Title (EN)" required><input type="text" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={shared.formInput} placeholder="e.g. Summer Sale 50% OFF" /></FormField>
+                <FormField label="Title (AR)" required><input type="text" required value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} className={shared.formInput} placeholder="العنوان بالعربي" dir="rtl" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Placement"><select value={form.placement} onChange={e => setForm(f => ({ ...f, placement: e.target.value as Ad['placement'] }))} className={shared.formInput}><option value="home_banner">Home Banner</option><option value="category_banner">Category Banner</option><option value="search_promoted">Search Promoted</option><option value="between_listings">Between Listings</option></select></FormField>
+                    <FormField label="Ad Type"><select value={form.ad_type} onChange={e => setForm(f => ({ ...f, ad_type: e.target.value as Ad['ad_type'] }))} className={shared.formInput}><option value="image_banner">Image Banner</option><option value="promotional_card">Promotional Card</option><option value="featured_provider">Featured Provider</option></select></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Start Date"><input type="date" style={inputStyle} /></FormField>
-                    <FormField label="End Date"><input type="date" style={inputStyle} /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label="Start Date"><input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} className={shared.formInput} /></FormField>
+                    <FormField label="End Date"><input type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} className={shared.formInput} /></FormField>
                 </div>
-                <FormField label="Target URL"><input type="url" style={inputStyle} placeholder="https://..." /></FormField>
+                <FormField label="Target URL"><input type="url" value={form.target_url} onChange={e => setForm(f => ({ ...f, target_url: e.target.value }))} className={shared.formInput} placeholder="https://..." /></FormField>
             </FormModal>
 
             {/* Delete Confirm */}
