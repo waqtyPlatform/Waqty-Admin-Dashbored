@@ -100,8 +100,8 @@ export default function DashboardPage() {
                                 }}
                                 formatter={(value) => [`EGP ${(Number(value) / 1000).toFixed(0)}K`, '']}
                             />
-                            <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="#00b166" fill="#00b16640" name="Subscriptions" />
-                            <Area type="monotone" dataKey="commissions" stackId="1" stroke="#3b82f6" fill="#3b82f640" name="Commissions" />
+                            <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="var(--color-primary-500)" fill="var(--color-primary-500)" fillOpacity={0.25} name="Subscriptions" />
+                            <Area type="monotone" dataKey="commissions" stackId="1" stroke="var(--color-info)" fill="var(--color-info)" fillOpacity={0.25} name="Commissions" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -120,8 +120,8 @@ export default function DashboardPage() {
                                 dataKey="count"
                                 nameKey="name"
                             >
-                                {mockCategoryBreakdown.map((entry, i) => (
-                                    <Cell key={i} fill={entry.color} />
+                                {mockCategoryBreakdown.map(entry => (
+                                    <Cell key={entry.name} fill={entry.color} />
                                 ))}
                             </Pie>
                             <Tooltip

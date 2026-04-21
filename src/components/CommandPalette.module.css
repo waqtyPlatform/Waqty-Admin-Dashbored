@@ -1,0 +1,108 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 15vh;
+    backdrop-filter: blur(4px);
+}
+
+.dialog {
+    width: min(640px, 92vw);
+    max-height: 70vh;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.command {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.input {
+    width: 100%;
+    padding: 16px 20px;
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 1rem;
+    outline: none;
+    font-family: var(--font-sans);
+}
+
+.input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.list {
+    overflow-y: auto;
+    padding: 8px;
+    max-height: calc(70vh - 60px);
+}
+
+.empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+}
+
+.group {
+    margin-bottom: 8px;
+}
+
+.group [cmdk-group-heading] {
+    padding: 8px 12px 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-tertiary);
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    transition: background var(--transition-fast);
+}
+
+.item[data-selected='true'] {
+    background: var(--bg-tertiary);
+}
+
+.item:hover {
+    background: var(--bg-tertiary);
+}
+
+.itemIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}
+
+.itemLabel {
+    flex: 1;
+}
+
+.itemHint {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+}

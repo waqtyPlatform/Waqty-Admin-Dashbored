@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DollarSign, CalendarDays, Users, Building2, Globe } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
 
 const reportCards = [
     { title: 'Revenue Reports', desc: 'Track subscription and commission revenue trends', icon: <DollarSign size={24} />, href: '/reports/revenue', color: 'var(--color-success)' },
@@ -16,8 +17,8 @@ const reportCards = [
 export default function ReportsPage() {
     const { t } = useTranslation();
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{t('sidebar.reports')}</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>{t('sidebar.reports')}</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
                 {reportCards.map(card => (
                     <Link key={card.href} href={card.href} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24, textDecoration: 'none', display: 'flex', flexDirection: 'column', gap: 12, transition: 'box-shadow 0.15s' }}>

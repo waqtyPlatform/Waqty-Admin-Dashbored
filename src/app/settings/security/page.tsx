@@ -1,9 +1,14 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Shield, Key, Smartphone, Clock, AlertTriangle, Save } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
+
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function SecurityPage() {
+    const { t } = useTranslation();
     const [settings, setSettings] = useState({
         requireMFA: true,
         mfaMethod: 'authenticator',
@@ -24,14 +29,14 @@ export default function SecurityPage() {
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div className={shared.pageHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Shield size={24} />
-                    <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Security Settings</h1>
+                    <h1 className={shared.pageTitle}>{t('settings.security.title')}</h1>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {saved && <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: 500 }}>Saved successfully!</span>}
-                    <button onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Save size={16} /> Save</button>
+                    {saved && <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: 500 }}>{t('settings.security.savedSuccessfully')}</span>}
+                    <button onClick={handleSave} className={shared.addBtn}><Save size={16} /> {t('common.save')}</button>
                 </div>
             </div>
 
@@ -39,17 +44,17 @@ export default function SecurityPage() {
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                     <Smartphone size={18} color="var(--color-info)" />
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Multi-Factor Authentication</h3>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>{t('settings.security.mfa')}</h3>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <Row label="Require MFA for all admins" description="All admin users must enable MFA to access the dashboard">
+                    <Row label={t('settings.security.requireMFA')} description={t('settings.security.requireMFADesc')}>
                         <Toggle value={settings.requireMFA} onChange={v => update('requireMFA', v)} />
                     </Row>
-                    <Row label="Default MFA Method">
+                    <Row label={t('settings.security.defaultMFAMethod')}>
                         <select value={settings.mfaMethod} onChange={e => update('mfaMethod', e.target.value)} style={selectStyle}>
-                            <option value="authenticator">Authenticator App</option>
-                            <option value="sms">SMS</option>
-                            <option value="email">Email</option>
+                            <option value="authenticator">{t('settings.security.authenticatorApp')}</option>
+                            <option value="sms">{t('settings.security.sms')}</option>
+                            <option value="email">{t('common.email')}</option>
                         </select>
                     </Row>
                 </div>
@@ -59,17 +64,17 @@ export default function SecurityPage() {
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                     <Key size={18} color="var(--color-primary-500)" />
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Password Policy</h3>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>{t('settings.security.passwordPolicy')}</h3>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <Row label="Minimum Password Length">
-                        <input type="number" min={8} max={32} value={settings.passwordMinLength} onChange={e => update('passwordMinLength', Number(e.target.value))} style={inputStyle} />
+                    <Row label={t('settings.security.minimumPasswordLength')}>
+                        <input type="number" min={8} max={32} value={settings.passwordMinLength} onChange={e => update('passwordMinLength', Number(e.target.value))} className={shared.formInput} />
                     </Row>
-                    <Row label="Require Uppercase Letter"><Toggle value={settings.passwordRequireUppercase} onChange={v => update('passwordRequireUppercase', v)} /></Row>
-                    <Row label="Require Number"><Toggle value={settings.passwordRequireNumber} onChange={v => update('passwordRequireNumber', v)} /></Row>
-                    <Row label="Require Special Character"><Toggle value={settings.passwordRequireSpecial} onChange={v => update('passwordRequireSpecial', v)} /></Row>
-                    <Row label="Force Password Change Every (days)">
-                        <input type="number" min={0} max={365} value={settings.requireStrongPasswordChange} onChange={e => update('requireStrongPasswordChange', Number(e.target.value))} style={inputStyle} />
+                    <Row label={t('settings.security.requireUppercase')}><Toggle value={settings.passwordRequireUppercase} onChange={v => update('passwordRequireUppercase', v)} /></Row>
+                    <Row label={t('settings.security.requireNumber')}><Toggle value={settings.passwordRequireNumber} onChange={v => update('passwordRequireNumber', v)} /></Row>
+                    <Row label={t('settings.security.requireSpecial')}><Toggle value={settings.passwordRequireSpecial} onChange={v => update('passwordRequireSpecial', v)} /></Row>
+                    <Row label={t('settings.security.forcePasswordChange')}>
+                        <input type="number" min={0} max={365} value={settings.requireStrongPasswordChange} onChange={e => update('requireStrongPasswordChange', Number(e.target.value))} className={shared.formInput} />
                     </Row>
                 </div>
             </div>
@@ -78,17 +83,17 @@ export default function SecurityPage() {
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                     <Clock size={18} color="var(--color-warning)" />
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>Session & Access</h3>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>{t('settings.security.session')}</h3>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    <Row label="Session Timeout (minutes)" description="Auto-logout after this period of inactivity">
-                        <input type="number" min={5} max={480} value={settings.sessionTimeout} onChange={e => update('sessionTimeout', Number(e.target.value))} style={inputStyle} />
+                    <Row label={t('settings.security.sessionTimeout')} description={t('settings.security.sessionTimeoutDesc')}>
+                        <input type="number" min={5} max={480} value={settings.sessionTimeout} onChange={e => update('sessionTimeout', Number(e.target.value))} className={shared.formInput} />
                     </Row>
-                    <Row label="Max Failed Login Attempts">
-                        <input type="number" min={3} max={10} value={settings.maxLoginAttempts} onChange={e => update('maxLoginAttempts', Number(e.target.value))} style={inputStyle} />
+                    <Row label={t('settings.security.maxFailedLogins')}>
+                        <input type="number" min={3} max={10} value={settings.maxLoginAttempts} onChange={e => update('maxLoginAttempts', Number(e.target.value))} className={shared.formInput} />
                     </Row>
-                    <Row label="API Rate Limit (requests/min)">
-                        <input type="number" min={10} max={1000} value={settings.rateLimit} onChange={e => update('rateLimit', Number(e.target.value))} style={inputStyle} />
+                    <Row label={t('settings.security.apiRateLimit')}>
+                        <input type="number" min={10} max={1000} value={settings.rateLimit} onChange={e => update('rateLimit', Number(e.target.value))} className={shared.formInput} />
                     </Row>
                 </div>
             </div>
@@ -97,10 +102,10 @@ export default function SecurityPage() {
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                     <AlertTriangle size={18} color="var(--color-error)" />
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>IP Allowlist</h3>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: 0 }}>{t('settings.security.ipAllowlist')}</h3>
                 </div>
                 <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 12px' }}>
-                    Restrict admin dashboard access to specific IPs. One per line. Leave empty to allow all.
+                    {t('settings.security.ipAllowlistDesc')}
                 </p>
                 <textarea value={settings.ipAllowlist} onChange={e => update('ipAllowlist', e.target.value)} placeholder="e.g.&#10;192.168.1.0/24&#10;10.0.0.5"
                     style={{ ...inputStyle, width: '100%', minHeight: 100, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} />
@@ -109,7 +114,6 @@ export default function SecurityPage() {
     );
 }
 
-const inputStyle = { padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)', width: 180, outline: 'none' };
 const selectStyle = { ...inputStyle, cursor: 'pointer' };
 
 function Row({ label, description, children }: { label: string; description?: string; children: React.ReactNode }) {

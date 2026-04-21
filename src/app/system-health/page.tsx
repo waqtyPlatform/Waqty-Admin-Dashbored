@@ -4,6 +4,8 @@ import React from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import type { SystemHealthMetric } from '@/types/system';
 import { Activity, Server, Database, Wifi, Smartphone } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import shared from '@/components/admin/shared.module.css';
 
 const mockHealth: SystemHealthMetric[] = [
     { service: 'API Server', status: 'healthy', uptime_percent: 99.97, avg_response_ms: 45, error_rate: 0.02, last_checked_at: '2026-04-13T12:00:00Z' },
@@ -19,11 +21,12 @@ const mockHealth: SystemHealthMetric[] = [
 const icons: Record<string, React.ReactNode> = { 'API Server': <Server size={20} />, 'Database': <Database size={20} />, 'CDN / Static Assets': <Wifi size={20} />, 'Push Notifications': <Activity size={20} />, 'Payment Gateway': <Activity size={20} />, 'SMS Provider': <Activity size={20} />, 'User App (iOS)': <Smartphone size={20} />, 'User App (Android)': <Smartphone size={20} /> };
 
 export default function SystemHealthPage() {
+    const { t } = useTranslation();
     const allHealthy = mockHealth.every(m => m.status === 'healthy');
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className={shared.page}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>System Health</h1>
+                <h1 className={shared.pageTitle}>{t('systemHealth.title')}</h1>
                 <StatusBadge status={allHealthy ? 'healthy' : 'degraded'} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
@@ -37,9 +40,9 @@ export default function SystemHealthPage() {
                             <StatusBadge status={m.status} />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                            <div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Uptime</div><div style={{ fontWeight: 700, color: m.uptime_percent >= 99.9 ? 'var(--color-success)' : 'var(--color-warning)' }}>{m.uptime_percent}%</div></div>
-                            <div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Latency</div><div style={{ fontWeight: 700 }}>{m.avg_response_ms}ms</div></div>
-                            <div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>Errors</div><div style={{ fontWeight: 700, color: m.error_rate > 1 ? 'var(--color-error)' : 'var(--text-primary)' }}>{m.error_rate}%</div></div>
+                            <div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('systemHealth.uptime')}</div><div style={{ fontWeight: 700, color: m.uptime_percent >= 99.9 ? 'var(--color-success)' : 'var(--color-warning)' }}>{m.uptime_percent}%</div></div>
+                            <div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('systemHealth.latency')}</div><div style={{ fontWeight: 700 }}>{m.avg_response_ms}ms</div></div>
+                            <div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)', textTransform: 'uppercase' }}>{t('systemHealth.errors')}</div><div style={{ fontWeight: 700, color: m.error_rate > 1 ? 'var(--color-error)' : 'var(--text-primary)' }}>{m.error_rate}%</div></div>
                         </div>
                     </div>
                 ))}

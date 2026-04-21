@@ -356,6 +356,17 @@
     animation: slideUp 0.25s ease;
 }
 
+@media (max-width: 640px) {
+    .modalOverlay {
+        padding: 8px;
+    }
+    .modal {
+        max-width: 100%;
+        max-height: 95vh;
+        border-radius: var(--radius-lg);
+    }
+}
+
 .modalHeader {
     display: flex;
     align-items: center;

@@ -3,6 +3,8 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Building2, TrendingUp, Star, AlertTriangle } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import shared from '@/components/admin/shared.module.css';
 
 const providerStats = [
     { month: 'Oct', newProviders: 45, churned: 8, active: 1050 },
@@ -14,15 +16,16 @@ const providerStats = [
 ];
 
 export default function ProviderReportsPage() {
+    const { t } = useTranslation();
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Provider Reports</h1>
+        <div className={shared.page}>
+            <h1 className={shared.pageTitle}>{t('reports.providers.title')}</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
                 {[
-                    { label: 'Total Providers', value: '1,247', icon: <Building2 size={20} />, color: 'var(--color-primary-500)' },
-                    { label: 'Growth Rate', value: '+4.2%', icon: <TrendingUp size={20} />, color: 'var(--color-success)' },
-                    { label: 'Avg Rating', value: '4.6', icon: <Star size={20} />, color: '#f59e0b' },
-                    { label: 'Suspended', value: '23', icon: <AlertTriangle size={20} />, color: 'var(--color-error)' },
+                    { label: t('reports.providers.total'), value: '1,247', icon: <Building2 size={20} />, color: 'var(--color-primary-500)' },
+                    { label: t('reports.providers.growthRate'), value: '+4.2%', icon: <TrendingUp size={20} />, color: 'var(--color-success)' },
+                    { label: t('reports.providers.avgRating'), value: '4.6', icon: <Star size={20} />, color: '#f59e0b' },
+                    { label: t('reports.providers.suspended'), value: '23', icon: <AlertTriangle size={20} />, color: 'var(--color-error)' },
                 ].map(k => (
                     <div key={k.label} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
                         <div style={{ width: 44, height: 44, borderRadius: 10, background: `color-mix(in srgb, ${k.color} 12%, transparent)`, color: k.color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{k.icon}</div>
@@ -31,7 +34,7 @@ export default function ProviderReportsPage() {
                 ))}
             </div>
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
-                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Provider Growth vs Churn</h3>
+                <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('reports.providers.growthVsChurn')}</h3>
                 <ResponsiveContainer width="100%" height={350}>
                     <BarChart data={providerStats}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -39,8 +42,8 @@ export default function ProviderReportsPage() {
                         <YAxis stroke="var(--text-tertiary)" fontSize={12} />
                         <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
                         <Legend />
-                        <Bar dataKey="newProviders" fill="#00b166" name="New Providers" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="churned" fill="#ef4444" name="Churned" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="newProviders" fill="var(--color-primary-500)" name={t('reports.providers.newProviders')} radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="churned" fill="var(--color-error)" name={t('reports.providers.churned')} radius={[4, 4, 0, 0]} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>

@@ -5,8 +5,9 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { Plus, Image as ImageIcon, Eye } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import shared from '@/components/admin/shared.module.css';
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 const initialBanners = [
     { id: '1', title: 'Summer Sale Banner', placement: 'Home Top', dimensions: '1200x400', status: 'active' as const, start: '2026-04-01', end: '2026-04-30', impressions: 85000, clicks: 6200 },
@@ -16,15 +17,16 @@ const initialBanners = [
 ];
 
 export default function BannersPage() {
+    const { t } = useTranslation();
     const [banners, setBanners] = useState(initialBanners);
     const [showCreate, setShowCreate] = useState(false);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><ImageIcon size={24} /><h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Banners</h1></div>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><ImageIcon size={24} /><h1 className={shared.pageTitle}>{t('marketing.banners.title')}</h1></div>
                 <PermissionGate module="marketing" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Upload Banner</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> {t('marketing.banners.upload')}</button>
                 </PermissionGate>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
@@ -42,29 +44,29 @@ export default function BannersPage() {
                                 {b.placement} &middot; {b.dimensions} &middot; {b.start} → {b.end}
                             </div>
                             <div style={{ display: 'flex', gap: 16, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                <span><Eye size={12} /> {b.impressions.toLocaleString()} views</span>
-                                <span>{b.clicks.toLocaleString()} clicks</span>
-                                <span>{b.impressions > 0 ? (b.clicks / b.impressions * 100).toFixed(1) : 0}% CTR</span>
+                                <span><Eye size={12} /> {b.impressions.toLocaleString()} {t('marketing.banners.views')}</span>
+                                <span>{b.clicks.toLocaleString()} {t('marketing.banners.clicks')}</span>
+                                <span>{b.impressions > 0 ? (b.clicks / b.impressions * 100).toFixed(1) : 0}% {t('marketing.banners.ctr')}</span>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Upload Banner" submitLabel="Create Banner" onSubmit={e => {
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title={t('marketing.banners.upload')} submitLabel={t('marketing.banners.createBanner')} onSubmit={e => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
                 setBanners(prev => [{ id: String(Date.now()), title: String(fd.get('title') || ''), placement: String(fd.get('placement') || 'Home Top'), dimensions: String(fd.get('dimensions') || '1200x400'), status: 'draft' as const, start: String(fd.get('start') || ''), end: String(fd.get('end') || ''), impressions: 0, clicks: 0 }, ...prev]);
                 setShowCreate(false);
             }}>
-                <FormField label="Banner Title" required><input name="title" type="text" required style={inputStyle} placeholder="e.g. Summer Sale Banner" /></FormField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Placement"><select name="placement" style={inputStyle}><option value="Home Top">Home Top</option><option value="Home Bottom">Home Bottom</option><option value="Category Page">Category Page</option><option value="Search Results">Search Results</option></select></FormField>
-                    <FormField label="Dimensions"><select name="dimensions" style={inputStyle}><option value="1200x400">1200x400</option><option value="1200x300">1200x300</option><option value="800x200">800x200</option><option value="600x600">600x600</option></select></FormField>
+                <FormField label={t('marketing.banners.bannerTitle')} required><input name="title" type="text" required className={shared.formInput} placeholder="e.g. Summer Sale Banner" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label={t('marketing.banners.placement')}><select name="placement" className={shared.formInput}><option value="Home Top">Home Top</option><option value="Home Bottom">Home Bottom</option><option value="Category Page">Category Page</option><option value="Search Results">Search Results</option></select></FormField>
+                    <FormField label={t('marketing.banners.dimensions')}><select name="dimensions" className={shared.formInput}><option value="1200x400">1200x400</option><option value="1200x300">1200x300</option><option value="800x200">800x200</option><option value="600x600">600x600</option></select></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Start Date" required><input name="start" type="date" required style={inputStyle} /></FormField>
-                    <FormField label="End Date" required><input name="end" type="date" required style={inputStyle} /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label={t('marketing.banners.startDate')} required><input name="start" type="date" required className={shared.formInput} /></FormField>
+                    <FormField label={t('marketing.banners.endDate')} required><input name="end" type="date" required className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

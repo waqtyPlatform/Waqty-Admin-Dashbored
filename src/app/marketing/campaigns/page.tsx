@@ -1,11 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import type { Campaign } from '@/types/marketing';
 import { Plus, Eye, MousePointerClick, Target, DollarSign } from 'lucide-react';
+import shared from '@/components/admin/shared.module.css';
+
+const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 const initialCampaigns: Campaign[] = [
     { id: '1', name: 'Summer Promotion 2026', description: 'Platform-wide summer discount campaign', type: 'push', status: 'active', start_date: '2026-04-01', end_date: '2026-06-30', budget: 50000, spent: 18500, impressions: 125000, clicks: 9800, conversions: 1250, created_at: '2026-03-25T10:00:00Z' },
@@ -14,19 +18,19 @@ const initialCampaigns: Campaign[] = [
     { id: '4', name: 'Q1 Email Newsletter', description: 'Quarterly email to all users', type: 'email', status: 'completed', start_date: '2026-01-15', end_date: '2026-01-15', budget: 5000, spent: 4200, impressions: 48000, clicks: 6100, conversions: 890, created_at: '2026-01-10T10:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
 export default function CampaignsPage() {
+    const { t } = useTranslation();
     const [campaigns, setCampaigns] = useState(initialCampaigns);
     const [showCreate, setShowCreate] = useState(false);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Campaigns</h1>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <h1 className={shared.pageTitle}>{t('marketing.campaigns.title')}</h1>
                 <PermissionGate module="marketing" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                        <Plus size={16} /> Create Campaign
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}>
+                        <Plus size={16} /> {t('marketing.campaigns.createCampaign')}
                     </button>
                 </PermissionGate>
             </div>
@@ -44,16 +48,16 @@ export default function CampaignsPage() {
                         </div>
                         <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', margin: '0 0 16px' }}>{c.description}</p>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Eye size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>Impressions</div><div style={{ fontWeight: 600 }}>{c.impressions.toLocaleString()}</div></div></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><MousePointerClick size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>Clicks</div><div style={{ fontWeight: 600 }}>{c.clicks.toLocaleString()}</div></div></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Target size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>Conversions</div><div style={{ fontWeight: 600 }}>{c.conversions.toLocaleString()}</div></div></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><DollarSign size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>Budget</div><div style={{ fontWeight: 600 }}>{c.budget > 0 ? `EGP ${c.spent.toLocaleString()} / ${c.budget.toLocaleString()}` : 'N/A'}</div></div></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Eye size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.impressions')}</div><div style={{ fontWeight: 600 }}>{c.impressions.toLocaleString()}</div></div></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><MousePointerClick size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.clicks')}</div><div style={{ fontWeight: 600 }}>{c.clicks.toLocaleString()}</div></div></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Target size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.conversions')}</div><div style={{ fontWeight: 600 }}>{c.conversions.toLocaleString()}</div></div></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><DollarSign size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.budgetLabel')}</div><div style={{ fontWeight: 600 }}>{c.budget > 0 ? `EGP ${c.spent.toLocaleString()} / ${c.budget.toLocaleString()}` : 'N/A'}</div></div></div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title="Create Campaign" submitLabel="Create" onSubmit={e => {
+            <FormModal open={showCreate} onClose={() => setShowCreate(false)} title={t('marketing.campaigns.createCampaign')} submitLabel={t('common.create')} onSubmit={e => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
                 setCampaigns(prev => [{
@@ -65,15 +69,15 @@ export default function CampaignsPage() {
                 }, ...prev]);
                 setShowCreate(false);
             }}>
-                <FormField label="Campaign Name" required><input name="name" type="text" required style={inputStyle} placeholder="e.g. Summer Promotion 2026" /></FormField>
-                <FormField label="Description"><textarea name="description" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Campaign description" /></FormField>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Type"><select name="type" style={inputStyle}><option value="push">Push Notification</option><option value="email">Email</option><option value="banner">Banner</option><option value="featured_listing">Featured Listing</option></select></FormField>
-                    <FormField label="Budget (EGP)"><input name="budget" type="number" style={inputStyle} placeholder="0 for unlimited" /></FormField>
+                <FormField label={t('marketing.campaigns.campaignName')} required><input name="name" type="text" required className={shared.formInput} placeholder="e.g. Summer Promotion 2026" /></FormField>
+                <FormField label={t('marketing.campaigns.description')}><textarea name="description" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Campaign description" /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label={t('marketing.campaigns.type')}><select name="type" className={shared.formInput}><option value="push">Push Notification</option><option value="email">{t('common.email')}</option><option value="banner">Banner</option><option value="featured_listing">Featured Listing</option></select></FormField>
+                    <FormField label={t('marketing.campaigns.budget')}><input name="budget" type="number" className={shared.formInput} placeholder="0 for unlimited" /></FormField>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Start Date" required><input name="start_date" type="date" required style={inputStyle} /></FormField>
-                    <FormField label="End Date" required><input name="end_date" type="date" required style={inputStyle} /></FormField>
+                <div className={shared.formGrid2}>
+                    <FormField label={t('marketing.campaigns.startDate')} required><input name="start_date" type="date" required className={shared.formInput} /></FormField>
+                    <FormField label={t('marketing.campaigns.endDate')} required><input name="end_date" type="date" required className={shared.formInput} /></FormField>
                 </div>
             </FormModal>
         </div>

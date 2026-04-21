@@ -5,6 +5,8 @@ import { DataTable, type Column } from '@/components/tables/DataTable';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { Plus, Edit, Globe } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
+import shared from '@/components/admin/shared.module.css';
 
 interface TranslationEntry { id: string; key: string; en: string; ar: string; module: string; updated_at: string; }
 
@@ -23,46 +25,46 @@ const initialTranslations: TranslationEntry[] = [
     { id: '12', key: 'notification.newBooking', en: 'New booking received', ar: 'تم استلام حجز جديد', module: 'notification', updated_at: '2026-03-25T10:00:00Z' },
 ];
 
-const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 export default function LocalizationPage() {
+    const { t } = useTranslation();
     const [translations, setTranslations] = useState(initialTranslations);
     const [showCreate, setShowCreate] = useState(false);
     const [editEntry, setEditEntry] = useState<TranslationEntry | null>(null);
     const [moduleFilter, setModuleFilter] = useState('all');
-    const modules = Array.from(new Set(translations.map(t => t.module)));
-    const filtered = translations.filter(t => moduleFilter === 'all' || t.module === moduleFilter);
+    const modules = Array.from(new Set(translations.map(tr => tr.module)));
+    const filtered = translations.filter(tr => moduleFilter === 'all' || tr.module === moduleFilter);
 
     const columns: Column<TranslationEntry>[] = [
-        { key: 'key', label: 'Key', sortable: true, render: r => <code style={{ fontSize: '0.8125rem', fontWeight: 500, background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: 4 }}>{r.key}</code> },
-        { key: 'en', label: 'English', sortable: true, render: r => <span style={{ fontSize: '0.875rem' }}>{r.en}</span> },
-        { key: 'ar', label: 'Arabic', sortable: true, render: r => <span style={{ fontSize: '0.875rem' }} dir="rtl">{r.ar}</span> },
-        { key: 'module', label: 'Module', sortable: true, render: r => <span style={{ textTransform: 'capitalize', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: 4, fontSize: '0.75rem' }}>{r.module}</span> },
+        { key: 'key', label: t('localization.key'), sortable: true, render: r => <code style={{ fontSize: '0.8125rem', fontWeight: 500, background: 'var(--bg-tertiary)', padding: '2px 6px', borderRadius: 4 }}>{r.key}</code> },
+        { key: 'en', label: t('localization.english'), sortable: true, render: r => <span style={{ fontSize: '0.875rem' }}>{r.en}</span> },
+        { key: 'ar', label: t('localization.arabic'), sortable: true, render: r => <span style={{ fontSize: '0.875rem' }} dir="rtl">{r.ar}</span> },
+        { key: 'module', label: t('localization.module'), sortable: true, render: r => <span style={{ textTransform: 'capitalize', padding: '2px 8px', background: 'var(--bg-tertiary)', borderRadius: 4, fontSize: '0.75rem' }}>{r.module}</span> },
         { key: 'actions', label: '', width: '48px', render: r => <button onClick={e => { e.stopPropagation(); setEditEntry(r); }} style={{ border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', padding: '4px 8px', display: 'flex' }}><Edit size={14} /></button> },
     ];
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Globe size={24} /><h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Localization Manager</h1></div>
+        <div className={shared.page}>
+            <div className={shared.pageHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><Globe size={24} /><h1 className={shared.pageTitle}>{t('localization.title')}</h1></div>
                 <PermissionGate module="localization" action="create">
-                    <button onClick={() => setShowCreate(true)} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 16px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}><Plus size={16} /> Add Key</button>
+                    <button onClick={() => setShowCreate(true)} className={shared.addBtn}><Plus size={16} /> {t('localization.addKey')}</button>
                 </PermissionGate>
             </div>
 
             <div style={{ display: 'flex', gap: 8, fontSize: '0.8125rem', color: 'var(--text-secondary)' }}>
-                <span>Total keys: <strong>{translations.length}</strong></span>
+                <span>{t('localization.totalKeys')}: <strong>{translations.length}</strong></span>
                 <span>&middot;</span>
-                <span>Modules: <strong>{modules.length}</strong></span>
+                <span>{t('localization.modulesLabel')}: <strong>{modules.length}</strong></span>
             </div>
 
-            <DataTable<TranslationEntry> columns={columns} data={filtered} searchKeys={['key', 'en', 'ar']} searchPlaceholder="Search translations..." getRowKey={r => r.id}
+            <DataTable<TranslationEntry> columns={columns} data={filtered} searchKeys={['key', 'en', 'ar']} searchPlaceholder={t('localization.searchPlaceholder')} getRowKey={r => r.id}
                 filters={<select value={moduleFilter} onChange={e => setModuleFilter(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)' }}>
-                    <option value="all">All Modules</option>
+                    <option value="all">{t('localization.allModules')}</option>
                     {modules.map(m => <option key={m} value={m}>{m}</option>)}
                 </select>}
             />
 
-            <FormModal open={showCreate || !!editEntry} onClose={() => { setShowCreate(false); setEditEntry(null); }} title={editEntry ? 'Edit Translation' : 'Add Translation Key'} submitLabel={editEntry ? 'Save' : 'Add Key'} onSubmit={e => {
+            <FormModal open={showCreate || !!editEntry} onClose={() => { setShowCreate(false); setEditEntry(null); }} title={editEntry ? t('localization.editTranslation') : t('localization.addTranslationKey')} submitLabel={editEntry ? t('common.save') : t('localization.addKey')} onSubmit={e => {
                 e.preventDefault();
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
                 const now = new Date().toISOString();
@@ -76,10 +78,10 @@ export default function LocalizationPage() {
                 }
                 setShowCreate(false); setEditEntry(null);
             }}>
-                <FormField label="Key" required><input name="key" type="text" required defaultValue={editEntry?.key || ''} style={inputStyle} placeholder="e.g. booking.confirmTitle" /></FormField>
-                <FormField label="Module"><input name="module" type="text" defaultValue={editEntry?.module || ''} style={inputStyle} placeholder="e.g. booking" /></FormField>
-                <FormField label="English" required><input name="en" type="text" required defaultValue={editEntry?.en || ''} style={inputStyle} placeholder="English translation" /></FormField>
-                <FormField label="Arabic" required><input name="ar" type="text" required defaultValue={editEntry?.ar || ''} style={inputStyle} placeholder="الترجمة العربية" dir="rtl" /></FormField>
+                <FormField label={t('localization.key')} required><input name="key" type="text" required defaultValue={editEntry?.key || ''} className={shared.formInput} placeholder="e.g. booking.confirmTitle" /></FormField>
+                <FormField label={t('localization.module')}><input name="module" type="text" defaultValue={editEntry?.module || ''} className={shared.formInput} placeholder="e.g. booking" /></FormField>
+                <FormField label={t('localization.english')} required><input name="en" type="text" required defaultValue={editEntry?.en || ''} className={shared.formInput} placeholder="English translation" /></FormField>
+                <FormField label={t('localization.arabic')} required><input name="ar" type="text" required defaultValue={editEntry?.ar || ''} className={shared.formInput} placeholder="الترجمة العربية" dir="rtl" /></FormField>
             </FormModal>
         </div>
     );

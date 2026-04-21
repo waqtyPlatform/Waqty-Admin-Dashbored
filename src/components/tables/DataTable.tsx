@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight, Download, Inbox } from 'lucide-react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
+import { EmptyState } from '@/components/admin/EmptyState';
 import styles from './DataTable.module.css';
 
 export interface Column<T> {
@@ -157,7 +158,11 @@ export function DataTable<T extends object>({
                         ) : paginated.length === 0 ? (
                             <tr>
                                 <td colSpan={columns.length} className={styles.empty}>
-                                    {emptyMessage || t('common.noData')}
+                                    <EmptyState
+                                        icon={<Inbox size={36} strokeWidth={1.5} />}
+                                        title={emptyMessage || t('common.noData')}
+                                        description={debouncedSearch ? 'Try adjusting your search or filters.' : undefined}
+                                    />
                                 </td>
                             </tr>
                         ) : (

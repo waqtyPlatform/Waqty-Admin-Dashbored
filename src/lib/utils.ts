@@ -54,8 +54,11 @@ export function formatCurrency(amount: number, currency = 'EGP'): string {
 }
 
 /**
- * Format date
+ * Format date. Returns `—` for missing or invalid input.
  */
-export function formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString();
+export function formatDate(dateStr: string | null | undefined): string {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return '—';
+    return d.toLocaleDateString();
 }

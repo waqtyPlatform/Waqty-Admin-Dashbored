@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import type { SupportTicket } from '@/types/ticket';
 import { MessageSquare, AlertTriangle, Clock } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const mockTickets: SupportTicket[] = [
     { id: 'TK-001', subject: 'Cannot process payment', description: 'My credit card keeps getting declined when trying to pay for subscription', category: 'billing', priority: 'high', status: 'open', submitted_by: { type: 'provider', id: '6', name: 'Fatima Hassan', email: 'fatima@nailart.com' }, assigned_to: null, assigned_to_name: null, sla_deadline: '2026-04-14T10:00:00Z', sla_breached: false, messages: [], tags: ['payment', 'subscription'], created_at: '2026-04-13T08:00:00Z', updated_at: '2026-04-13T08:00:00Z', resolved_at: null },
@@ -19,13 +20,22 @@ const mockTickets: SupportTicket[] = [
 const priorityColors: Record<string, string> = { low: 'var(--text-tertiary)', medium: 'var(--color-info)', high: 'var(--color-warning)', urgent: 'var(--color-error)' };
 
 export default function SupportPage() {
+    const { t } = useTranslation();
     const router = useRouter();
-    const [statusFilter, setStatusFilter] = useState('all');
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const statusFilter = searchParams.get('status') || 'all';
+    const setStatusFilter = useCallback((value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value === 'all') params.delete('status');
+        else params.set('status', value);
+        router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
+    }, [searchParams, pathname, router]);
     const filtered = mockTickets.filter(t => statusFilter === 'all' || t.status === statusFilter);
 
     const columns: Column<SupportTicket>[] = [
-        { key: 'id', label: 'ID', width: '80px', render: r => <span style={{ fontWeight: 500, fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{r.id}</span> },
-        { key: 'subject', label: 'Subject', sortable: true, render: r => (
+        { key: 'id', label: t('support.id'), width: '80px', render: r => <span style={{ fontWeight: 500, fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{r.id}</span> },
+        { key: 'subject', label: t('support.subject'), sortable: true, render: r => (
             <div>
                 <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {r.sla_breached && <AlertTriangle size={14} color="var(--color-error)" />}
@@ -34,35 +44,35 @@ export default function SupportPage() {
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{r.submitted_by.name} ({r.submitted_by.type})</div>
             </div>
         )},
-        { key: 'category', label: 'Category', sortable: true, render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.category.replace('_', ' ')}</span> },
-        { key: 'priority', label: 'Priority', sortable: true, render: r => <span style={{ color: priorityColors[r.priority], fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase' }}>{r.priority}</span> },
-        { key: 'status', label: 'Status', sortable: true, render: r => <StatusBadge status={r.status} /> },
-        { key: 'assigned_to_name', label: 'Assigned', render: r => r.assigned_to_name || <span style={{ color: 'var(--text-tertiary)' }}>Unassigned</span> },
-        { key: 'created_at', label: 'Created', sortable: true, render: r => new Date(r.created_at).toLocaleDateString() },
+        { key: 'category', label: t('support.category'), sortable: true, render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.category.replace('_', ' ')}</span> },
+        { key: 'priority', label: t('support.priority'), sortable: true, render: r => <span style={{ color: priorityColors[r.priority], fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase' }}>{r.priority}</span> },
+        { key: 'status', label: t('common.status'), sortable: true, render: r => <StatusBadge status={r.status} /> },
+        { key: 'assigned_to_name', label: t('support.assigned'), render: r => r.assigned_to_name || <span style={{ color: 'var(--text-tertiary)' }}>{t('support.unassigned')}</span> },
+        { key: 'created_at', label: t('support.created'), sortable: true, render: r => new Date(r.created_at).toLocaleDateString() },
     ];
 
     const summary = { open: mockTickets.filter(t => t.status === 'open').length, inProgress: mockTickets.filter(t => t.status === 'in_progress').length, breached: mockTickets.filter(t => t.sla_breached).length };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>Support Tickets</h1>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{t('support.title')}</h1>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <MessageSquare size={20} color="var(--color-warning)" />
-                    <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Open</div><div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{summary.open}</div></div>
+                    <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('support.open')}</div><div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{summary.open}</div></div>
                 </div>
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <Clock size={20} color="var(--color-info)" />
-                    <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>In Progress</div><div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{summary.inProgress}</div></div>
+                    <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('support.inProgress')}</div><div style={{ fontSize: '1.25rem', fontWeight: 700 }}>{summary.inProgress}</div></div>
                 </div>
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <AlertTriangle size={20} color="var(--color-error)" />
-                    <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>SLA Breached</div><div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-error)' }}>{summary.breached}</div></div>
+                    <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('support.slaBreached')}</div><div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-error)' }}>{summary.breached}</div></div>
                 </div>
             </div>
-            <DataTable<SupportTicket> columns={columns} data={filtered} searchKeys={['subject', 'id', 'submitted_by']} searchPlaceholder="Search tickets..." getRowKey={r => r.id} onRowClick={r => router.push(`/support/${r.id}`)}
+            <DataTable<SupportTicket> columns={columns} data={filtered} searchKeys={['subject', 'id', 'submitted_by']} searchPlaceholder={t('support.searchPlaceholder')} getRowKey={r => r.id} onRowClick={r => router.push(`/support/${r.id}`)}
                 filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)' }}>
-                    <option value="all">All Status</option><option value="open">Open</option><option value="in_progress">In Progress</option><option value="waiting_on_customer">Waiting</option><option value="resolved">Resolved</option>
+                    <option value="all">{t('common.all')} {t('common.status')}</option><option value="open">{t('support.open')}</option><option value="in_progress">{t('support.inProgress')}</option><option value="waiting_on_customer">{t('support.waiting')}</option><option value="resolved">{t('support.resolved')}</option>
                 </select>}
             />
         </div>

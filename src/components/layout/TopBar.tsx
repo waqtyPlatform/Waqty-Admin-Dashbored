@@ -5,17 +5,19 @@ import { useRouter } from 'next/navigation';
 import { useSidebar } from './SidebarContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Search, Bell, Moon, Sun, Menu, ChevronDown, User, LogOut, Settings, Languages } from 'lucide-react';
+import { Search, Bell, Moon, Sun, Menu, ChevronDown, User, LogOut, Settings, Languages, AlertTriangle } from 'lucide-react';
 import styles from './TopBar.module.css';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useCommandPalette } from '@/components/CommandPalette';
 
 export default function TopBar() {
     const router = useRouter();
     const { setMobileOpen } = useSidebar();
-    const { user, logout } = useAuth();
+    const { user, logout, impersonating, stopImpersonating } = useAuth();
     const { language, toggleLanguage } = useLanguage();
     const { resolvedTheme, toggleTheme } = useTheme();
+    const { setOpen: setPaletteOpen } = useCommandPalette();
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [searchFocused, setSearchFocused] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
@@ -32,24 +34,39 @@ export default function TopBar() {
     }, []);
 
     return (
-        <header className={styles.topbar}>
+        <>
+            {impersonating && (
+                <div className={styles.impersonationBanner}>
+                    <AlertTriangle size={16} />
+                    <span>
+                        Impersonating <strong>{impersonating.providerName}</strong> — all actions will be logged
+                    </span>
+                    <button className={styles.impersonationExit} onClick={stopImpersonating}>
+                        Exit
+                    </button>
+                </div>
+            )}
+        <header className={`${styles.topbar} ${impersonating ? styles.topbarWithBanner : ''}`}>
             {/* Mobile menu button */}
             <button className={styles.mobileMenuBtn} onClick={() => setMobileOpen(true)} aria-label="Open menu">
                 <Menu size={20} />
             </button>
 
-            {/* Search */}
-            <div className={`${styles.searchWrapper} ${searchFocused ? styles.searchActive : ''}`}>
+            {/* Search — opens CommandPalette */}
+            <button
+                type="button"
+                className={`${styles.searchWrapper} ${searchFocused ? styles.searchActive : ''}`}
+                onClick={() => setPaletteOpen(true)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                aria-label="Open command palette"
+            >
                 <Search size={18} className={styles.searchIcon} />
-                <input
-                    type="text"
-                    placeholder={t('topbar.search')}
-                    className={styles.searchInput}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setSearchFocused(false)}
-                />
+                <span className={styles.searchInput} style={{ textAlign: 'start', color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center' }}>
+                    {t('topbar.search')}
+                </span>
                 <kbd className={styles.searchKbd}>⌘K</kbd>
-            </div>
+            </button>
 
             {/* Actions */}
             <div className={styles.actions}>
@@ -95,5 +112,6 @@ export default function TopBar() {
                 </div>
             </div>
         </header>
+        </>
     );
 }

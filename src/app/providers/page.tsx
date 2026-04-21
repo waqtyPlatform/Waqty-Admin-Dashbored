@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermission } from '@/hooks/usePermission';
 import { DataTable, type Column } from '@/components/tables/DataTable';
@@ -27,11 +27,19 @@ import styles from './page.module.css';
 
 export default function ProvidersPage() {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const { t } = useTranslation();
     const { can } = usePermission();
     const [providers, setProviders] = useState(mockProviders);
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [categoryFilter, setCategoryFilter] = useState<string>('all');
+    const statusFilter = searchParams.get('status') || 'all';
+    const categoryFilter = searchParams.get('category') || 'all';
+    const setFilter = useCallback((key: string, value: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (value === 'all') params.delete(key);
+        else params.set(key, value);
+        router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
+    }, [searchParams, pathname, router]);
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [confirmAction, setConfirmAction] = useState<{ id: string; action: string; name: string } | null>(null);
@@ -106,13 +114,13 @@ export default function ProvidersPage() {
         },
         {
             key: 'total_bookings',
-            label: 'Bookings',
+            label: t('providers.bookings'),
             sortable: true,
             render: (row) => row.total_bookings.toLocaleString(),
         },
         {
             key: 'total_revenue',
-            label: 'Revenue',
+            label: t('providers.revenue'),
             sortable: true,
             render: (row) => `EGP ${(row.total_revenue / 1000).toFixed(0)}K`,
         },
@@ -187,17 +195,17 @@ export default function ProvidersPage() {
                 columns={columns}
                 data={filtered}
                 searchKeys={['business_name', 'email', 'name', 'city']}
-                searchPlaceholder="Search providers..."
+                searchPlaceholder={t('providers.searchPlaceholder')}
                 getRowKey={(row) => row.id}
                 onRowClick={(row) => router.push(`/providers/${row.id}`)}
                 filters={
                     <div className={styles.filterGroup}>
                         <select
                             value={statusFilter}
-                            onChange={e => setStatusFilter(e.target.value)}
+                            onChange={e => setFilter('status', e.target.value)}
                             className={styles.filterSelect}
                         >
-                            <option value="all">{t('common.all')} Status</option>
+                            <option value="all">{t('providers.allStatus')}</option>
                             <option value="active">Active</option>
                             <option value="suspended">Suspended</option>
                             <option value="blocked">Blocked</option>
@@ -206,10 +214,10 @@ export default function ProvidersPage() {
                         </select>
                         <select
                             value={categoryFilter}
-                            onChange={e => setCategoryFilter(e.target.value)}
+                            onChange={e => setFilter('category', e.target.value)}
                             className={styles.filterSelect}
                         >
-                            <option value="all">{t('common.all')} Category</option>
+                            <option value="all">{t('providers.allCategory')}</option>
                             <option value="salon">Salon</option>
                             <option value="barber">Barber</option>
                             <option value="clinic">Clinic</option>
@@ -229,8 +237,8 @@ export default function ProvidersPage() {
             <FormModal
                 open={showCreateModal}
                 onClose={() => setShowCreateModal(false)}
-                title="Add New Provider"
-                submitLabel="Create Provider"
+                title={t('providers.addNewProvider')}
+                submitLabel={t('providers.createProvider')}
                 onSubmit={(e) => {
                     e.preventDefault();
                     const id = String(Date.now());
@@ -248,14 +256,14 @@ export default function ProvidersPage() {
                     setNewProvider({ business_name: '', name: '', email: '', phone: '', business_category: 'salon', city: '', commission_rate: 10 });
                 }}
             >
-                <FormField label="Business Name" required>
+                <FormField label={t('providers.businessName')} required>
                     <input type="text" value={newProvider.business_name} onChange={e => setNewProvider(p => ({ ...p, business_name: e.target.value }))} required className={styles.formInput} placeholder="e.g. Glamour Studio" />
                 </FormField>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Owner Name" required>
+                    <FormField label={t('providers.ownerName')} required>
                         <input type="text" value={newProvider.name} onChange={e => setNewProvider(p => ({ ...p, name: e.target.value }))} required className={styles.formInput} placeholder="Full name" />
                     </FormField>
-                    <FormField label="Category" required>
+                    <FormField label={t('providers.category')} required>
                         <select value={newProvider.business_category} onChange={e => setNewProvider(p => ({ ...p, business_category: e.target.value }))} className={styles.formInput}>
                             <option value="salon">Salon</option>
                             <option value="barber">Barber</option>
@@ -266,18 +274,18 @@ export default function ProvidersPage() {
                     </FormField>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="Email" required>
+                    <FormField label={t('common.email')} required>
                         <input type="email" value={newProvider.email} onChange={e => setNewProvider(p => ({ ...p, email: e.target.value }))} required className={styles.formInput} placeholder="email@example.com" />
                     </FormField>
-                    <FormField label="Phone" required>
+                    <FormField label={t('common.phone')} required>
                         <input type="tel" value={newProvider.phone} onChange={e => setNewProvider(p => ({ ...p, phone: e.target.value }))} required className={styles.formInput} placeholder="+201012345678" />
                     </FormField>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                    <FormField label="City" required>
+                    <FormField label={t('common.city')} required>
                         <input type="text" value={newProvider.city} onChange={e => setNewProvider(p => ({ ...p, city: e.target.value }))} required className={styles.formInput} placeholder="Cairo" />
                     </FormField>
-                    <FormField label="Commission Rate (%)">
+                    <FormField label={`${t('providers.commissionRate')} (%)`}>
                         <input type="number" value={newProvider.commission_rate} onChange={e => setNewProvider(p => ({ ...p, commission_rate: Number(e.target.value) }))} className={styles.formInput} min={0} max={100} />
                     </FormField>
                 </div>
