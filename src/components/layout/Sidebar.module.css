@@ -186,7 +186,9 @@
 .subNav {
     display: flex;
     flex-direction: column;
-    padding: var(--space-1) 0 var(--space-1) calc(var(--space-3) + 20px + var(--space-3));
+    padding-block: var(--space-1);
+    padding-inline-start: calc(var(--space-3) + 20px + var(--space-3));
+    padding-inline-end: 0;
     gap: var(--space-0);
 }
 
@@ -303,8 +305,22 @@
         transform: translateX(0);
     }
 
+    /* In RTL, slide off to the trailing (right) edge instead of the
+       leading (left) edge. translateX of a positive % pushes right. */
+    :global([dir='rtl']) .sidebar {
+        transform: translateX(100%);
+    }
+    :global([dir='rtl']) .sidebar.mobileOpen {
+        transform: translateX(0);
+    }
+
     .collapseBtn {
         display: none;
+    }
+
+    /* Show the X (close) button on mobile when the sidebar is open. */
+    .sidebar.mobileOpen .collapseBtn {
+        display: flex;
     }
 
     .mobileCloseBtn {
