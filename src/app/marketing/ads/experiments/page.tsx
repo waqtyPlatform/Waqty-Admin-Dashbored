@@ -129,7 +129,7 @@ export default function ExperimentsPage() {
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12, marginBottom: 12 }}>
                                 <VariantCard title={t('marketing.experiments.variantA')} label={exp.variants.A.label} v={exp.variants.A} ctr={result.ctrA} conv={result.convA} />
                                 <VariantCard title={t('marketing.experiments.variantB')} label={exp.variants.B.label} v={exp.variants.B} ctr={result.ctrB} conv={result.convB} />
                             </div>

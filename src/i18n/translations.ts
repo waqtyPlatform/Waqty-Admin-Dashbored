@@ -77,6 +77,8 @@ const translations: Translations = {
     'common.exit': { en: 'Exit', ar: 'خروج' },
     'notifications.title': { en: 'Notifications', ar: 'الإشعارات' },
     'notifications.unread': { en: 'Unread', ar: 'غير مقروء' },
+    'mobileNav.more': { en: 'More', ar: 'المزيد' },
+    'mobileNav.ariaLabel': { en: 'Mobile primary navigation', ar: 'التنقل الرئيسي للجوال' },
 
     // ── Sidebar ──
     'sidebar.dashboard': { en: 'Dashboard', ar: 'لوحة القيادة' },
