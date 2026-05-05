@@ -204,7 +204,7 @@ export default function CountriesPage() {
 
     // ── Shared column builders ────────────────────────────
     const nameCol = <T extends CountryObject | CityObject | GovernorateObject>(): Column<T> => ({
-        key: 'name' as keyof T, label: t('common.name'), sortable: true,
+        key: 'name', label: t('common.name'), sortable: true,
         render: (row) => (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--color-primary-50)', color: 'var(--color-primary-600)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: '0.75rem', fontWeight: 600 }}>
@@ -219,12 +219,12 @@ export default function CountriesPage() {
     });
 
     const statusCol = <T extends CountryObject | CityObject | GovernorateObject>(): Column<T> => ({
-        key: 'active' as keyof T, label: t('common.status'),
+        key: 'active', label: t('common.status'),
         render: (row) => <StatusBadge status={(row as unknown as CountryObject).active ? 'active' : 'deactivated'} />,
     });
 
     const actionsCol = <T extends CountryObject | CityObject | GovernorateObject>(): Column<T> => ({
-        key: 'uuid' as keyof T, label: '', width: '48px',
+        key: 'uuid', label: '', width: '48px',
         render: (row) => {
             const item = row as unknown as CountryObject;
             return (

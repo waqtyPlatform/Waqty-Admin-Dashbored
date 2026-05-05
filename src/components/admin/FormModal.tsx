@@ -9,7 +9,7 @@ interface FormModalProps {
     open: boolean;
     onClose: () => void;
     title: string;
-    onSubmit: (e: React.FormEvent) => void;
+    onSubmit: (e: React.FormEvent<HTMLFormElement>) => void | Promise<void>;
     submitLabel?: string;
     submitVariant?: 'primary' | 'danger';
     loading?: boolean;

@@ -91,12 +91,12 @@ export default function PaymentsPage() {
     const columns: Column<PaymentObject>[] = [
         {
             key: 'uuid',
-            header: 'UUID',
+            label: 'UUID',
             render: r => <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{r.uuid.slice(0, 8)}…</span>,
         },
         {
             key: 'payment_method',
-            header: 'Method',
+            label: 'Method',
             render: r => (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <CreditCard size={14} />
@@ -106,12 +106,12 @@ export default function PaymentsPage() {
         },
         {
             key: 'amount',
-            header: 'Amount',
+            label: 'Amount',
             render: r => <span style={{ fontWeight: 600 }}>EGP {Number(r.amount).toFixed(2)}</span>,
         },
         {
             key: 'status',
-            header: 'Status',
+            label: 'Status',
             render: r => (
                 <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600, background: `color-mix(in srgb, ${statusColors[r.status]} 15%, transparent)`, color: statusColors[r.status] }}>
                     {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
@@ -120,17 +120,17 @@ export default function PaymentsPage() {
         },
         {
             key: 'transaction_id',
-            header: 'Transaction ID',
+            label: 'Transaction ID',
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{r.transaction_id ?? '—'}</span>,
         },
         {
             key: 'created_at',
-            header: 'Date',
+            label: 'Date',
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{new Date(r.created_at).toLocaleDateString()}</span>,
         },
         {
             key: 'actions',
-            header: '',
+            label: '',
             render: r => (
                 <div style={{ position: 'relative' }}>
                     <button onClick={() => setActionMenuId(actionMenuId === r.uuid ? null : r.uuid)}
@@ -139,7 +139,7 @@ export default function PaymentsPage() {
                     </button>
                     {actionMenuId === r.uuid && (
                         <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 140, padding: 4 }}>
-                            <PermissionGate module="settings" action="update">
+                            <PermissionGate module="settings" action="edit">
                                 <button onClick={() => { setEditTarget(r); setActionMenuId(null); }}
                                     style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}>
                                     <Pencil size={14} /> Edit
@@ -212,14 +212,16 @@ export default function PaymentsPage() {
                     {formError && (
                         <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>
                     )}
-                    <FormField label="Payment Method" name="payment_method" required>
+                    <FormField label="Payment Method" required>
                         <select name="payment_method" defaultValue={editTarget.payment_method} className={shared.filterSelect} style={{ width: '100%' }}>
                             <option value="cash">Cash</option>
                             <option value="paymob">Paymob</option>
                         </select>
                     </FormField>
-                    <FormField label="Amount (EGP)" name="amount" type="number" defaultValue={String(editTarget.amount)} required />
-                    <FormField label="Status" name="status" required>
+                    <FormField label="Amount (EGP)" required>
+                        <input name="amount" type="number" defaultValue={String(editTarget.amount)} required className={shared.filterSelect} style={{ width: '100%' }} />
+                    </FormField>
+                    <FormField label="Status" required>
                         <select name="status" defaultValue={editTarget.status} className={shared.filterSelect} style={{ width: '100%' }}>
                             <option value="pending">Pending</option>
                             <option value="completed">Completed</option>
@@ -227,8 +229,12 @@ export default function PaymentsPage() {
                             <option value="refunded">Refunded</option>
                         </select>
                     </FormField>
-                    <FormField label="Transaction ID" name="transaction_id" defaultValue={editTarget.transaction_id ?? ''} />
-                    <FormField label="Notes" name="notes" defaultValue={editTarget.notes ?? ''} />
+                    <FormField label="Transaction ID">
+                        <input name="transaction_id" defaultValue={editTarget.transaction_id ?? ''} className={shared.filterSelect} style={{ width: '100%' }} />
+                    </FormField>
+                    <FormField label="Notes">
+                        <input name="notes" defaultValue={editTarget.notes ?? ''} className={shared.filterSelect} style={{ width: '100%' }} />
+                    </FormField>
                 </FormModal>
             )}
 

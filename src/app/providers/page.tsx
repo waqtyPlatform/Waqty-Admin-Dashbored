@@ -106,7 +106,7 @@ export default function ProvidersPage() {
     const columns: Column<AdminProviderObject>[] = [
         {
             key: 'name',
-            header: 'Provider',
+            label: 'Provider',
             render: r => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--color-primary-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary-600)', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0 }}>
@@ -121,29 +121,29 @@ export default function ProvidersPage() {
         },
         {
             key: 'phone',
-            header: 'Phone',
+            label: 'Phone',
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{r.phone}</span>,
         },
         {
             key: 'category',
-            header: 'Category',
+            label: 'Category',
             render: r => r.category
                 ? <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>{r.category.name}</span>
                 : <span style={{ color: 'var(--text-tertiary)' }}>—</span>,
         },
         {
             key: 'status',
-            header: 'Status',
+            label: 'Status',
             render: r => <StatusBadge status={getProviderStatus(r)} />,
         },
         {
             key: 'created_at',
-            header: 'Joined',
+            label: 'Joined',
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{new Date(r.created_at).toLocaleDateString()}</span>,
         },
         {
             key: 'actions',
-            header: '',
+            label: '',
             render: r => (
                 <div style={{ position: 'relative' }}>
                     <button onClick={e => { e.stopPropagation(); setActionMenuId(actionMenuId === r.uuid ? null : r.uuid); }}
@@ -154,7 +154,7 @@ export default function ProvidersPage() {
                         <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 160, padding: 4 }} onClick={e => e.stopPropagation()}>
                             {!r.deleted_at && (
                                 <>
-                                    <PermissionGate module="providers" action="update">
+                                    <PermissionGate module="providers" action="edit">
                                         {r.active
                                             ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'deactivate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldOff size={14} /> Deactivate</button>
                                             : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'activate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> Activate</button>
@@ -174,7 +174,7 @@ export default function ProvidersPage() {
                                 </>
                             )}
                             {r.deleted_at && (
-                                <PermissionGate module="providers" action="update">
+                                <PermissionGate module="providers" action="edit">
                                     <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'restore', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> Restore</button>
                                 </PermissionGate>
                             )}

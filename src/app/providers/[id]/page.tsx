@@ -208,7 +208,7 @@ export default function ProviderDetailPage() {
         if (type === 'bookings') {
             exportToCSV(mockBookings, `provider-${provider.id}-bookings`);
         } else if (type === 'employees') {
-            exportToCSV(mockEmployees, `provider-${provider.id}-employees`);
+            exportToCSV(employees ?? [], `provider-${provider.id}-employees`);
         } else {
             const summary = [{
                 provider: provider.business_name,
