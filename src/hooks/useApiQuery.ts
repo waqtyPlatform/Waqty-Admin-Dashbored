@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ApiResponse } from '@/lib/api';
+import type { ApiResponse, ApiMeta } from '@/lib/api';
+import { ApiError } from '@/lib/api';
 
 interface UseApiQueryOptions {
     enabled?: boolean;
@@ -12,6 +13,10 @@ interface UseApiQueryResult<T> {
     data: T | null;
     loading: boolean;
     error: string | null;
+    /** ApiError instance when available — includes `.status`, `.errors`, helper booleans */
+    apiError: ApiError | null;
+    /** Pagination meta from the response envelope */
+    meta: ApiMeta | null;
     refetch: () => Promise<void>;
     setData: React.Dispatch<React.SetStateAction<T | null>>;
 }
@@ -27,6 +32,8 @@ export function useApiQuery<T = any>(
     const [data, setData] = useState<T | null>((fallbackData as T) ?? null);
     const [loading, setLoading] = useState(enabled);
     const [error, setError] = useState<string | null>(null);
+    const [apiError, setApiError] = useState<ApiError | null>(null);
+    const [meta, setMeta] = useState<ApiMeta | null>(null);
     const mountedRef = useRef(true);
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
@@ -35,21 +42,28 @@ export function useApiQuery<T = any>(
         if (!enabled) return;
         setLoading(true);
         setError(null);
+        setApiError(null);
         try {
             const response = await fetcherRef.current();
             if (mountedRef.current) {
                 setData(response.data ?? null);
+                setMeta(response.meta ?? null);
             }
         } catch (err: unknown) {
             if (mountedRef.current) {
                 if (fallbackData !== undefined) {
                     setData(fallbackData as T);
                 } else {
-                    const message =
-                        err && typeof err === 'object' && 'message' in err
-                            ? (err as { message: string }).message
-                            : 'An error occurred';
-                    setError(message);
+                    if (err instanceof ApiError) {
+                        setApiError(err);
+                        setError(err.message);
+                    } else {
+                        const message =
+                            err && typeof err === 'object' && 'message' in err
+                                ? (err as { message: string }).message
+                                : 'An error occurred';
+                        setError(message);
+                    }
                 }
             }
         } finally {
@@ -68,7 +82,7 @@ export function useApiQuery<T = any>(
         };
     }, [fetchData]);
 
-    return { data, loading, error, refetch: fetchData, setData };
+    return { data, loading, error, apiError, meta, refetch: fetchData, setData };
 }
 
 interface UseApiMutationResult<T, V = Record<string, unknown>> {
@@ -76,6 +90,8 @@ interface UseApiMutationResult<T, V = Record<string, unknown>> {
     data: T | null;
     loading: boolean;
     error: string | null;
+    /** ApiError instance — gives access to `.status`, `.errors` (422 fields), helper booleans */
+    apiError: ApiError | null;
 }
 
 export function useApiMutation<T, V = Record<string, unknown>>(
@@ -84,21 +100,28 @@ export function useApiMutation<T, V = Record<string, unknown>>(
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [apiError, setApiError] = useState<ApiError | null>(null);
 
     const mutate = useCallback(
         async (variables: V): Promise<T | null> => {
             setLoading(true);
             setError(null);
+            setApiError(null);
             try {
                 const response = await mutator(variables);
                 setData(response.data ?? null);
                 return response.data ?? null;
             } catch (err: unknown) {
-                const message =
-                    err && typeof err === 'object' && 'message' in err
-                        ? (err as { message: string }).message
-                        : 'An error occurred';
-                setError(message);
+                if (err instanceof ApiError) {
+                    setApiError(err);
+                    setError(err.message);
+                } else {
+                    const message =
+                        err && typeof err === 'object' && 'message' in err
+                            ? (err as { message: string }).message
+                            : 'An error occurred';
+                    setError(message);
+                }
                 return null;
             } finally {
                 setLoading(false);
@@ -107,5 +130,5 @@ export function useApiMutation<T, V = Record<string, unknown>>(
         [mutator]
     );
 
-    return { mutate, data, loading, error };
+    return { mutate, data, loading, error, apiError };
 }

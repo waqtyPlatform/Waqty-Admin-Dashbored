@@ -10,6 +10,7 @@ const translations: Translations = {
     'common.appName': { en: 'Hagzy Admin', ar: 'هاقزي أدمن' },
     'common.search': { en: 'Search...', ar: 'بحث...' },
     'common.save': { en: 'Save', ar: 'حفظ' },
+    'common.saving': { en: 'Saving...', ar: 'جارٍ الحفظ...' },
     'common.cancel': { en: 'Cancel', ar: 'إلغاء' },
     'common.delete': { en: 'Delete', ar: 'حذف' },
     'common.edit': { en: 'Edit', ar: 'تعديل' },

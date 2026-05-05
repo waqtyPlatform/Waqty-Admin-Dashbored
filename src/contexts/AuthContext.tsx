@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { SuperAdminUser, SuperAdminRole } from '@/types/admin';
 import { getPermissionsForRole } from '@/lib/permissions';
+import { adminAuthApi, ApiError } from '@/lib/api';
 
 interface ImpersonationState {
     providerId: string;
@@ -75,6 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = localStorage.getItem('hagzy_superadmin_token');
         if (storedUser && storedToken) {
             const parsed = JSON.parse(storedUser) as SuperAdminUser;
+            // Ensure the API client has the token available
+            localStorage.setItem('hagzy_token', storedToken);
             setUser(parsed);
             setAuthCookie(true, parsed.role);
         } else {
@@ -106,33 +109,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const login = async (email: string, password: string) => {
         try {
-            // Mock login — any password with 6+ characters works
-            await new Promise(resolve => setTimeout(resolve, 800));
+            const res = await adminAuthApi.login(email, password);
+            const { token, admin } = res.data!;
 
-            if (password.length < 6) {
-                return { success: false, error: 'Password must be at least 6 characters' };
-            }
+            // Store JWT so the ApiClient can attach it to every request
+            localStorage.setItem('hagzy_token', token);
 
-            const adminInfo = MOCK_ADMINS[email.toLowerCase()];
-            if (!adminInfo) {
-                // Allow any email for demo — default to viewer
-                const mockUser = buildMockUser(email, { name: email.split('@')[0], role: 'super_admin' });
-                localStorage.setItem('hagzy_superadmin_token', 'mock-token-' + Date.now());
-                localStorage.setItem('hagzy_superadmin_user', JSON.stringify(mockUser));
-                setUser(mockUser);
-                setAuthCookie(true, mockUser.role);
-                router.push('/');
-                return { success: true, user: mockUser };
-            }
+            // Build a SuperAdminUser from the API response.
+            // The API only returns id/name/email/active — default role to super_admin
+            // (role-based access can be refined once the backend exposes it).
+            const apiUser: SuperAdminUser = {
+                id: String(admin.id),
+                uuid: `admin-${admin.id}`,
+                name: admin.name,
+                email: admin.email,
+                role: 'super_admin' as SuperAdminRole,
+                permissions: getPermissionsForRole('super_admin'),
+                active: admin.active,
+                last_login_at: new Date().toISOString(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+            };
 
-            const mockUser = buildMockUser(email, adminInfo);
-            localStorage.setItem('hagzy_superadmin_token', 'mock-token-' + Date.now());
-            localStorage.setItem('hagzy_superadmin_user', JSON.stringify(mockUser));
-            setUser(mockUser);
-            setAuthCookie(true, mockUser.role);
+            localStorage.setItem('hagzy_superadmin_token', token);
+            localStorage.setItem('hagzy_superadmin_user', JSON.stringify(apiUser));
+            setUser(apiUser);
+            setAuthCookie(true, apiUser.role);
             router.push('/');
-            return { success: true, user: mockUser };
-        } catch {
+            return { success: true, user: apiUser };
+        } catch (err) {
+            if (err instanceof ApiError) {
+                if (err.isUnauthorized) return { success: false, error: 'Invalid email or password.' };
+                if (err.isForbidden)    return { success: false, error: 'Account is inactive. Contact your administrator.' };
+                return { success: false, error: err.message };
+            }
             return { success: false, error: 'Login failed. Please try again.' };
         }
     };
@@ -155,6 +165,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const logout = () => {
+        // Fire-and-forget — invalidate token on server
+        adminAuthApi.logout().catch(() => { /* ignore */ });
+        localStorage.removeItem('hagzy_token');
         localStorage.removeItem('hagzy_superadmin_token');
         localStorage.removeItem('hagzy_superadmin_user');
         localStorage.removeItem('hagzy_superadmin_impersonating');
