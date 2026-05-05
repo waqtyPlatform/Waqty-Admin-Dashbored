@@ -28,6 +28,12 @@ interface DataTableProps<T> {
     exportFilename?: string;
     emptyMessage?: string;
     loading?: boolean;
+    // Server-side pagination
+    serverPagination?: boolean;
+    currentPage?: number;
+    totalPages?: number;
+    totalCount?: number;
+    onPageChange?: (page: number) => void;
 }
 
 type SortDir = 'asc' | 'desc' | null;
@@ -44,6 +50,11 @@ export function DataTable<T extends object>({
     pageSize = 15,
     emptyMessage,
     loading,
+    serverPagination = false,
+    currentPage: serverPage = 1,
+    totalPages: serverTotalPages = 1,
+    totalCount: serverTotalCount,
+    onPageChange,
 }: DataTableProps<T>) {
     const { t } = useTranslation();
     const [search, setSearch] = useState('');
@@ -76,12 +87,14 @@ export function DataTable<T extends object>({
         });
     }, [filtered, sortKey, sortDir]);
 
-    // Paginate
-    const totalPages = Math.ceil(sorted.length / pageSize);
+    // Paginate (client-side only when not using server pagination)
+    const totalPages = serverPagination ? serverTotalPages : Math.ceil(sorted.length / pageSize);
+    const activePage = serverPagination ? serverPage : page;
     const paginated = useMemo(() => {
+        if (serverPagination) return sorted; // already paginated by server
         const start = (page - 1) * pageSize;
         return sorted.slice(start, start + pageSize);
-    }, [sorted, page, pageSize]);
+    }, [sorted, page, pageSize, serverPagination]);
 
     const handleSort = (key: string) => {
         if (sortKey === key) {
@@ -187,29 +200,40 @@ export function DataTable<T extends object>({
             {totalPages > 1 && (
                 <div className={styles.pagination}>
                     <span className={styles.pageInfo}>
-                        {t('common.showing')} {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, sorted.length)} {t('common.of')} {sorted.length} {t('common.results')}
+                        {serverPagination && serverTotalCount != null
+                            ? <>{t('common.showing')} {(activePage - 1) * pageSize + 1}-{Math.min(activePage * pageSize, serverTotalCount)} {t('common.of')} {serverTotalCount} {t('common.results')}</>
+                            : <>{t('common.showing')} {(activePage - 1) * pageSize + 1}-{Math.min(activePage * pageSize, sorted.length)} {t('common.of')} {sorted.length} {t('common.results')}</>
+                        }
                     </span>
                     <div className={styles.pageButtons}>
-                        <button disabled={page === 1} onClick={() => setPage(page - 1)} className={styles.pageBtn}>
+                        <button
+                            disabled={activePage === 1}
+                            onClick={() => serverPagination ? onPageChange?.(activePage - 1) : setPage(activePage - 1)}
+                            className={styles.pageBtn}
+                        >
                             <ChevronLeft size={16} />
                         </button>
                         {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                             let pageNum: number;
                             if (totalPages <= 5) pageNum = i + 1;
-                            else if (page <= 3) pageNum = i + 1;
-                            else if (page >= totalPages - 2) pageNum = totalPages - 4 + i;
-                            else pageNum = page - 2 + i;
+                            else if (activePage <= 3) pageNum = i + 1;
+                            else if (activePage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                            else pageNum = activePage - 2 + i;
                             return (
                                 <button
                                     key={pageNum}
-                                    onClick={() => setPage(pageNum)}
-                                    className={`${styles.pageBtn} ${page === pageNum ? styles.active : ''}`}
+                                    onClick={() => serverPagination ? onPageChange?.(pageNum) : setPage(pageNum)}
+                                    className={`${styles.pageBtn} ${activePage === pageNum ? styles.active : ''}`}
                                 >
                                     {pageNum}
                                 </button>
                             );
                         })}
-                        <button disabled={page === totalPages} onClick={() => setPage(page + 1)} className={styles.pageBtn}>
+                        <button
+                            disabled={activePage === totalPages}
+                            onClick={() => serverPagination ? onPageChange?.(activePage + 1) : setPage(activePage + 1)}
+                            className={styles.pageBtn}
+                        >
                             <ChevronRight size={16} />
                         </button>
                     </div>

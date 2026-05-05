@@ -8,7 +8,11 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { ConfirmModal, FormModal, FormField } from '@/components/admin/FormModal';
 import { useToast } from '@/components/ui';
-import { mockProviders } from '@/mocks/providers';
+import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
+import {
+    adminProvidersApi, adminBranchesApi, adminEmployeesApi,
+    type AdminProviderObject, type BranchObject, type EmployeeObject,
+} from '@/lib/api';
 import { mockPlans } from '@/mocks/subscriptions';
 import type { Provider, ProviderStatus } from '@/types/provider';
 import { scoreProvider, assessChurnRisk } from '@/lib/analytics';
@@ -16,24 +20,13 @@ import {
     ArrowLeft, Building2, Users, CalendarDays, DollarSign, MapPin, Mail, Phone,
     Ban, ShieldCheck, Trash2, RotateCcw, LogIn, Pause, Play, ExternalLink,
     Clock, Star, CreditCard, Scissors, Percent, Download, ChevronDown,
+    MoreHorizontal, CheckCircle2, XCircle, Loader2,
 } from 'lucide-react';
 import { exportToCSV } from '@/lib/utils';
 import styles from './page.module.css';
 import shared from '@/components/admin/shared.module.css';
 
-// Mock branch/employee/service/booking data for tabs
-const mockBranches = [
-    { id: '1', name: 'Main Branch - Downtown', city: 'Cairo', phone: '+20225750000', employees: 8, active: true, is_main: true },
-    { id: '2', name: 'Maadi Branch', city: 'Cairo', phone: '+20225750001', employees: 6, active: true, is_main: false },
-    { id: '3', name: 'Alexandria Branch', city: 'Alexandria', phone: '+20325750000', employees: 4, active: true, is_main: false },
-];
-const mockEmployees = [
-    { id: '1', name: 'Ahmed Hassan', role: 'Senior Stylist', branch: 'Downtown', active: true, bookings: 142, rating: 4.8 },
-    { id: '2', name: 'Sara Ibrahim', role: 'Hair Colorist', branch: 'Downtown', active: true, bookings: 98, rating: 4.9 },
-    { id: '3', name: 'Omar Khalil', role: 'Junior Barber', branch: 'Maadi', active: true, bookings: 67, rating: 4.5 },
-    { id: '4', name: 'Layla Mahmoud', role: 'Nail Technician', branch: 'Maadi', active: false, bookings: 45, rating: 4.3 },
-    { id: '5', name: 'Khaled Nabil', role: 'Massage Therapist', branch: 'Alexandria', active: true, bookings: 89, rating: 4.7 },
-];
+// Mock data kept only for services / bookings (no API endpoint implemented yet)
 const mockServices = [
     { id: '1', name: 'Haircut', category: 'Hair', price: 150, duration: 30, active: true, bookings: 520 },
     { id: '2', name: 'Hair Color', category: 'Hair', price: 350, duration: 60, active: true, bookings: 280 },
@@ -57,7 +50,7 @@ export default function ProviderDetailPage() {
     const { addToast } = useToast();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('overview');
-    const [provider, setProvider] = useState<Provider | undefined>(() => mockProviders.find(p => p.id === id));
+    const [provider, setProvider] = useState<Provider | undefined>(undefined);
     const [confirmAction, setConfirmAction] = useState<{ action: string; label: string } | null>(null);
     const [showRenew, setShowRenew] = useState(false);
     const [showChangePlan, setShowChangePlan] = useState(false);
@@ -70,7 +63,87 @@ export default function ProviderDetailPage() {
     const [commissionReason, setCommissionReason] = useState('');
     const [exportOpen, setExportOpen] = useState(false);
 
-    if (!provider) {
+    // ── Real API: provider detail ─────────────────────────
+    const providerUuid = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : '';
+    const { data: apiProvider, loading: providerLoading } = useApiQuery(
+        () => adminProvidersApi.get(providerUuid),
+        [providerUuid],
+        { enabled: !!providerUuid }
+    );
+
+    // ── Real API: branches ────────────────────────────────
+    const { data: branches, loading: branchesLoading, refetch: refetchBranches } = useApiQuery(
+        () => adminBranchesApi.list({ provider_uuid: providerUuid, per_page: 50 }),
+        [providerUuid],
+        { enabled: !!providerUuid && activeTab === 'branches' }
+    );
+
+    // ── Real API: employees ───────────────────────────────
+    const { data: employees, loading: employeesLoading, refetch: refetchEmployees } = useApiQuery(
+        () => adminEmployeesApi.list({ provider_uuid: providerUuid, per_page: 50 }),
+        [providerUuid],
+        { enabled: !!providerUuid && activeTab === 'employees' }
+    );
+
+    // ── Branch mutations ──────────────────────────────────
+    const { mutate: updateBranchStatus } = useApiMutation(
+        ({ uuid, body }: { uuid: string; body: { active?: boolean; blocked?: boolean; banned?: boolean } }) =>
+            adminBranchesApi.updateStatus(uuid, body)
+    );
+    const { mutate: deleteBranch } = useApiMutation((uuid: string) => adminBranchesApi.delete(uuid));
+    const { mutate: restoreBranch } = useApiMutation((uuid: string) => adminBranchesApi.restore(uuid));
+
+    // ── Employee mutations ────────────────────────────────
+    const { mutate: updateEmployeeStatus } = useApiMutation(
+        ({ uuid, body }: { uuid: string; body: { active?: boolean; blocked?: boolean } }) =>
+            adminEmployeesApi.updateStatus(uuid, body)
+    );
+    const { mutate: deleteEmployee } = useApiMutation((uuid: string) => adminEmployeesApi.delete(uuid));
+    const { mutate: restoreEmployee } = useApiMutation((uuid: string) => adminEmployeesApi.restore(uuid));
+
+    // ── Branch / Employee action menus ────────────────────
+    const [branchMenuId, setBranchMenuId] = useState<string | null>(null);
+    const [employeeMenuId, setEmployeeMenuId] = useState<string | null>(null);
+    const [actionBusy, setActionBusy] = useState<string | null>(null);
+
+    const handleBranchAction = async (branch: BranchObject, action: 'activate' | 'deactivate' | 'block' | 'unblock' | 'delete' | 'restore') => {
+        setBranchMenuId(null);
+        setActionBusy(branch.uuid);
+        if (action === 'activate')    await updateBranchStatus({ uuid: branch.uuid, body: { active: true } });
+        else if (action === 'deactivate') await updateBranchStatus({ uuid: branch.uuid, body: { active: false } });
+        else if (action === 'block')      await updateBranchStatus({ uuid: branch.uuid, body: { blocked: true } });
+        else if (action === 'unblock')    await updateBranchStatus({ uuid: branch.uuid, body: { blocked: false } });
+        else if (action === 'delete')     await deleteBranch(branch.uuid);
+        else if (action === 'restore')    await restoreBranch(branch.uuid);
+        setActionBusy(null);
+        refetchBranches();
+    };
+
+    const handleEmployeeAction = async (emp: EmployeeObject, action: 'activate' | 'deactivate' | 'block' | 'unblock' | 'delete' | 'restore') => {
+        setEmployeeMenuId(null);
+        setActionBusy(emp.uuid);
+        if (action === 'activate')    await updateEmployeeStatus({ uuid: emp.uuid, body: { active: true } });
+        else if (action === 'deactivate') await updateEmployeeStatus({ uuid: emp.uuid, body: { active: false } });
+        else if (action === 'block')      await updateEmployeeStatus({ uuid: emp.uuid, body: { blocked: true } });
+        else if (action === 'unblock')    await updateEmployeeStatus({ uuid: emp.uuid, body: { blocked: false } });
+        else if (action === 'delete')     await deleteEmployee(emp.uuid);
+        else if (action === 'restore')    await restoreEmployee(emp.uuid);
+        setActionBusy(null);
+        refetchEmployees();
+    };
+
+    if (providerLoading) {
+        return (
+            <div className={styles.page}>
+                <button className={styles.backBtn} onClick={() => router.push('/providers')}><ArrowLeft size={16} /> {t('providers.title')}</button>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, color: 'var(--text-tertiary)' }}>
+                    <Loader2 size={32} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+                </div>
+            </div>
+        );
+    }
+
+    if (!apiProvider) {
         return (
             <div className={styles.page}>
                 <button className={styles.backBtn} onClick={() => router.push('/providers')}><ArrowLeft size={16} /> {t('common.back')}</button>
@@ -85,8 +158,8 @@ export default function ProviderDetailPage() {
     };
 
     const handleImpersonate = () => {
-        startImpersonating(provider.id, provider.business_name || provider.name);
-        addToast('info', `Now impersonating ${provider.business_name}`);
+        startImpersonating(apiProvider.uuid, apiProvider.name);
+        addToast('info', `Now impersonating ${apiProvider.name}`);
     };
 
     const handleRenewSubscription = () => {
@@ -135,7 +208,7 @@ export default function ProviderDetailPage() {
         if (type === 'bookings') {
             exportToCSV(mockBookings, `provider-${provider.id}-bookings`);
         } else if (type === 'employees') {
-            exportToCSV(mockEmployees, `provider-${provider.id}-employees`);
+            exportToCSV(employees ?? [], `provider-${provider.id}-employees`);
         } else {
             const summary = [{
                 provider: provider.business_name,
@@ -151,10 +224,10 @@ export default function ProviderDetailPage() {
     };
 
     const stats = [
-        { label: t('providers.branches'), value: provider.branches_count, icon: <Building2 size={18} /> },
-        { label: t('providers.employees'), value: provider.employees_count, icon: <Users size={18} /> },
-        { label: t('providers.totalBookings'), value: provider.total_bookings.toLocaleString(), icon: <CalendarDays size={18} /> },
-        { label: t('providers.totalRevenue'), value: `EGP ${(provider.total_revenue / 1000).toFixed(0)}K`, icon: <DollarSign size={18} /> },
+        { label: t('providers.branches'), value: (branches ?? []).length, icon: <Building2 size={18} /> },
+        { label: t('providers.employees'), value: (employees ?? []).length, icon: <Users size={18} /> },
+        { label: 'Joined', value: new Date(apiProvider.created_at).toLocaleDateString(), icon: <CalendarDays size={18} /> },
+        { label: 'Category', value: apiProvider.category?.name ?? '—', icon: <DollarSign size={18} /> },
     ];
 
     const tabs: { key: string; label: string }[] = [
@@ -173,51 +246,39 @@ export default function ProviderDetailPage() {
             {/* Header */}
             <div className={styles.header}>
                 <div className={styles.headerLeft}>
-                    <div className={styles.avatar}>{provider.business_name.charAt(0)}</div>
+                    <div className={styles.avatar}>{apiProvider.name.charAt(0)}</div>
                     <div>
                         <div className={styles.headerName}>
-                            <h1>{provider.business_name}</h1>
-                            <StatusBadge status={provider.status} />
-                            <StatusBadge status={provider.subscription_status} />
+                            <h1>{apiProvider.name}</h1>
+                            <StatusBadge status={apiProvider.active ? 'active' : 'inactive'} />
+                            {apiProvider.blocked && <StatusBadge status="blocked" />}
+                            {apiProvider.banned && <StatusBadge status="banned" />}
+                            {apiProvider.deleted_at && <StatusBadge status="deleted" />}
                         </div>
                         <div className={styles.headerMeta}>
-                            <span><Mail size={14} /> {provider.email}</span>
-                            <span><Phone size={14} /> {provider.phone}</span>
-                            <span><MapPin size={14} /> {provider.city}, {provider.country}</span>
+                            <span><Mail size={14} /> {apiProvider.email}</span>
+                            <span><Phone size={14} /> {apiProvider.phone}</span>
+                            {apiProvider.category && <span><MapPin size={14} /> {apiProvider.category.name}</span>}
                         </div>
                     </div>
                 </div>
                 <div className={styles.headerActions}>
                     <PermissionGate module="providers" action="edit">
-                        {provider.status === 'active' && <>
-                            <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'suspended', label: 'Suspend' })}><Pause size={14} /> {t('providers.suspend')}</button>
-                            <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'blocked', label: 'Block' })}><Ban size={14} /> {t('providers.block')}</button>
-                        </>}
-                        {provider.status === 'suspended' && <button className={styles.actionBtn} onClick={() => handleStatusChange('active')}><Play size={14} /> {t('providers.activate')}</button>}
-                        {provider.status === 'blocked' && <button className={styles.actionBtn} onClick={() => handleStatusChange('active')}><ShieldCheck size={14} /> {t('providers.unblock')}</button>}
-                        {provider.status === 'soft_deleted' && <button className={styles.actionBtn} onClick={() => handleStatusChange('active')}><RotateCcw size={14} /> {t('providers.restore')}</button>}
+                        {!apiProvider.deleted_at && (apiProvider.active
+                            ? <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'suspended', label: 'Deactivate' })}><Pause size={14} /> Deactivate</button>
+                            : <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'active', label: 'Activate' })}><Play size={14} /> Activate</button>
+                        )}
+                        {!apiProvider.deleted_at && (apiProvider.blocked
+                            ? <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'unblock', label: 'Unblock' })}><ShieldCheck size={14} /> Unblock</button>
+                            : <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'block', label: 'Block' })}><Ban size={14} /> Block</button>
+                        )}
+                        {apiProvider.deleted_at && <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'restore', label: 'Restore' })}><RotateCcw size={14} /> Restore</button>}
                     </PermissionGate>
                     <PermissionGate module="providers" action="impersonate">
-                        {provider.status === 'active' && <button className={`${styles.actionBtn} ${styles.impersonateBtn}`} onClick={handleImpersonate}><LogIn size={14} /> {t('providers.impersonate')}</button>}
+                        {apiProvider.active && !apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.impersonateBtn}`} onClick={handleImpersonate}><LogIn size={14} /> {t('providers.impersonate')}</button>}
                     </PermissionGate>
-                    <PermissionGate module="providers" action="edit">
-                        <button className={styles.actionBtn} onClick={openCommission}><Percent size={14} /> {t('providers.adjustCommission')}</button>
-                    </PermissionGate>
-                    <div style={{ position: 'relative' }}>
-                        <button className={styles.actionBtn} onClick={() => setExportOpen(o => !o)}><Download size={14} /> {t('common.export')} <ChevronDown size={14} /></button>
-                        {exportOpen && (
-                            <>
-                                <div style={{ position: 'fixed', inset: 0, zIndex: 10 }} onClick={() => setExportOpen(false)} />
-                                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', insetInlineEnd: 0, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 10px 30px rgba(0,0,0,0.12)', minWidth: 220, zIndex: 11, padding: 4 }}>
-                                    <button onClick={() => handleExport('bookings')} style={{ width: '100%', textAlign: 'start', padding: '8px 12px', background: 'transparent', color: 'var(--text-primary)', fontSize: '0.8125rem', borderRadius: 6 }}>{t('providers.bookingsCSV')}</button>
-                                    <button onClick={() => handleExport('employees')} style={{ width: '100%', textAlign: 'start', padding: '8px 12px', background: 'transparent', color: 'var(--text-primary)', fontSize: '0.8125rem', borderRadius: 6 }}>{t('providers.employeesCSV')}</button>
-                                    <button onClick={() => handleExport('financial')} style={{ width: '100%', textAlign: 'start', padding: '8px 12px', background: 'transparent', color: 'var(--text-primary)', fontSize: '0.8125rem', borderRadius: 6 }}>{t('providers.financialCSV')}</button>
-                                </div>
-                            </>
-                        )}
-                    </div>
                     <PermissionGate module="providers" action="delete">
-                        {provider.status !== 'soft_deleted' && <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'soft_deleted', label: 'Delete' })}><Trash2 size={14} /> {t('providers.softDelete')}</button>}
+                        {!apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'soft_deleted', label: 'Delete' })}><Trash2 size={14} /> Delete</button>}
                     </PermissionGate>
                 </div>
             </div>
@@ -242,88 +303,23 @@ export default function ProviderDetailPage() {
             <div className={styles.tabContent}>
                 {activeTab === 'overview' && (
                     <div className={styles.overviewGrid}>
-                        {(() => {
-                            const score = scoreProvider(provider, mockProviders);
-                            const churn = assessChurnRisk(provider, mockProviders);
-                            const tierColor = score.tier === 'elite' ? 'var(--color-success)'
-                                : score.tier === 'strong' ? 'var(--color-info)'
-                                : score.tier === 'average' ? 'var(--color-warning)'
-                                : 'var(--color-error)';
-                            const riskColor = churn.risk === 'high' ? 'var(--color-error)'
-                                : churn.risk === 'watch' ? 'var(--color-warning)'
-                                : 'var(--color-success)';
-                            const breakdownRows: Array<[string, number]> = [
-                                [t('providers.score.breakdown.bookings'), score.breakdown.bookings],
-                                [t('providers.score.breakdown.revenue'), score.breakdown.revenue],
-                                [t('providers.score.breakdown.activity'), score.breakdown.activity],
-                                [t('providers.score.breakdown.subscription'), score.breakdown.subscription],
-                                [t('providers.score.breakdown.tenure'), score.breakdown.tenure],
-                            ];
-                            return (
-                                <>
-                                    <div className={styles.infoCard}>
-                                        <h3>{t('providers.score.title')}</h3>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4, marginBottom: 12 }}>
-                                            <span style={{ fontSize: '2.25rem', fontWeight: 700, color: tierColor }}>{score.score}</span>
-                                            <span style={{ color: 'var(--text-secondary)' }}>/100</span>
-                                            <span style={{ marginInlineStart: 'auto', padding: '3px 10px', borderRadius: 999, background: `color-mix(in srgb, ${tierColor} 14%, transparent)`, color: tierColor, fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase' }}>
-                                                {t(`providers.score.tier.${score.tier === 'at_risk' ? 'atRisk' : score.tier}`)}
-                                            </span>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                            {breakdownRows.map(([label, value]) => (
-                                                <div key={label}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
-                                                        <span style={{ color: 'var(--text-secondary)' }}>{label}</span>
-                                                        <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{value}/100</span>
-                                                    </div>
-                                                    <div style={{ height: 6, background: 'var(--bg-tertiary)', borderRadius: 999, overflow: 'hidden' }}>
-                                                        <div style={{ width: `${Math.min(100, Math.max(0, value))}%`, height: '100%', background: tierColor }} />
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <div className={styles.infoCard}>
-                                        <h3>{t('providers.churnRisk.title')}</h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, marginBottom: 12 }}>
-                                            <span style={{ padding: '4px 12px', borderRadius: 999, background: `color-mix(in srgb, ${riskColor} 14%, transparent)`, color: riskColor, fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase' }}>
-                                                {t(`providers.churnRisk.level.${churn.risk}`)}
-                                            </span>
-                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{churn.riskScore}/100</span>
-                                        </div>
-                                        {churn.reasons.length > 0 ? (
-                                            <>
-                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', marginBottom: 6, fontWeight: 500 }}>{t('providers.churnRisk.reasons')}</div>
-                                                <ul style={{ margin: 0, paddingInlineStart: 20, fontSize: '0.8125rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                                    {churn.reasons.map((r, i) => <li key={i}>{r}</li>)}
-                                                </ul>
-                                            </>
-                                        ) : (
-                                            <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: 0 }}>{t('providers.churnRisk.noReasons')}</p>
-                                        )}
-                                    </div>
-                                </>
-                            );
-                        })()}
                         <div className={styles.infoCard}>
                             <h3>{t('providers.businessInfo')}</h3>
                             <div className={styles.infoRows}>
-                                <InfoRow label={t('providers.owner')} value={provider.name} />
-                                <InfoRow label={t('providers.category')} value={provider.business_category} capitalize />
-                                <InfoRow label={t('providers.commissionRate')} value={`${provider.commission_rate}%`} />
-                                <InfoRow label={t('providers.registered')} value={new Date(provider.registered_at).toLocaleDateString()} />
-                                <InfoRow label={t('providers.lastActive')} value={new Date(provider.last_active_at).toLocaleDateString()} />
-                                {provider.deleted_at && <InfoRow label={t('common.delete')} value={new Date(provider.deleted_at).toLocaleDateString()} />}
+                                <InfoRow label="Name" value={apiProvider.name} />
+                                <InfoRow label="Email" value={apiProvider.email} />
+                                <InfoRow label="Phone" value={apiProvider.phone} />
+                                <InfoRow label={t('providers.category')} value={apiProvider.category?.name ?? '—'} />
+                                <InfoRow label="Registered" value={new Date(apiProvider.created_at).toLocaleDateString()} />
+                                {apiProvider.deleted_at && <InfoRow label="Deleted" value={new Date(apiProvider.deleted_at).toLocaleDateString()} />}
                             </div>
                         </div>
                         <div className={styles.infoCard}>
-                            <h3>{t('providers.subscriptionDetails')}</h3>
+                            <h3>Account Status</h3>
                             <div className={styles.infoRows}>
-                                <InfoRow label={t('providers.plan')} value={provider.subscription_plan_id ? t('providers.enterprise') : t('providers.noPlan')} />
-                                <div className={styles.infoRow}><span>{t('common.status')}</span><span><StatusBadge status={provider.subscription_status} /></span></div>
-                                <InfoRow label={t('providers.billingCycle')} value={t('providers.monthly')} />
-                                <InfoRow label={t('providers.autoRenew')} value={t('common.yes')} />
+                                <div className={styles.infoRow}><span>Active</span><span><StatusBadge status={apiProvider.active ? 'active' : 'inactive'} /></span></div>
+                                <div className={styles.infoRow}><span>Blocked</span><span><StatusBadge status={apiProvider.blocked ? 'blocked' : 'active'} /></span></div>
+                                <div className={styles.infoRow}><span>Banned</span><span><StatusBadge status={apiProvider.banned ? 'banned' : 'active'} /></span></div>
                             </div>
                         </div>
                     </div>
@@ -331,42 +327,125 @@ export default function ProviderDetailPage() {
 
                 {activeTab === 'branches' && (
                     <div className={styles.infoCard}>
-                        <h3>{t('providers.branches')} ({mockBranches.length})</h3>
+                        <h3>{t('providers.branches')} {!branchesLoading && `(${(branches ?? []).length})`}</h3>
+                        {branchesLoading ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48, color: 'var(--text-tertiary)' }}>
+                                <Loader2 size={24} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+                            </div>
+                        ) : (branches ?? []).length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>No branches found</div>
+                        ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', marginTop: 16 }}>
                             <thead><tr style={{ background: 'var(--bg-secondary)' }}>
-                                {[t('common.branch'), t('common.city'), t('common.phone'), t('providers.employees'), t('common.status')].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
+                                {['Branch', 'Phone', 'Main', 'Status', 'Actions'].map(h => (
+                                    <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
+                                ))}
                             </tr></thead>
-                            <tbody>{mockBranches.map(b => (
-                                <tr key={b.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '10px 12px', fontWeight: 500 }}>{b.name} {b.is_main && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-primary-50)', color: 'var(--color-primary-600)', borderRadius: 4, marginLeft: 8 }}>{t('common.main')}</span>}</td>
-                                    <td style={{ padding: '10px 12px' }}>{b.city}</td>
-                                    <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{b.phone}</td>
-                                    <td style={{ padding: '10px 12px' }}>{b.employees}</td>
-                                    <td style={{ padding: '10px 12px' }}><StatusBadge status={b.active ? 'active' : 'deactivated'} /></td>
+                            <tbody>{(branches ?? []).map(b => (
+                                <tr key={b.uuid} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <td style={{ padding: '10px 12px', fontWeight: 500 }}>
+                                        {b.name}
+                                        {b.is_main && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-primary-50)', color: 'var(--color-primary-600)', borderRadius: 4, marginLeft: 8 }}>Main</span>}
+                                        {b.deleted_at && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-error-light)', color: 'var(--color-error)', borderRadius: 4, marginLeft: 8 }}>Deleted</span>}
+                                    </td>
+                                    <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{b.phone ?? '—'}</td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        {b.is_main ? <CheckCircle2 size={16} color="var(--color-success)" /> : <XCircle size={16} color="var(--text-tertiary)" />}
+                                    </td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        <StatusBadge status={b.deleted_at ? 'deleted' : b.blocked ? 'blocked' : b.active ? 'active' : 'inactive'} />
+                                    </td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        {actionBusy === b.uuid ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : (
+                                        <div style={{ position: 'relative' }}>
+                                            <button onClick={e => { e.stopPropagation(); setBranchMenuId(branchMenuId === b.uuid ? null : b.uuid); }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-secondary)', borderRadius: 6 }}>
+                                                <MoreHorizontal size={16} />
+                                            </button>
+                                            {branchMenuId === b.uuid && (
+                                                <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 150, padding: 4 }} onClick={e => e.stopPropagation()}>
+                                                    {!b.deleted_at && (b.active
+                                                        ? <button onClick={() => handleBranchAction(b, 'deactivate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Pause size={14} /> Deactivate</button>
+                                                        : <button onClick={() => handleBranchAction(b, 'activate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> Activate</button>
+                                                    )}
+                                                    {!b.deleted_at && (b.blocked
+                                                        ? <button onClick={() => handleBranchAction(b, 'unblock')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> Unblock</button>
+                                                        : <button onClick={() => handleBranchAction(b, 'block')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> Block</button>
+                                                    )}
+                                                    {b.deleted_at
+                                                        ? <button onClick={() => handleBranchAction(b, 'restore')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> Restore</button>
+                                                        : <button onClick={() => handleBranchAction(b, 'delete')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> Delete</button>
+                                                    }
+                                                </div>
+                                            )}
+                                        </div>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}</tbody>
                         </table>
+                        )}
                     </div>
                 )}
 
                 {activeTab === 'employees' && (
                     <div className={styles.infoCard}>
-                        <h3>{t('providers.employees')} ({mockEmployees.length})</h3>
+                        <h3>{t('providers.employees')} {!employeesLoading && `(${(employees ?? []).length})`}</h3>
+                        {employeesLoading ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48, color: 'var(--text-tertiary)' }}>
+                                <Loader2 size={24} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
+                            </div>
+                        ) : (employees ?? []).length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>No employees found</div>
+                        ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', marginTop: 16 }}>
                             <thead><tr style={{ background: 'var(--bg-secondary)' }}>
-                                {[t('common.employee'), t('common.role'), t('common.branch'), t('providers.bookings'), t('common.rating'), t('common.status')].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
+                                {['Employee', 'Branch', 'Status', 'Blocked', 'Actions'].map(h => (
+                                    <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
+                                ))}
                             </tr></thead>
-                            <tbody>{mockEmployees.map(e => (
-                                <tr key={e.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                    <td style={{ padding: '10px 12px', fontWeight: 500 }}>{e.name}</td>
-                                    <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{e.role}</td>
-                                    <td style={{ padding: '10px 12px' }}>{e.branch}</td>
-                                    <td style={{ padding: '10px 12px' }}>{e.bookings}</td>
-                                    <td style={{ padding: '10px 12px' }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Star size={14} fill="#f59e0b" stroke="#f59e0b" /> {e.rating}</span></td>
-                                    <td style={{ padding: '10px 12px' }}><StatusBadge status={e.active ? 'active' : 'deactivated'} /></td>
+                            <tbody>{(employees ?? []).map(e => (
+                                <tr key={e.uuid} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        <div style={{ fontWeight: 600 }}>{e.name}</div>
+                                        {e.email && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{e.email}</div>}
+                                        {e.deleted_at && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-error-light)', color: 'var(--color-error)', borderRadius: 4 }}>Deleted</span>}
+                                    </td>
+                                    <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{e.branch?.name ?? '—'}</td>
+                                    <td style={{ padding: '10px 12px' }}><StatusBadge status={e.active ? 'active' : 'inactive'} /></td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        {e.blocked ? <CheckCircle2 size={16} color="var(--color-error)" /> : <XCircle size={16} color="var(--text-tertiary)" />}
+                                    </td>
+                                    <td style={{ padding: '10px 12px' }}>
+                                        {actionBusy === e.uuid ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : (
+                                        <div style={{ position: 'relative' }}>
+                                            <button onClick={ev => { ev.stopPropagation(); setEmployeeMenuId(employeeMenuId === e.uuid ? null : e.uuid); }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-secondary)', borderRadius: 6 }}>
+                                                <MoreHorizontal size={16} />
+                                            </button>
+                                            {employeeMenuId === e.uuid && (
+                                                <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 150, padding: 4 }} onClick={ev => ev.stopPropagation()}>
+                                                    {!e.deleted_at && (e.active
+                                                        ? <button onClick={() => handleEmployeeAction(e, 'deactivate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Pause size={14} /> Deactivate</button>
+                                                        : <button onClick={() => handleEmployeeAction(e, 'activate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> Activate</button>
+                                                    )}
+                                                    {!e.deleted_at && (e.blocked
+                                                        ? <button onClick={() => handleEmployeeAction(e, 'unblock')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> Unblock</button>
+                                                        : <button onClick={() => handleEmployeeAction(e, 'block')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> Block</button>
+                                                    )}
+                                                    {e.deleted_at
+                                                        ? <button onClick={() => handleEmployeeAction(e, 'restore')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> Restore</button>
+                                                        : <button onClick={() => handleEmployeeAction(e, 'delete')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> Delete</button>
+                                                    }
+                                                </div>
+                                            )}
+                                        </div>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}</tbody>
                         </table>
+                        )}
                     </div>
                 )}
 
@@ -417,19 +496,16 @@ export default function ProviderDetailPage() {
                         <div className={styles.infoCard}>
                             <h3>{t('providers.currentPlan')}</h3>
                             <div className={styles.infoRows}>
-                                <InfoRow label={t('providers.plan')} value={provider.subscription_plan_id ? t('providers.enterprise') : t('providers.noPlan')} />
-                                <div className={styles.infoRow}><span>{t('common.status')}</span><span><StatusBadge status={provider.subscription_status} /></span></div>
+                                <InfoRow label={t('providers.plan')} value={t('providers.noPlan')} />
                                 <InfoRow label={t('providers.billingCycle')} value={t('providers.monthly')} />
-                                <InfoRow label={t('common.amount')} value="EGP 1,299/month" />
-                                <InfoRow label={t('providers.currentPeriod')} value="Apr 1 - Apr 30, 2026" />
-                                <InfoRow label={t('providers.autoRenew')} value={t('common.yes')} />
+                                <InfoRow label={t('common.amount')} value="—" />
                             </div>
                         </div>
                         <div className={styles.infoCard}>
                             <h3>{t('providers.subscriptionActions')}</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
                                 <button style={{ padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => setShowRenew(true)}><CreditCard size={16} /> {t('providers.renewSubscription')}</button>
-                                <button style={{ padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-info)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => { setSelectedPlanId(provider.subscription_plan_id || ''); setShowChangePlan(true); }}><ExternalLink size={16} /> {t('providers.changePlan')}</button>
+                                <button style={{ padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-info)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => setShowChangePlan(true)}><ExternalLink size={16} /> {t('providers.changePlan')}</button>
                                 <button style={{ padding: '10px 16px', border: '1px solid var(--color-error-light)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-error)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 8 }} onClick={() => setShowCancelSub(true)}><Trash2 size={16} /> {t('providers.cancelSubscription')}</button>
                             </div>
                         </div>
@@ -443,7 +519,7 @@ export default function ProviderDetailPage() {
                 onClose={() => setConfirmAction(null)}
                 onConfirm={() => handleStatusChange(confirmAction?.action as ProviderStatus)}
                 title={`${confirmAction?.label} Provider`}
-                message={`Are you sure you want to ${confirmAction?.label?.toLowerCase()} "${provider.business_name}"? ${confirmAction?.action === 'soft_deleted' ? 'The provider data will be preserved but hidden from the platform.' : confirmAction?.action === 'blocked' ? 'The provider will not be able to log in or receive bookings.' : 'The provider account will be temporarily suspended.'}`}
+                message={`Are you sure you want to ${confirmAction?.label?.toLowerCase()} "${apiProvider.name}"?`}
                 confirmLabel={confirmAction?.label || 'Confirm'}
                 variant={confirmAction?.action === 'soft_deleted' || confirmAction?.action === 'blocked' ? 'danger' : 'warning'}
             />
@@ -452,12 +528,12 @@ export default function ProviderDetailPage() {
             <FormModal
                 open={showRenew}
                 onClose={() => setShowRenew(false)}
-                title={`Renew Subscription — ${provider.business_name}`}
+                title={`Renew Subscription — ${apiProvider.name}`}
                 submitLabel={t('providers.renew')}
                 onSubmit={e => { e.preventDefault(); handleRenewSubscription(); }}
             >
                 <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                    <strong>{t('providers.currentStatus')}:</strong> {provider.subscription_status}
+                    <strong>{t('providers.currentStatus')}:</strong> Active
                 </div>
                 <FormField label={t('providers.billingCycle')} required>
                     <select value={renewCycle} onChange={e => setRenewCycle(e.target.value as 'monthly' | 'yearly')} className={shared.formInput}>
@@ -474,12 +550,12 @@ export default function ProviderDetailPage() {
             <FormModal
                 open={showChangePlan}
                 onClose={() => { setShowChangePlan(false); setSelectedPlanId(''); }}
-                title={`Change Plan — ${provider.business_name}`}
+                title={`Change Plan — ${apiProvider.name}`}
                 submitLabel={t('providers.applyChange')}
                 onSubmit={e => { e.preventDefault(); handleChangePlan(); }}
             >
                 <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                    <strong>{t('providers.currentPlan')}:</strong> {mockPlans.find(p => p.id === provider.subscription_plan_id)?.name || t('providers.noPlan')}
+                    <strong>{t('providers.currentPlan')}:</strong> {t('providers.noPlan')}
                 </div>
                 <FormField label={t('providers.newPlan')} required>
                     <select value={selectedPlanId} onChange={e => setSelectedPlanId(e.target.value)} required className={shared.formInput}>
@@ -496,8 +572,8 @@ export default function ProviderDetailPage() {
                 open={showCancelSub}
                 onClose={() => setShowCancelSub(false)}
                 onConfirm={handleCancelSubscription}
-                title={`Cancel Subscription — ${provider.business_name}`}
-                message={`Are you sure you want to cancel the subscription for "${provider.business_name}"? They will lose access at the end of the current billing period.`}
+                title={`Cancel Subscription — ${apiProvider.name}`}
+                message={`Are you sure you want to cancel the subscription for "${apiProvider.name}"? They will lose access at the end of the current billing period.`}
                 confirmLabel={t('providers.cancelSubscription')}
                 variant="danger"
             />
@@ -506,12 +582,12 @@ export default function ProviderDetailPage() {
             <FormModal
                 open={showCommission}
                 onClose={() => setShowCommission(false)}
-                title={`Adjust Commission — ${provider.business_name}`}
+                title={`Adjust Commission — ${apiProvider.name}`}
                 submitLabel={t('providers.saveCommission')}
                 onSubmit={e => { e.preventDefault(); handleCommission(); }}
             >
                 <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                    <strong>{t('providers.currentRate')}:</strong> {provider.commission_rate}%
+                    <strong>{t('providers.currentRate')}:</strong> {commissionRate}%
                 </div>
                 <FormField label={t('providers.newRate')} required>
                     <input type="number" min={0} max={50} step="0.5" value={commissionRate} onChange={e => setCommissionRate(e.target.value)} required className={shared.formInput} />

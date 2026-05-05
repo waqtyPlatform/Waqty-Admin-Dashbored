@@ -6,7 +6,7 @@ const PUBLIC_ROUTES = ['/login', '/forgot-password'];
 // Routes that require specific role access
 const ADMIN_ONLY_ROUTES = ['/settings/security', '/settings/roles', '/settings/admins', '/audit-logs'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Allow public routes

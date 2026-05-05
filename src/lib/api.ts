@@ -1,9 +1,46 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://waqty.alemtayaz.shop/public';
+// Use the Next.js rewrite proxy (/api-proxy/*) in the browser to avoid CORS.
+// On the server (SSR/build), hit the real API directly.
+const API_BASE_URL =
+    typeof window !== 'undefined'
+        ? '/api-proxy'
+        : (process.env.NEXT_PUBLIC_API_BASE_URL || 'https://waqty.alemtayaz.shop/public/api');
 
-interface ApiResponse<T = unknown> {
+export interface Pagination {
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+}
+
+export interface ApiMeta {
+    pagination?: Pagination;
+}
+
+export interface ApiResponse<T = unknown> {
     success: boolean;
-    message: string;
+    message?: string;
     data?: T;
+    meta?: ApiMeta;
+}
+
+/** Typed error thrown for every non-2xx response */
+export class ApiError extends Error {
+    constructor(
+        public readonly status: number,
+        message: string,
+        /** Field-level validation errors (422) */
+        public readonly errors?: Record<string, string[]>
+    ) {
+        super(message);
+        this.name = 'ApiError';
+    }
+
+    get isUnauthorized() { return this.status === 401; }
+    get isForbidden()    { return this.status === 403; }
+    get isNotFound()     { return this.status === 404; }
+    get isValidation()   { return this.status === 422; }
+    get isRateLimit()    { return this.status === 429; }
+    get isServerError()  { return this.status >= 500; }
 }
 
 class ApiClient {
@@ -36,13 +73,43 @@ class ApiClient {
             headers,
         });
 
-        const data: ApiResponse<T> = await response.json();
+        const body: ApiResponse<T> = await response.json();
 
         if (!response.ok) {
-            throw { status: response.status, ...data };
+            // 401 — clear stored credentials so the proxy redirects to login
+            if (response.status === 401 && typeof window !== 'undefined') {
+                localStorage.removeItem('hagzy_token');
+                document.cookie = 'hagzy_superadmin_logged_in=; Max-Age=0; path=/';
+                document.cookie = 'hagzy_superadmin_auth=; Max-Age=0; path=/';
+            }
+
+            // 422 — extract field-level validation errors
+            const validationErrors =
+                response.status === 422 && body && typeof body === 'object' && 'errors' in body
+                    ? (body as { errors: Record<string, string[]> }).errors
+                    : undefined;
+
+            throw new ApiError(
+                response.status,
+                body?.message ?? response.statusText,
+                validationErrors
+            );
         }
 
-        return data;
+        return body;
+    }
+
+    async get<T>(endpoint: string, params?: Record<string, string | number | boolean | undefined>): Promise<ApiResponse<T>> {
+        let url = endpoint;
+        if (params) {
+            const qs = new URLSearchParams(
+                Object.entries(params)
+                    .filter(([, v]) => v !== undefined && v !== '')
+                    .map(([k, v]) => [k, String(v)])
+            ).toString();
+            if (qs) url = `${endpoint}?${qs}`;
+        }
+        return this.request<T>(url, { method: 'GET' });
     }
 
     async post<T>(endpoint: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
@@ -50,10 +117,6 @@ class ApiClient {
             method: 'POST',
             body: JSON.stringify(body),
         });
-    }
-
-    async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-        return this.request<T>(endpoint, { method: 'GET' });
     }
 
     async put<T>(endpoint: string, body: Record<string, unknown>): Promise<ApiResponse<T>> {
@@ -87,16 +150,1315 @@ class ApiClient {
             headers,
             body: formData,
         });
-        const data: ApiResponse<T> = await response.json();
-        if (!response.ok) throw { status: response.status, ...data };
-        return data;
+        const body: ApiResponse<T> = await response.json();
+        if (!response.ok) {
+            const validationErrors =
+                response.status === 422 && body && typeof body === 'object' && 'errors' in body
+                    ? (body as { errors: Record<string, string[]> }).errors
+                    : undefined;
+            throw new ApiError(response.status, body?.message ?? response.statusText, validationErrors);
+        }
+        return body;
+    }
+
+    async putFormData<T>(endpoint: string, formData: FormData): Promise<ApiResponse<T>> {
+        // Laravel method spoofing: add _method=PUT so server treats it as PUT
+        formData.append('_method', 'PUT');
+        return this.postFormData<T>(endpoint, formData);
     }
 }
 
 export const api = new ApiClient(API_BASE_URL);
-export type { ApiResponse };
 
-// ── Response Types ──────────────────────────────────────
+// ── Admin Auth Types ────────────────────────────────────
+
+export interface AdminObject {
+    id: number;
+    name: string;
+    email: string;
+    active: boolean;
+}
+
+export interface AdminLoginResponse {
+    token: string;
+    token_type: 'Bearer';
+    expires_in: number;
+    admin: AdminObject;
+}
+
+// ── Admin Auth API ──────────────────────────────────────
+
+export const adminAuthApi = {
+    /**
+     * POST /admin/auth/send-verification-otp
+     * Public. Throttle: 5 req/min.
+     * Sends an OTP to the given admin email.
+     */
+    sendVerificationOtp: (email: string) =>
+        api.post('/admin/auth/send-verification-otp', { email }),
+
+    /**
+     * POST /admin/auth/verify-email
+     * Public. Throttle: 5 req/min.
+     * Verifies the OTP — returns JWT token + admin object.
+     */
+    verifyEmail: (email: string, otp: string) =>
+        api.post<AdminLoginResponse>('/admin/auth/verify-email', { email, otp }),
+
+    /**
+     * POST /admin/auth/resend-verification-otp
+     * Public. Throttle: 5 req/min.
+     * Resends the verification OTP.
+     */
+    resendVerificationOtp: (email: string) =>
+        api.post('/admin/auth/resend-verification-otp', { email }),
+
+    /**
+     * POST /admin/auth/login
+     * Public.
+     * Login with email + password — returns JWT token + admin object.
+     */
+    login: (email: string, password: string) =>
+        api.post<AdminLoginResponse>('/admin/auth/login', { email, password }),
+
+    /**
+     * POST /admin/auth/logout
+     * Requires authentication.
+     * Invalidates the current JWT token.
+     */
+    logout: () =>
+        api.post('/admin/auth/logout', {}),
+
+    /**
+     * GET /admin/auth/me
+     * Requires authentication.
+     * Returns the currently authenticated admin.
+     */
+    me: () =>
+        api.get<AdminObject>('/admin/auth/me'),
+};
+
+// ── Admins Management API ───────────────────────────────
+
+export interface AdminListFilters {
+    search?: string;
+    active?: boolean;
+    per_page?: number;
+    page?: number;
+}
+
+export interface CreateAdminBody {
+    name: string;
+    email: string;
+    password: string;
+    active?: boolean;
+}
+
+export interface UpdateAdminBody {
+    name: string;
+    email: string;
+    password?: string;
+    active?: boolean;
+}
+
+export const adminsApi = {
+    /** GET /admin/admins — paginated list */
+    list: (filters?: AdminListFilters) =>
+        api.get<AdminObject[]>('/admin/admins', {
+            ...(filters?.search   !== undefined && { search: filters.search }),
+            ...(filters?.active   !== undefined && { active: String(filters.active) }),
+            ...(filters?.per_page !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page     !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/admins/{id} */
+    get: (id: number) =>
+        api.get<AdminObject>(`/admin/admins/${id}`),
+
+    /** POST /admin/admins */
+    create: (body: CreateAdminBody) =>
+        api.post<AdminObject>('/admin/admins', body as unknown as Record<string, unknown>),
+
+    /** PUT /admin/admins/{id} */
+    update: (id: number, body: UpdateAdminBody) =>
+        api.put<AdminObject>(`/admin/admins/${id}`, body as unknown as Record<string, unknown>),
+
+    /** PATCH /admin/admins/{id}/active */
+    toggleActive: (id: number, active: boolean) =>
+        api.patch<AdminObject>(`/admin/admins/${id}/active`, { active }),
+};
+
+// ── Countries API ───────────────────────────────────────
+
+export interface CountryName { ar: string; en: string; }
+
+export interface CountryObject {
+    uuid: string;
+    name: CountryName;
+    iso2?: string;
+    phone_code?: string;
+    active: boolean;
+    sort_order?: number;
+    deleted_at?: string | null;
+}
+
+export interface CountryListFilters {
+    search?: string;
+    active?: boolean;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface CountryBody {
+    name: { ar: string; en: string };
+    iso2?: string;
+    phone_code?: string;
+    active?: boolean;
+    sort_order?: number;
+}
+
+export const countriesApi = {
+    list: (filters?: CountryListFilters) =>
+        api.get<CountryObject[]>('/admin/countries', {
+            ...(filters?.search   !== undefined && { search: filters.search }),
+            ...(filters?.active   !== undefined && { active: String(filters.active) }),
+            ...(filters?.trashed  !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page     !== undefined && { page: filters.page }),
+        }),
+    get: (uuid: string) =>
+        api.get<CountryObject>(`/admin/countries/${uuid}`),
+    create: (body: CountryBody) =>
+        api.post<CountryObject>('/admin/countries', body as unknown as Record<string, unknown>),
+    update: (uuid: string, body: Partial<CountryBody>) =>
+        api.put<CountryObject>(`/admin/countries/${uuid}`, body as unknown as Record<string, unknown>),
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/countries/${uuid}`),
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<CountryObject>(`/admin/countries/${uuid}/active`, { active }),
+    restore: (uuid: string) =>
+        api.post<CountryObject>(`/admin/countries/${uuid}/restore`, {}),
+    forceDelete: (uuid: string) =>
+        api.delete<null>(`/admin/countries/${uuid}/force`),
+};
+
+// ── Cities API ──────────────────────────────────────────
+
+export interface CityObject {
+    uuid: string;
+    name: CountryName;
+    country_uuid: string;
+    active: boolean;
+    sort_order?: number;
+    deleted_at?: string | null;
+}
+
+export interface CityListFilters {
+    search?: string;
+    active?: boolean;
+    country_uuid?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface CityBody {
+    name: { ar: string; en: string };
+    country_uuid: string;
+    active?: boolean;
+    sort_order?: number;
+}
+
+export const citiesApi = {
+    list: (filters?: CityListFilters) =>
+        api.get<CityObject[]>('/admin/cities', {
+            ...(filters?.search       !== undefined && { search: filters.search }),
+            ...(filters?.active       !== undefined && { active: String(filters.active) }),
+            ...(filters?.country_uuid !== undefined && { country_uuid: filters.country_uuid }),
+            ...(filters?.trashed      !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page     !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page         !== undefined && { page: filters.page }),
+        }),
+    get: (uuid: string) =>
+        api.get<CityObject>(`/admin/cities/${uuid}`),
+    create: (body: CityBody) =>
+        api.post<CityObject>('/admin/cities', body as unknown as Record<string, unknown>),
+    update: (uuid: string, body: Partial<CityBody>) =>
+        api.put<CityObject>(`/admin/cities/${uuid}`, body as unknown as Record<string, unknown>),
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/cities/${uuid}`),
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<CityObject>(`/admin/cities/${uuid}/active`, { active }),
+    restore: (uuid: string) =>
+        api.post<CityObject>(`/admin/cities/${uuid}/restore`, {}),
+    forceDelete: (uuid: string) =>
+        api.delete<null>(`/admin/cities/${uuid}/force`),
+};
+
+// ── Governorates API ────────────────────────────────────
+
+export interface GovernorateObject {
+    uuid: string;
+    name: CountryName;
+    country_uuid: string;
+    active: boolean;
+    sort_order?: number;
+    deleted_at?: string | null;
+}
+
+export interface GovernorateListFilters {
+    search?: string;
+    active?: boolean;
+    country_uuid?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface GovernorateBody {
+    name: { ar: string; en: string };
+    country_uuid: string;
+    active?: boolean;
+    sort_order?: number;
+}
+
+export const governoratesApi = {
+    list: (filters?: GovernorateListFilters) =>
+        api.get<GovernorateObject[]>('/admin/governorates', {
+            ...(filters?.search       !== undefined && { search: filters.search }),
+            ...(filters?.active       !== undefined && { active: String(filters.active) }),
+            ...(filters?.country_uuid !== undefined && { country_uuid: filters.country_uuid }),
+            ...(filters?.trashed      !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page     !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page         !== undefined && { page: filters.page }),
+        }),
+    get: (uuid: string) =>
+        api.get<GovernorateObject>(`/admin/governorates/${uuid}`),
+    create: (body: GovernorateBody) =>
+        api.post<GovernorateObject>('/admin/governorates', body as unknown as Record<string, unknown>),
+    update: (uuid: string, body: Partial<GovernorateBody>) =>
+        api.put<GovernorateObject>(`/admin/governorates/${uuid}`, body as unknown as Record<string, unknown>),
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/governorates/${uuid}`),
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<GovernorateObject>(`/admin/governorates/${uuid}/active`, { active }),
+    restore: (uuid: string) =>
+        api.post<GovernorateObject>(`/admin/governorates/${uuid}/restore`, {}),
+    forceDelete: (uuid: string) =>
+        api.delete<null>(`/admin/governorates/${uuid}/force`),
+};
+
+// ── Payments API ────────────────────────────────────────
+
+export type PaymentMethodType = 'cash' | 'paymob';
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
+export interface PaymentObject {
+    uuid: string;
+    payment_method: PaymentMethodType;
+    amount: number;
+    status: PaymentStatus;
+    transaction_id?: string | null;
+    notes?: string | null;
+    booking_uuid?: string | null;
+    provider_uuid?: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface PaymentListFilters {
+    payment_method?: PaymentMethodType;
+    status?: PaymentStatus;
+    booking_uuid?: string;
+    provider_uuid?: string;
+    from_date?: string;
+    to_date?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface UpdatePaymentBody {
+    payment_method?: PaymentMethodType;
+    amount?: number;
+    status?: PaymentStatus;
+    transaction_id?: string;
+    notes?: string;
+}
+
+export const paymentsApi = {
+    /** GET /admin/payments */
+    list: (filters?: PaymentListFilters) =>
+        api.get<PaymentObject[]>('/admin/payments', {
+            ...(filters?.payment_method !== undefined && { payment_method: filters.payment_method }),
+            ...(filters?.status         !== undefined && { status: filters.status }),
+            ...(filters?.booking_uuid   !== undefined && { booking_uuid: filters.booking_uuid }),
+            ...(filters?.provider_uuid  !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.from_date      !== undefined && { from_date: filters.from_date }),
+            ...(filters?.to_date        !== undefined && { to_date: filters.to_date }),
+            ...(filters?.trashed        !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page       !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page           !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/payments/{uuid} */
+    get: (uuid: string) =>
+        api.get<PaymentObject>(`/admin/payments/${uuid}`),
+
+    /** PUT /admin/payments/{uuid} */
+    update: (uuid: string, body: UpdatePaymentBody) =>
+        api.put<PaymentObject>(`/admin/payments/${uuid}`, body as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/payments/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/payments/${uuid}`),
+};
+
+// ── Admin Providers API ─────────────────────────────────
+
+export interface AdminProviderObject {
+    uuid: string;
+    name: string;
+    email: string;
+    phone: string;
+    code?: string | null;
+    active: boolean;
+    blocked: boolean;
+    banned: boolean;
+    country_id?: number | null;
+    city_id?: number | null;
+    category_id?: number | null;
+    category?: { uuid: string; name: string } | null;
+    branches?: Array<{ uuid: string; name: string; phone: string }>;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface AdminProviderListFilters {
+    search?: string;
+    active?: boolean;
+    blocked?: boolean;
+    banned?: boolean;
+    country_id?: number;
+    city_id?: number;
+    category_id?: number;
+    trashed?: boolean;
+    per_page?: number;
+    page?: number;
+}
+
+export const adminProvidersApi = {
+    /** GET /admin/providers */
+    list: (filters?: AdminProviderListFilters) =>
+        api.get<AdminProviderObject[]>('/admin/providers', {
+            ...(filters?.search      !== undefined && { search: filters.search }),
+            ...(filters?.active      !== undefined && { active: String(filters.active) }),
+            ...(filters?.blocked     !== undefined && { blocked: String(filters.blocked) }),
+            ...(filters?.banned      !== undefined && { banned: String(filters.banned) }),
+            ...(filters?.country_id  !== undefined && { country_id: filters.country_id }),
+            ...(filters?.city_id     !== undefined && { city_id: filters.city_id }),
+            ...(filters?.category_id !== undefined && { category_id: filters.category_id }),
+            ...(filters?.trashed     !== undefined && { trashed: String(filters.trashed) }),
+            ...(filters?.per_page    !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page        !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/providers/{uuid} */
+    get: (uuid: string) =>
+        api.get<AdminProviderObject>(`/admin/providers/${uuid}`),
+
+    /** PATCH /admin/providers/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<AdminProviderObject>(`/admin/providers/${uuid}/active`, { active }),
+
+    /** PATCH /admin/providers/{uuid}/block */
+    block: (uuid: string, blocked: boolean, reason?: string) =>
+        api.patch<AdminProviderObject>(`/admin/providers/${uuid}/block`, { blocked, ...(reason && { reason }) }),
+
+    /** PATCH /admin/providers/{uuid}/ban */
+    ban: (uuid: string, banned: boolean, reason?: string) =>
+        api.patch<AdminProviderObject>(`/admin/providers/${uuid}/ban`, { banned, ...(reason && { reason }) }),
+
+    /** DELETE /admin/providers/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/providers/${uuid}`),
+
+    /** POST /admin/providers/{uuid}/restore */
+    restore: (uuid: string) =>
+        api.post<AdminProviderObject>(`/admin/providers/${uuid}/restore`, {}),
+
+    /** DELETE /admin/providers/{uuid}/force */
+    forceDelete: (uuid: string) =>
+        api.delete<null>(`/admin/providers/${uuid}/force`),
+};
+
+// ── Admin Provider Branches API ─────────────────────────
+
+export interface BranchObject {
+    uuid: string;
+    name: string;
+    phone?: string | null;
+    provider_uuid?: string | null;
+    country_uuid?: string | null;
+    city_uuid?: string | null;
+    category_uuid?: string | null;
+    active: boolean;
+    blocked: boolean;
+    banned: boolean;
+    is_main: boolean;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface BranchListFilters {
+    provider_uuid?: string;
+    country_uuid?: string;
+    city_uuid?: string;
+    category_uuid?: string;
+    active?: boolean;
+    blocked?: boolean;
+    banned?: boolean;
+    is_main?: boolean;
+    search?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface UpdateBranchStatusBody {
+    active?: boolean;
+    blocked?: boolean;
+    banned?: boolean;
+}
+
+export const adminBranchesApi = {
+    /** GET /admin/provider-branches */
+    list: (filters?: BranchListFilters) =>
+        api.get<BranchObject[]>('/admin/provider-branches', {
+            ...(filters?.provider_uuid !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.country_uuid  !== undefined && { country_uuid: filters.country_uuid }),
+            ...(filters?.city_uuid     !== undefined && { city_uuid: filters.city_uuid }),
+            ...(filters?.category_uuid !== undefined && { category_uuid: filters.category_uuid }),
+            ...(filters?.active        !== undefined && { active: String(filters.active) }),
+            ...(filters?.blocked       !== undefined && { blocked: String(filters.blocked) }),
+            ...(filters?.banned        !== undefined && { banned: String(filters.banned) }),
+            ...(filters?.is_main       !== undefined && { is_main: String(filters.is_main) }),
+            ...(filters?.search        !== undefined && { search: filters.search }),
+            ...(filters?.trashed       !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page      !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page          !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/provider-branches/{uuid} */
+    get: (uuid: string) =>
+        api.get<BranchObject>(`/admin/provider-branches/${uuid}`),
+
+    /** PATCH /admin/provider-branches/{uuid}/status */
+    updateStatus: (uuid: string, body: UpdateBranchStatusBody) =>
+        api.patch<BranchObject>(`/admin/provider-branches/${uuid}/status`, body as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/provider-branches/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/provider-branches/${uuid}`),
+
+    /** POST /admin/provider-branches/{uuid}/restore */
+    restore: (uuid: string) =>
+        api.post<BranchObject>(`/admin/provider-branches/${uuid}/restore`, {}),
+};
+
+// ── Admin Categories API ────────────────────────────────
+
+export interface AdminCategoryName { ar: string; en: string; }
+
+export interface AdminCategoryObject {
+    uuid: string;
+    name: AdminCategoryName;
+    image_url?: string | null;
+    active: boolean;
+    sort_order?: number;
+    subcategories_count?: number;
+    subcategories?: AdminSubcategoryObject[];
+    deleted_at?: string | null;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface AdminCategoryListFilters {
+    search?: string;
+    active?: boolean;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminCategoriesApi = {
+    /** GET /admin/categories */
+    list: (filters?: AdminCategoryListFilters) =>
+        api.get<AdminCategoryObject[]>('/admin/categories', {
+            ...(filters?.search   !== undefined && { search: filters.search }),
+            ...(filters?.active   !== undefined && { active: String(filters.active) }),
+            ...(filters?.trashed  !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page     !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/categories/{uuid} */
+    get: (uuid: string) =>
+        api.get<AdminCategoryObject>(`/admin/categories/${uuid}`),
+
+    /** POST /admin/categories — multipart/form-data */
+    create: (formData: FormData) =>
+        api.postFormData<AdminCategoryObject>('/admin/categories', formData),
+
+    /** PUT /admin/categories/{uuid} — multipart/form-data */
+    update: (uuid: string, formData: FormData) =>
+        api.putFormData<AdminCategoryObject>(`/admin/categories/${uuid}`, formData),
+
+    /** PATCH /admin/categories/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<AdminCategoryObject>(`/admin/categories/${uuid}/active`, { active }),
+
+    /** DELETE /admin/categories/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/categories/${uuid}`),
+
+    /** POST /admin/categories/{uuid}/restore */
+    restore: (uuid: string) =>
+        api.post<AdminCategoryObject>(`/admin/categories/${uuid}/restore`, {}),
+
+    /** DELETE /admin/categories/{uuid}/force */
+    forceDelete: (uuid: string) =>
+        api.delete<null>(`/admin/categories/${uuid}/force`),
+};
+
+// ── Admin Subcategories API ─────────────────────────────
+
+export interface AdminSubcategoryObject {
+    uuid: string;
+    name: AdminCategoryName;
+    category_uuid: string;
+    category?: { uuid: string; name: AdminCategoryName };
+    image_url?: string | null;
+    active: boolean;
+    sort_order?: number;
+    deleted_at?: string | null;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface AdminSubcategoryListFilters {
+    search?: string;
+    active?: boolean;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminSubcategoriesApi = {
+    /** GET /admin/subcategories */
+    list: (filters?: AdminSubcategoryListFilters) =>
+        api.get<AdminSubcategoryObject[]>('/admin/subcategories', {
+            ...(filters?.search   !== undefined && { search: filters.search }),
+            ...(filters?.active   !== undefined && { active: String(filters.active) }),
+            ...(filters?.trashed  !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page     !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/subcategories/{uuid} */
+    get: (uuid: string) =>
+        api.get<AdminSubcategoryObject>(`/admin/subcategories/${uuid}`),
+
+    /** POST /admin/subcategories — multipart/form-data */
+    create: (formData: FormData) =>
+        api.postFormData<AdminSubcategoryObject>('/admin/subcategories', formData),
+
+    /** PUT /admin/subcategories/{uuid} — multipart/form-data */
+    update: (uuid: string, formData: FormData) =>
+        api.putFormData<AdminSubcategoryObject>(`/admin/subcategories/${uuid}`, formData),
+
+    /** PATCH /admin/subcategories/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<AdminSubcategoryObject>(`/admin/subcategories/${uuid}/active`, { active }),
+
+    /** DELETE /admin/subcategories/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/subcategories/${uuid}`),
+
+    /** POST /admin/subcategories/{uuid}/restore */
+    restore: (uuid: string) =>
+        api.post<AdminSubcategoryObject>(`/admin/subcategories/${uuid}/restore`, {}),
+
+    /** DELETE /admin/subcategories/{uuid}/force */
+    forceDelete: (uuid: string) =>
+        api.delete<null>(`/admin/subcategories/${uuid}/force`),
+};
+
+// ── Admin Employees API ─────────────────────────────────
+
+export interface EmployeeObject {
+    uuid: string;
+    name: string;
+    email?: string | null;
+    phone?: string | null;
+    active: boolean;
+    blocked: boolean;
+    provider_uuid?: string | null;
+    provider?: { uuid: string; name: string } | null;
+    branch_uuid?: string | null;
+    branch?: { uuid: string; name: string } | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface EmployeeListFilters {
+    provider_uuid?: string;
+    branch_uuid?: string;
+    active?: boolean;
+    blocked?: boolean;
+    search?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface UpdateEmployeeStatusBody {
+    active?: boolean;
+    blocked?: boolean;
+}
+
+export const adminEmployeesApi = {
+    /** GET /admin/employees */
+    list: (filters?: EmployeeListFilters) =>
+        api.get<EmployeeObject[]>('/admin/employees', {
+            ...(filters?.provider_uuid !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.branch_uuid   !== undefined && { branch_uuid: filters.branch_uuid }),
+            ...(filters?.active        !== undefined && { active: String(filters.active) }),
+            ...(filters?.blocked       !== undefined && { blocked: String(filters.blocked) }),
+            ...(filters?.search        !== undefined && { search: filters.search }),
+            ...(filters?.trashed       !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page      !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page          !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/employees/{uuid} */
+    get: (uuid: string) =>
+        api.get<EmployeeObject>(`/admin/employees/${uuid}`),
+
+    /** PATCH /admin/employees/{uuid}/status */
+    updateStatus: (uuid: string, body: UpdateEmployeeStatusBody) =>
+        api.patch<EmployeeObject>(`/admin/employees/${uuid}/status`, body as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/employees/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/employees/${uuid}`),
+
+    /** POST /admin/employees/{uuid}/restore */
+    restore: (uuid: string) =>
+        api.post<EmployeeObject>(`/admin/employees/${uuid}/restore`, {}),
+};
+
+// ── Service Pricing ───────────────────────────────────────────────────────────
+
+export interface ServicePriceObject {
+    uuid: string;
+    provider_uuid: string;
+    provider?: { uuid: string; name: string } | null;
+    service_uuid: string;
+    service?: { uuid: string; name: string } | null;
+    sub_category_uuid?: string | null;
+    sub_category?: { uuid: string; name: string } | null;
+    scope_type: 'branch' | 'employee' | string;
+    branch_uuid?: string | null;
+    branch?: { uuid: string; name: string } | null;
+    employee_uuid?: string | null;
+    employee?: { uuid: string; name: string } | null;
+    pricing_group_uuid?: string | null;
+    pricing_group?: { uuid: string; name: string } | null;
+    price: number;
+    active: boolean;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface ServicePriceListFilters {
+    provider_uuid?: string;
+    service_uuid?: string;
+    sub_category_uuid?: string;
+    scope_type?: 'branch' | 'employee';
+    branch_uuid?: string;
+    employee_uuid?: string;
+    pricing_group_uuid?: string;
+    active?: boolean;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminServicePricesApi = {
+    /** GET /admin/service-prices */
+    list: (filters?: ServicePriceListFilters) =>
+        api.get<ServicePriceObject[]>('/admin/service-prices', {
+            ...(filters?.provider_uuid       !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.service_uuid        !== undefined && { service_uuid: filters.service_uuid }),
+            ...(filters?.sub_category_uuid   !== undefined && { sub_category_uuid: filters.sub_category_uuid }),
+            ...(filters?.scope_type          !== undefined && { scope_type: filters.scope_type }),
+            ...(filters?.branch_uuid         !== undefined && { branch_uuid: filters.branch_uuid }),
+            ...(filters?.employee_uuid       !== undefined && { employee_uuid: filters.employee_uuid }),
+            ...(filters?.pricing_group_uuid  !== undefined && { pricing_group_uuid: filters.pricing_group_uuid }),
+            ...(filters?.active              !== undefined && { active: String(filters.active) }),
+            ...(filters?.trashed             !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page            !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page                !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/service-prices/{uuid} */
+    get: (uuid: string) =>
+        api.get<ServicePriceObject>(`/admin/service-prices/${uuid}`),
+};
+
+// ── Pricing Groups ────────────────────────────────────────────────────────────
+
+export interface PricingGroupObject {
+    uuid: string;
+    name: string;
+    provider_uuid: string;
+    provider?: { uuid: string; name: string } | null;
+    active: boolean;
+    employees?: Array<{ uuid: string; name: string }>;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface PricingGroupListFilters {
+    provider_uuid?: string;
+    active?: boolean;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminPricingGroupsApi = {
+    /** GET /admin/pricing-groups */
+    list: (filters?: PricingGroupListFilters) =>
+        api.get<PricingGroupObject[]>('/admin/pricing-groups', {
+            ...(filters?.provider_uuid !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.active        !== undefined && { active: String(filters.active) }),
+            ...(filters?.trashed       !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page      !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page          !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/pricing-groups/{uuid} */
+    get: (uuid: string) =>
+        api.get<PricingGroupObject>(`/admin/pricing-groups/${uuid}`),
+};
+
+// ── Bookings ──────────────────────────────────────────────────────────────────
+
+export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+
+export interface BookingObject {
+    uuid: string;
+    status: BookingStatus;
+    booking_date: string;
+    user_uuid: string;
+    user?: { uuid: string; name: string; phone?: string | null } | null;
+    provider_uuid: string;
+    provider?: { uuid: string; name: string } | null;
+    branch_uuid?: string | null;
+    branch?: { uuid: string; name: string } | null;
+    employee_uuid?: string | null;
+    employee?: { uuid: string; name: string } | null;
+    notes?: string | null;
+    total_price?: number | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface BookingListFilters {
+    status?: BookingStatus;
+    user_uuid?: string;
+    provider_uuid?: string;
+    branch_uuid?: string;
+    employee_uuid?: string;
+    booking_date?: string;
+    from_date?: string;
+    to_date?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminBookingsApi = {
+    /** GET /admin/bookings */
+    list: (filters?: BookingListFilters) =>
+        api.get<BookingObject[]>('/admin/bookings', {
+            ...(filters?.status        !== undefined && { status: filters.status }),
+            ...(filters?.user_uuid     !== undefined && { user_uuid: filters.user_uuid }),
+            ...(filters?.provider_uuid !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.branch_uuid   !== undefined && { branch_uuid: filters.branch_uuid }),
+            ...(filters?.employee_uuid !== undefined && { employee_uuid: filters.employee_uuid }),
+            ...(filters?.booking_date  !== undefined && { booking_date: filters.booking_date }),
+            ...(filters?.from_date     !== undefined && { from_date: filters.from_date }),
+            ...(filters?.to_date       !== undefined && { to_date: filters.to_date }),
+            ...(filters?.trashed       !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page      !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page          !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/bookings/next-upcoming */
+    nextUpcoming: () =>
+        api.get<BookingObject | null>('/admin/bookings/next-upcoming'),
+
+    /** GET /admin/bookings/{uuid} */
+    get: (uuid: string) =>
+        api.get<BookingObject>(`/admin/bookings/${uuid}`),
+
+    /** PATCH /admin/bookings/{uuid}/status */
+    updateStatus: (uuid: string, status: BookingStatus) =>
+        api.patch<BookingObject>(`/admin/bookings/${uuid}/status`, { status } as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/bookings/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/bookings/${uuid}`),
+};
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+
+export interface UserObject {
+    uuid: string;
+    name: string;
+    email: string;
+    phone: string;
+    gender: 'male' | 'female' | string;
+    date_birth?: string | null;
+    active: boolean;
+    blocked: boolean;
+    banned: boolean;
+    email_verified_at?: string | null;
+    avatar_url?: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface UserListFilters {
+    search?: string;
+    active?: boolean;
+    blocked?: boolean;
+    banned?: boolean;
+    gender?: 'male' | 'female';
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminUsersApi = {
+    /** GET /admin/users */
+    list: (filters?: UserListFilters) =>
+        api.get<UserObject[]>('/admin/users', {
+            ...(filters?.search   !== undefined && { search: filters.search }),
+            ...(filters?.active   !== undefined && { active: String(filters.active) }),
+            ...(filters?.blocked  !== undefined && { blocked: String(filters.blocked) }),
+            ...(filters?.banned   !== undefined && { banned: String(filters.banned) }),
+            ...(filters?.gender   !== undefined && { gender: filters.gender }),
+            ...(filters?.trashed  !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page     !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/users/{uuid} */
+    get: (uuid: string) =>
+        api.get<UserObject>(`/admin/users/${uuid}`),
+
+    /** PATCH /admin/users/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<UserObject>(`/admin/users/${uuid}/active`, { active } as unknown as Record<string, unknown>),
+
+    /** PATCH /admin/users/{uuid}/block */
+    toggleBlock: (uuid: string, blocked: boolean) =>
+        api.patch<UserObject>(`/admin/users/${uuid}/block`, { blocked } as unknown as Record<string, unknown>),
+
+    /** PATCH /admin/users/{uuid}/ban */
+    toggleBan: (uuid: string, banned: boolean) =>
+        api.patch<UserObject>(`/admin/users/${uuid}/ban`, { banned } as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/users/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/users/${uuid}`),
+
+    /** POST /admin/users/{uuid}/restore */
+    restore: (uuid: string) =>
+        api.post<UserObject>(`/admin/users/${uuid}/restore`, {}),
+};
+
+// ── Ratings ───────────────────────────────────────────────────────────────────
+
+export interface RatingStatsObject {
+    total: number;
+    published: number;
+    hidden: number;
+    avg_rating: number;
+}
+
+export interface RatingObject {
+    uuid: string;
+    rating: number;
+    comment?: string | null;
+    active: boolean;
+    user?: {
+        uuid: string;
+        name: string;
+        email?: string | null;
+        phone?: string | null;
+    } | null;
+    booking?: {
+        uuid: string;
+        booking_date: string;
+        provider?: { uuid: string; name: string } | null;
+        branch?: { uuid: string; name: string } | null;
+    } | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface RatingListFilters {
+    search?: string;
+    active?: boolean;
+    rating?: 1 | 2 | 3 | 4 | 5;
+    provider_uuid?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface RatingAnalyticsSummary {
+    total: number;
+    avg_rating: number;
+    published: number;
+    hidden: number;
+    response_rate: number;
+}
+
+export interface RatingDistributionItem {
+    stars: number;
+    count: number;
+}
+
+export interface RatingByProviderItem {
+    provider_uuid: string;
+    provider_name: string;
+    total: number;
+    avg_rating: number;
+}
+
+export interface RatingAnalyticsObject {
+    summary: RatingAnalyticsSummary;
+    rating_distribution: RatingDistributionItem[];
+    by_provider: RatingByProviderItem[];
+}
+
+export const adminRatingsApi = {
+    /** GET /admin/ratings/analytics */
+    analytics: () =>
+        api.get<RatingAnalyticsObject>('/admin/ratings/analytics'),
+
+    /** GET /admin/ratings/stats */
+    stats: () =>
+        api.get<RatingStatsObject>('/admin/ratings/stats'),
+
+    /** GET /admin/ratings */
+    list: (filters?: RatingListFilters) =>
+        api.get<RatingObject[]>('/admin/ratings', {
+            ...(filters?.search        !== undefined && { search: filters.search }),
+            ...(filters?.active        !== undefined && { active: String(filters.active) }),
+            ...(filters?.rating        !== undefined && { rating: filters.rating }),
+            ...(filters?.provider_uuid !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.trashed       !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page      !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page          !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/ratings/{uuid} */
+    get: (uuid: string) =>
+        api.get<RatingObject>(`/admin/ratings/${uuid}`),
+
+    /** PATCH /admin/ratings/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<RatingObject>(`/admin/ratings/${uuid}/active`, { active } as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/ratings/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/ratings/${uuid}`),
+};
+
+// ── Content Pages ─────────────────────────────────────────────────────────────
+export interface ContentPageObject {
+    uuid: string;
+    slug: string;
+    title_en: string;
+    title_ar: string;
+    content_en: string | null;
+    content_ar: string | null;
+    active: boolean;
+    updated_by?: { uuid: string; name: string };
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ContentPagePayload {
+    slug?: string;
+    title_en?: string;
+    title_ar?: string;
+    content_en?: string;
+    content_ar?: string;
+    active?: boolean;
+}
+
+// ── Promo Codes ───────────────────────────────────────────────────────────────
+export type PromoCodeType = 'percentage' | 'fixed';
+
+export interface PromoCodeObject {
+    uuid: string;
+    code: string;
+    type: PromoCodeType;
+    value: number;
+    min_order: number | null;
+    max_discount: number | null;
+    usage_limit: number | null;
+    usage_count: number;
+    valid_until: string;
+    active: boolean;
+    is_expired: boolean;
+    is_exhausted: boolean;
+    created_by?: { uuid: string; name: string };
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface PromoCodePayload {
+    code?: string;
+    type?: PromoCodeType;
+    value?: number;
+    min_order?: number | null;
+    max_discount?: number | null;
+    usage_limit?: number | null;
+    valid_until?: string;
+    active?: boolean;
+}
+
+export interface PromoCodeListFilters {
+    search?: string;
+    active?: boolean;
+    type?: PromoCodeType;
+    expired?: boolean;
+    trashed?: 'only';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminPromoCodesApi = {
+    /** GET /admin/promo-codes */
+    list: (filters?: PromoCodeListFilters) =>
+        api.get<PromoCodeObject[]>('/admin/promo-codes', {
+            ...(filters?.search  !== undefined && { search: filters.search }),
+            ...(filters?.active  !== undefined && { active: String(filters.active) }),
+            ...(filters?.type    !== undefined && { type: filters.type }),
+            ...(filters?.expired !== undefined && { expired: String(filters.expired) }),
+            ...(filters?.trashed !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page    !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/promo-codes/{uuid} */
+    get: (uuid: string) =>
+        api.get<PromoCodeObject>(`/admin/promo-codes/${uuid}`),
+
+    /** POST /admin/promo-codes */
+    create: (payload: PromoCodePayload & { code: string; value: number; valid_until: string }) =>
+        api.post<PromoCodeObject>('/admin/promo-codes', payload as unknown as Record<string, unknown>),
+
+    /** PUT /admin/promo-codes/{uuid} */
+    update: (uuid: string, payload: PromoCodePayload) =>
+        api.put<PromoCodeObject>(`/admin/promo-codes/${uuid}`, payload as unknown as Record<string, unknown>),
+
+    /** PATCH /admin/promo-codes/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<PromoCodeObject>(`/admin/promo-codes/${uuid}/active`, { active } as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/promo-codes/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/promo-codes/${uuid}`),
+};
+
+// ── Banners ───────────────────────────────────────────────────────────────────
+export type BannerPlacement  = 'home_top' | 'home_bottom' | 'home_middle' | 'category' | 'sidebar';
+export type BannerDimensions = '1200x400' | '1200x600' | '800x400' | '600x300';
+
+export interface BannerObject {
+    uuid: string;
+    title: string;
+    image_url: string | null;
+    placement: BannerPlacement;
+    dimensions: string;
+    active: boolean;
+    sort_order: number;
+    starts_at: string | null;
+    ends_at: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface BannerListFilters {
+    search?: string;
+    active?: boolean;
+    placement?: BannerPlacement;
+    trashed?: 'only';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminBannersApi = {
+    /** GET /admin/banners */
+    list: (filters?: BannerListFilters) =>
+        api.get<BannerObject[]>('/admin/banners', {
+            ...(filters?.search    !== undefined && { search: filters.search }),
+            ...(filters?.active    !== undefined && { active: String(filters.active) }),
+            ...(filters?.placement !== undefined && { placement: filters.placement }),
+            ...(filters?.trashed   !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page  !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page      !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/banners/{uuid} */
+    get: (uuid: string) =>
+        api.get<BannerObject>(`/admin/banners/${uuid}`),
+
+    /** POST /admin/banners — multipart/form-data */
+    create: (formData: FormData) =>
+        api.postFormData<BannerObject>('/admin/banners', formData),
+
+    /** PUT /admin/banners/{uuid} — multipart/form-data */
+    update: (uuid: string, formData: FormData) =>
+        api.putFormData<BannerObject>(`/admin/banners/${uuid}`, formData),
+
+    /** PATCH /admin/banners/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<BannerObject>(`/admin/banners/${uuid}/active`, { active } as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/banners/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/banners/${uuid}`),
+};
+
+// ── Announcements ─────────────────────────────────────────────────────────────
+export type AnnouncementTarget   = 'all' | 'users' | 'providers' | 'employees' | 'branches';
+export type AnnouncementPriority = 'low' | 'normal' | 'high' | 'urgent';
+
+export interface AnnouncementObject {
+    uuid: string;
+    title_en: string;
+    title_ar: string;
+    message_en: string;
+    message_ar: string;
+    target: AnnouncementTarget;
+    priority: AnnouncementPriority;
+    active: boolean;
+    ends_at: string | null;
+    created_by?: { uuid: string; name: string };
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface AnnouncementPayload {
+    title_en?: string;
+    title_ar?: string;
+    message_en?: string;
+    message_ar?: string;
+    target?: AnnouncementTarget;
+    priority?: AnnouncementPriority;
+    active?: boolean;
+    ends_at?: string | null;
+}
+
+export interface AnnouncementListFilters {
+    search?: string;
+    active?: boolean;
+    target?: AnnouncementTarget;
+    priority?: AnnouncementPriority;
+    trashed?: 'only';
+    per_page?: number;
+    page?: number;
+}
+
+export const adminAnnouncementsApi = {
+    /** GET /admin/announcements */
+    list: (filters?: AnnouncementListFilters) =>
+        api.get<AnnouncementObject[]>('/admin/announcements', {
+            ...(filters?.search    !== undefined && { search: filters.search }),
+            ...(filters?.active    !== undefined && { active: String(filters.active) }),
+            ...(filters?.target    !== undefined && { target: filters.target }),
+            ...(filters?.priority  !== undefined && { priority: filters.priority }),
+            ...(filters?.trashed   !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page  !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page      !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/announcements/{uuid} */
+    get: (uuid: string) =>
+        api.get<AnnouncementObject>(`/admin/announcements/${uuid}`),
+
+    /** POST /admin/announcements */
+    create: (payload: AnnouncementPayload & { title_en: string; title_ar: string; message_en: string; message_ar: string }) =>
+        api.post<AnnouncementObject>('/admin/announcements', payload as unknown as Record<string, unknown>),
+
+    /** PUT /admin/announcements/{uuid} */
+    update: (uuid: string, payload: AnnouncementPayload) =>
+        api.put<AnnouncementObject>(`/admin/announcements/${uuid}`, payload as unknown as Record<string, unknown>),
+
+    /** PATCH /admin/announcements/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<AnnouncementObject>(`/admin/announcements/${uuid}/active`, { active } as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/announcements/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/announcements/${uuid}`),
+};
+
+export const adminPagesApi = {
+    /** GET /admin/pages */
+    list: () =>
+        api.get<ContentPageObject[]>('/admin/pages'),
+
+    /** GET /admin/pages/{uuid} */
+    get: (uuid: string) =>
+        api.get<ContentPageObject>(`/admin/pages/${uuid}`),
+
+    /** POST /admin/pages */
+    create: (payload: ContentPagePayload & { slug: string; title_en: string; title_ar: string }) =>
+        api.post<ContentPageObject>('/admin/pages', payload as unknown as Record<string, unknown>),
+
+    /** PUT /admin/pages/{uuid} */
+    update: (uuid: string, payload: ContentPagePayload) =>
+        api.put<ContentPageObject>(`/admin/pages/${uuid}`, payload as unknown as Record<string, unknown>),
+
+    /** PATCH /admin/pages/{uuid}/active */
+    toggleActive: (uuid: string, active: boolean) =>
+        api.patch<ContentPageObject>(`/admin/pages/${uuid}/active`, { active } as unknown as Record<string, unknown>),
+};
 
 export interface ProviderLoginResponse {
     token: string;
