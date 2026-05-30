@@ -26,7 +26,7 @@ export default function ProvidersPage() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-    const { t } = useTranslation();
+    const { t, tn } = useTranslation();
 
     // ── Filters ───────────────────────────────────────────
     const activeFilter  = searchParams.get('active');
@@ -113,7 +113,7 @@ export default function ProvidersPage() {
                         {r.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
-                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{r.name}</div>
+                        <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{tn(r.name, r.name_ar)}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{r.email}</div>
                     </div>
                 </div>

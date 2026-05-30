@@ -7,6 +7,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { mockWallets } from '@/mocks/users';
 import type { Wallet } from '@/types/wallet';
+import { formatMoney, toMinor, toMajor } from '@/lib/market';
 import { Wallet as WalletIcon, Lock, Unlock, Plus, Minus } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
 
@@ -36,9 +37,9 @@ export default function WalletsPage() {
                 </div>
             ),
         },
-        { key: 'balance', label: 'Balance', sortable: true, render: (row) => <strong style={{ color: row.balance > 0 ? 'var(--color-success)' : 'var(--text-tertiary)' }}>EGP {row.balance.toLocaleString()}</strong> },
-        { key: 'total_credits', label: 'Total Credits', sortable: true, render: (row) => `EGP ${row.total_credits.toLocaleString()}` },
-        { key: 'total_debits', label: 'Total Debits', sortable: true, render: (row) => `EGP ${row.total_debits.toLocaleString()}` },
+        { key: 'balance', label: 'Balance', sortable: true, render: (row) => <strong style={{ color: row.balance > 0 ? 'var(--color-success)' : 'var(--text-tertiary)' }}>{formatMoney(row.balance)}</strong> },
+        { key: 'total_credits', label: 'Total Credits', sortable: true, render: (row) => formatMoney(row.total_credits) },
+        { key: 'total_debits', label: 'Total Debits', sortable: true, render: (row) => formatMoney(row.total_debits) },
         { key: 'status', label: 'Status', sortable: true, render: (row) => <StatusBadge status={row.status} /> },
         { key: 'last_transaction_at', label: 'Last Transaction', sortable: true, render: (row) => row.last_transaction_at ? new Date(row.last_transaction_at).toLocaleDateString() : '-' },
         {
@@ -89,7 +90,7 @@ export default function WalletsPage() {
                 onSubmit={e => {
                     e.preventDefault();
                     if (walletAction && actionAmount) {
-                        const amt = Number(actionAmount);
+                        const amt = toMinor(Number(actionAmount)); // input is major units; store minor
                         setWallets(prev => prev.map(w => w.id === walletAction.wallet.id ? {
                             ...w,
                             balance: walletAction.type === 'add' ? w.balance + amt : Math.max(0, w.balance - amt),
@@ -103,10 +104,10 @@ export default function WalletsPage() {
                 {walletAction && (
                     <>
                         <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                            <strong>Current Balance:</strong> EGP {walletAction.wallet.balance.toLocaleString()}
+                            <strong>Current Balance:</strong> {formatMoney(walletAction.wallet.balance)}
                         </div>
                         <FormField label="Amount (EGP)" required>
-                            <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)} required min={1} max={walletAction.type === 'deduct' ? walletAction.wallet.balance : 100000} className={shared.formInput} placeholder="Enter amount" />
+                            <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)} required min={1} max={walletAction.type === 'deduct' ? toMajor(walletAction.wallet.balance) : 100000} className={shared.formInput} placeholder="Enter amount" />
                         </FormField>
                         <FormField label="Reason" required>
                             <input type="text" value={actionReason} onChange={e => setActionReason(e.target.value)} required className={shared.formInput} placeholder={walletAction.type === 'add' ? 'e.g. Loyalty reward, Refund' : 'e.g. Duplicate refund correction'} />

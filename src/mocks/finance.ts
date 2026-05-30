@@ -1,32 +1,61 @@
-import type { CommissionRecord, PayoutRecord } from '@/types/finance';
+/**
+ * Platform finance — DERIVED from paid Visits (SA-2 / SA-3).
+ *
+ * The commission ledger, payouts and revenue summary are computed from
+ * `mockVisits` + each provider's commission rate using the canonical
+ * `contract/platform_finance.ts` helpers. No hand-aggregated money mocks —
+ * the numbers reconcile with the provider's net by construction.
+ */
+import type { Uuid } from '@/contract/waqty_contract';
+import {
+    isBilled,
+    commissionForVisit,
+    buildPayouts,
+    platformRevenueSummary,
+} from '@/contract/platform_finance';
+import { mockVisits } from '@/mocks/visits';
+import { mockProviders } from '@/mocks/providers';
+import type { PlatformCommissionRow, PayoutRow } from '@/types/finance';
 
-export const mockCommissions: CommissionRecord[] = [
-    { id: 'com-1', provider_id: '1', provider_name: 'Glamour Studio', booking_id: 'BK-1001', booking_amount: 350, commission_rate: 10, commission_amount: 35, status: 'collected', created_at: '2026-04-13T10:00:00Z' },
-    { id: 'com-2', provider_id: '2', provider_name: 'Elite Barbers', booking_id: 'BK-1002', booking_amount: 150, commission_rate: 10, commission_amount: 15, status: 'collected', created_at: '2026-04-13T09:30:00Z' },
-    { id: 'com-3', provider_id: '3', provider_name: 'Beauty Clinic Cairo', booking_id: 'BK-1003', booking_amount: 500, commission_rate: 8, commission_amount: 40, status: 'pending', created_at: '2026-04-12T16:00:00Z' },
-    { id: 'com-4', provider_id: '4', provider_name: 'Royal Spa & Wellness', booking_id: 'BK-1004', booking_amount: 280, commission_rate: 10, commission_amount: 28, status: 'collected', created_at: '2026-04-12T14:00:00Z' },
-    { id: 'com-5', provider_id: '5', provider_name: 'Fresh Cuts Downtown', booking_id: 'BK-1005', booking_amount: 80, commission_rate: 10, commission_amount: 8, status: 'pending', created_at: '2026-04-12T11:00:00Z' },
-    { id: 'com-6', provider_id: '1', provider_name: 'Glamour Studio', booking_id: 'BK-1006', booking_amount: 420, commission_rate: 10, commission_amount: 42, status: 'collected', created_at: '2026-04-11T15:00:00Z' },
-    { id: 'com-7', provider_id: '9', provider_name: 'Glow Skin Clinic', booking_id: 'BK-1007', booking_amount: 600, commission_rate: 8, commission_amount: 48, status: 'pending', created_at: '2026-04-11T10:00:00Z' },
-    { id: 'com-8', provider_id: '11', provider_name: 'Luxury Nails', booking_id: 'BK-1008', booking_amount: 120, commission_rate: 10, commission_amount: 12, status: 'waived', created_at: '2026-04-10T16:00:00Z' },
-];
+/**
+ * provider_uuid -> commission_rate as a 0..1 fraction.
+ * Mock providers already store the rate as a fraction (0.10 = 10%), matching the
+ * canonical money math, so this is a straight pass-through (no scaling hack).
+ */
+export const commissionRateByProvider: Record<Uuid, number> = Object.fromEntries(
+    mockProviders.map(p => [p.uuid, p.commission_rate ?? 0]),
+);
 
-export const mockPayouts: PayoutRecord[] = [
-    { id: 'pay-1', provider_id: '1', provider_name: 'Glamour Studio', amount: 45000, currency: 'EGP', method: 'bank_transfer', status: 'completed', period_start: '2026-03-01T00:00:00Z', period_end: '2026-03-31T23:59:59Z', created_at: '2026-04-05T10:00:00Z', completed_at: '2026-04-07T10:00:00Z' },
-    { id: 'pay-2', provider_id: '2', provider_name: 'Elite Barbers', amount: 28000, currency: 'EGP', method: 'bank_transfer', status: 'completed', period_start: '2026-03-01T00:00:00Z', period_end: '2026-03-31T23:59:59Z', created_at: '2026-04-05T10:00:00Z', completed_at: '2026-04-07T14:00:00Z' },
-    { id: 'pay-3', provider_id: '3', provider_name: 'Beauty Clinic Cairo', amount: 52000, currency: 'EGP', method: 'bank_transfer', status: 'processing', period_start: '2026-03-01T00:00:00Z', period_end: '2026-03-31T23:59:59Z', created_at: '2026-04-10T10:00:00Z', completed_at: null },
-    { id: 'pay-4', provider_id: '4', provider_name: 'Royal Spa & Wellness', amount: 38000, currency: 'EGP', method: 'wallet', status: 'pending', period_start: '2026-03-01T00:00:00Z', period_end: '2026-03-31T23:59:59Z', created_at: '2026-04-12T10:00:00Z', completed_at: null },
-    { id: 'pay-5', provider_id: '5', provider_name: 'Fresh Cuts Downtown', amount: 15000, currency: 'EGP', method: 'bank_transfer', status: 'completed', period_start: '2026-03-01T00:00:00Z', period_end: '2026-03-31T23:59:59Z', created_at: '2026-04-05T10:00:00Z', completed_at: '2026-04-06T10:00:00Z' },
-];
+const providerName = (uuid: Uuid): string =>
+    mockProviders.find(p => p.uuid === uuid)?.business_name ?? uuid;
 
+/** Per-booking commission ledger, derived from each billed visit. */
+export const platformCommissions: PlatformCommissionRow[] = mockVisits
+    .filter(isBilled)
+    .map(v => ({
+        ...commissionForVisit(v, commissionRateByProvider[v.provider_uuid] ?? 0),
+        provider_name: providerName(v.provider_uuid),
+    }));
+
+/** One payout per provider per period, netting commission + fees. */
+export const platformPayouts: PayoutRow[] = buildPayouts(mockVisits, commissionRateByProvider)
+    .map(p => ({ ...p, provider_name: providerName(p.provider_uuid) }));
+
+/** Platform-side roll-up across billed visits. */
+export const revenueSummary = platformRevenueSummary(mockVisits, commissionRateByProvider);
+
+/* ---------------- aggregate chart data (reports/finance overview) ---------------- */
+
+// Aggregate revenue series — canonical Money (MINOR units; 100 = EGP 1.00), so
+// it renders through the market formatter like all platform money (FU/minor sweep).
 export const monthlyRevenueData = [
-    { month: 'Oct', subscriptions: 225000, commissions: 115000, total: 340000 },
-    { month: 'Nov', subscriptions: 240000, commissions: 125000, total: 365000 },
-    { month: 'Dec', subscriptions: 260000, commissions: 138000, total: 398000 },
-    { month: 'Jan', subscriptions: 275000, commissions: 142000, total: 417000 },
-    { month: 'Feb', subscriptions: 290000, commissions: 155000, total: 445000 },
-    { month: 'Mar', subscriptions: 310000, commissions: 168000, total: 478000 },
-    { month: 'Apr', subscriptions: 340000, commissions: 180000, total: 520000 },
+    { month: 'Oct', subscriptions: 22500000, commissions: 11500000, total: 34000000 },
+    { month: 'Nov', subscriptions: 24000000, commissions: 12500000, total: 36500000 },
+    { month: 'Dec', subscriptions: 26000000, commissions: 13800000, total: 39800000 },
+    { month: 'Jan', subscriptions: 27500000, commissions: 14200000, total: 41700000 },
+    { month: 'Feb', subscriptions: 29000000, commissions: 15500000, total: 44500000 },
+    { month: 'Mar', subscriptions: 31000000, commissions: 16800000, total: 47800000 },
+    { month: 'Apr', subscriptions: 34000000, commissions: 18000000, total: 52000000 },
 ];
 
 export const bookingTrendsData = [
@@ -39,13 +68,14 @@ export const bookingTrendsData = [
     { month: 'Apr', bookings: 18900, completed: 16400, cancelled: 1800, noShow: 700 },
 ];
 
+// `revenue` is canonical Money (MINOR units); providers/users/bookings are counts.
 export const geographicData = [
-    { city: 'Cairo', providers: 520, users: 22000, bookings: 85000, revenue: 1200000 },
-    { city: 'Alexandria', providers: 180, users: 8500, bookings: 28000, revenue: 380000 },
-    { city: 'Giza', providers: 145, users: 6200, bookings: 19000, revenue: 260000 },
-    { city: 'Mansoura', providers: 85, users: 3100, bookings: 8500, revenue: 115000 },
-    { city: 'Tanta', providers: 62, users: 2400, bookings: 5800, revenue: 78000 },
-    { city: 'Aswan', providers: 45, users: 1800, bookings: 4200, revenue: 56000 },
-    { city: 'Luxor', providers: 38, users: 1500, bookings: 3500, revenue: 47000 },
-    { city: 'Port Said', providers: 32, users: 1200, bookings: 2800, revenue: 38000 },
+    { city: 'Cairo', providers: 520, users: 22000, bookings: 85000, revenue: 120000000 },
+    { city: 'Alexandria', providers: 180, users: 8500, bookings: 28000, revenue: 38000000 },
+    { city: 'Giza', providers: 145, users: 6200, bookings: 19000, revenue: 26000000 },
+    { city: 'Mansoura', providers: 85, users: 3100, bookings: 8500, revenue: 11500000 },
+    { city: 'Tanta', providers: 62, users: 2400, bookings: 5800, revenue: 7800000 },
+    { city: 'Aswan', providers: 45, users: 1800, bookings: 4200, revenue: 5600000 },
+    { city: 'Luxor', providers: 38, users: 1500, bookings: 3500, revenue: 4700000 },
+    { city: 'Port Said', providers: 32, users: 1200, bookings: 2800, revenue: 3800000 },
 ];

@@ -1,152 +1,154 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
-import { adminProvidersApi, type AdminProviderObject } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/components/ui';
 import { PermissionGate } from '@/components/admin/PermissionGate';
-import { Check, X, Clock, Building2, Loader2, ExternalLink } from 'lucide-react';
+import { StatusBadge } from '@/components/admin/StatusBadge';
+import { FormModal, FormField } from '@/components/admin/FormModal';
+import { mockRegistrations } from '@/mocks/providers';
+import type { ProviderRegistration } from '@/types/provider';
+import { Check, X, Clock, Building2, FileText, UserCheck } from 'lucide-react';
 import styles from './page.module.css';
+import shared from '@/components/admin/shared.module.css';
+
+type StatusFilter = ProviderRegistration['status'] | 'all';
+const FILTERS: StatusFilter[] = ['all', 'pending', 'approved', 'rejected'];
 
 export default function RegistrationsPage() {
     const { t } = useTranslation();
-    const router = useRouter();
+    const { user } = useAuth();
+    const { addToast } = useToast();
 
-    const { data: providers, loading, refetch } = useApiQuery(
-        () => adminProvidersApi.list({ active: false, per_page: 50 }),
-        []
-    );
+    const [registrations, setRegistrations] = useState<ProviderRegistration[]>(mockRegistrations);
+    const [filter, setFilter] = useState<StatusFilter>('pending');
+    const [approveTarget, setApproveTarget] = useState<ProviderRegistration | null>(null);
+    const [rejectTarget, setRejectTarget] = useState<ProviderRegistration | null>(null);
+    const [note, setNote] = useState('');
+    const [reason, setReason] = useState('');
 
-    const { mutate: activate, loading: activating } = useApiMutation(
-        (uuid: string) => adminProvidersApi.toggleActive(uuid, true)
-    );
-
-    const { mutate: reject, loading: rejecting } = useApiMutation(
-        (uuid: string) => adminProvidersApi.delete(uuid)
-    );
-
-    const [busyUuid, setBusyUuid] = useState<string | null>(null);
-
-    const handleActivate = async (uuid: string) => {
-        setBusyUuid(uuid);
-        const result = await activate(uuid);
-        setBusyUuid(null);
-        if (result !== undefined) refetch();
+    const list = registrations.filter(r => filter === 'all' || r.status === filter);
+    const counts = {
+        pending: registrations.filter(r => r.status === 'pending').length,
+        approved: registrations.filter(r => r.status === 'approved').length,
+        rejected: registrations.filter(r => r.status === 'rejected').length,
     };
 
-    const handleReject = async (uuid: string) => {
-        setBusyUuid(uuid);
-        const result = await reject(uuid);
-        setBusyUuid(null);
-        if (result !== undefined) refetch();
+    // Explicit decision — stamps who/when/why and moves the registration's status.
+    const decide = (id: string, status: 'approved' | 'rejected', extra: Partial<ProviderRegistration>) => {
+        setRegistrations(prev => prev.map(r => r.id === id ? {
+            ...r,
+            status,
+            reviewed_by: user?.uuid ?? null,
+            reviewed_by_name: user?.name ?? null,
+            reviewed_at: new Date().toISOString(),
+            ...extra,
+        } : r));
     };
 
-    const list = providers ?? [];
+    const confirmApprove = () => {
+        if (!approveTarget) return;
+        decide(approveTarget.id, 'approved', { approval_note: note.trim() || null, rejection_reason: null });
+        addToast('success', `${approveTarget.business_name} approved`);
+        setApproveTarget(null);
+        setNote('');
+    };
+
+    const confirmReject = () => {
+        if (!rejectTarget) return;
+        if (!reason.trim()) { addToast('error', t('providers.registrations.reasonRequired')); return; }
+        decide(rejectTarget.id, 'rejected', { rejection_reason: reason.trim() });
+        addToast('warning', `${rejectTarget.business_name} rejected`);
+        setRejectTarget(null);
+        setReason('');
+    };
 
     return (
         <div className={styles.page}>
             <div className={styles.pageHeader}>
                 <h1 className={styles.pageTitle}>{t('sidebar.registrations')}</h1>
-                {!loading && <span className={styles.badge}>{list.length} pending</span>}
+                <span className={styles.badge}>{counts.pending} {t('providers.registrations.pending')}</span>
             </div>
 
-            {loading && (
-                <div className={styles.emptyState}>
-                    <Loader2 size={32} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
-                    <p>Loading registrations…</p>
-                </div>
-            )}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
+                {FILTERS.map(f => (
+                    <button key={f} onClick={() => setFilter(f)} style={{
+                        padding: '6px 14px', borderRadius: 9999, border: '1px solid var(--border-color)', cursor: 'pointer',
+                        background: filter === f ? 'var(--color-primary-500)' : 'var(--bg-primary)',
+                        color: filter === f ? '#fff' : 'var(--text-secondary)', fontSize: '0.8125rem', textTransform: 'capitalize',
+                    }}>{f === 'all' ? t('reviews.allStatus') : t(`providers.registrations.${f}`)}</button>
+                ))}
+            </div>
 
-            {!loading && list.length === 0 && (
+            {list.length === 0 && (
                 <div className={styles.emptyState}>
                     <Check size={48} strokeWidth={1} />
-                    <p>No pending registrations</p>
+                    <p>{t('providers.registrations.none')}</p>
                 </div>
             )}
 
-            {list.map(provider => (
-                <RegistrationCard
-                    key={provider.uuid}
-                    provider={provider}
-                    busy={busyUuid === provider.uuid}
-                    onActivate={handleActivate}
-                    onReject={handleReject}
-                    onView={() => router.push(`/providers/${provider.uuid}`)}
-                    t={t}
-                />
-            ))}
-        </div>
-    );
-}
-
-function RegistrationCard({
-    provider,
-    busy,
-    onActivate,
-    onReject,
-    onView,
-    t,
-}: {
-    provider: AdminProviderObject;
-    busy: boolean;
-    onActivate: (uuid: string) => void;
-    onReject: (uuid: string) => void;
-    onView: () => void;
-    t: (key: string) => string;
-}) {
-    return (
-        <div className={styles.card}>
-            <div className={styles.cardHeader}>
-                <div className={styles.cardInfo}>
-                    <div className={styles.cardAvatar}>
-                        <Building2 size={20} />
-                    </div>
-                    <div>
-                        <div className={styles.cardName}>{provider.name}</div>
-                        <div className={styles.cardMeta}>
-                            {provider.email}
-                            {provider.phone && <> &middot; {provider.phone}</>}
-                            {provider.category && <> &middot; <span className={styles.capitalize}>{provider.category.name}</span></>}
+            {list.map(reg => (
+                <div key={reg.id} className={styles.card}>
+                    <div className={styles.cardHeader}>
+                        <div className={styles.cardInfo}>
+                            <div className={styles.cardAvatar}><Building2 size={20} /></div>
+                            <div>
+                                <div className={styles.cardName}>{reg.business_name}</div>
+                                <div className={styles.cardMeta}>
+                                    {reg.provider_name} &middot; {reg.email} &middot; {reg.phone} &middot; <span className={styles.capitalize}>{reg.business_category}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div className={styles.cardRight}>
+                            <StatusBadge status={reg.status} />
+                            <span className={styles.timeAgo}><Clock size={12} /> {new Date(reg.submitted_at).toLocaleDateString()}</span>
                         </div>
                     </div>
-                </div>
-                <div className={styles.cardRight}>
-                    <span style={{ padding: '2px 10px', borderRadius: 9999, fontSize: '0.75rem', fontWeight: 500, background: 'var(--color-warning-light)', color: '#92400e' }}>
-                        Inactive
-                    </span>
-                    <span className={styles.timeAgo}>
-                        <Clock size={12} /> {new Date(provider.created_at).toLocaleDateString()}
-                    </span>
-                    <button
-                        onClick={onView}
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
-                    >
-                        <ExternalLink size={13} /> View Details
-                    </button>
-                </div>
-            </div>
 
-            <PermissionGate module="providers" action="edit">
-                <div className={styles.cardActions}>
-                    <button
-                        className={styles.approveBtn}
-                        onClick={() => onActivate(provider.uuid)}
-                        disabled={busy}
-                    >
-                        {busy ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={16} />}
-                        {t('providers.approve')}
-                    </button>
-                    <button
-                        className={styles.rejectBtn}
-                        onClick={() => onReject(provider.uuid)}
-                        disabled={busy}
-                    >
-                        {busy ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <X size={16} />}
-                        {t('providers.reject')}
-                    </button>
+                    <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '8px 0', fontSize: '0.8125rem' }}>
+                        {reg.documents.map(d => (
+                            <span key={d.type} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: d.verified ? 'var(--color-success)' : 'var(--text-tertiary)' }}>
+                                <FileText size={13} /> {d.type}{d.verified ? ' ✓' : ''}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Audit trail for decided registrations */}
+                    {reg.status !== 'pending' && reg.reviewed_at && (
+                        <div style={{ padding: 10, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.8125rem', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <span><UserCheck size={13} style={{ verticalAlign: 'middle' }} /> <strong>{reg.status === 'approved' ? t('providers.registrations.approvedBy') : t('providers.registrations.rejectedBy')}:</strong> {reg.reviewed_by_name ?? '—'} &middot; {new Date(reg.reviewed_at).toLocaleString()}</span>
+                            {reg.rejection_reason && <span style={{ color: 'var(--color-error)' }}><strong>{t('common.reason')}:</strong> {reg.rejection_reason}</span>}
+                            {reg.approval_note && <span style={{ color: 'var(--text-secondary)' }}><strong>{t('providers.registrations.note')}:</strong> {reg.approval_note}</span>}
+                        </div>
+                    )}
+
+                    {reg.status === 'pending' && (
+                        <PermissionGate module="providers" action="edit">
+                            <div className={styles.cardActions}>
+                                <button className={styles.approveBtn} onClick={() => { setApproveTarget(reg); setNote(''); }}>
+                                    <Check size={16} /> {t('providers.approve')}
+                                </button>
+                                <button className={styles.rejectBtn} onClick={() => { setRejectTarget(reg); setReason(''); }}>
+                                    <X size={16} /> {t('providers.reject')}
+                                </button>
+                            </div>
+                        </PermissionGate>
+                    )}
                 </div>
-            </PermissionGate>
+            ))}
+
+            <FormModal open={!!approveTarget} onClose={() => setApproveTarget(null)} title={`${t('providers.approve')} — ${approveTarget?.business_name ?? ''}`} submitLabel={t('providers.approve')} onSubmit={e => { e.preventDefault(); confirmApprove(); }}>
+                <FormField label={t('providers.registrations.note')}>
+                    <textarea value={note} onChange={e => setNote(e.target.value)} rows={3} className={shared.formInput} style={{ resize: 'vertical', width: '100%' }} placeholder={t('providers.registrations.notePlaceholder')} />
+                </FormField>
+            </FormModal>
+
+            <FormModal open={!!rejectTarget} onClose={() => setRejectTarget(null)} title={`${t('providers.reject')} — ${rejectTarget?.business_name ?? ''}`} submitLabel={t('providers.reject')} submitVariant="danger" onSubmit={e => { e.preventDefault(); confirmReject(); }}>
+                <FormField label={t('common.reason')} required>
+                    <textarea value={reason} onChange={e => setReason(e.target.value)} rows={3} required className={shared.formInput} style={{ resize: 'vertical', width: '100%' }} placeholder={t('providers.registrations.reasonPlaceholder')} />
+                </FormField>
+            </FormModal>
         </div>
     );
 }

@@ -3,6 +3,7 @@
 import React from 'react';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { geographicData } from '@/mocks/finance';
+import { formatCompactMoney } from '@/lib/market';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
@@ -16,7 +17,7 @@ export default function GeographicReportPage() {
         { key: 'providers', label: t('reports.geographic.providers'), sortable: true },
         { key: 'users', label: t('reports.geographic.users'), sortable: true, render: r => r.users.toLocaleString() },
         { key: 'bookings', label: t('reports.geographic.bookings'), sortable: true, render: r => r.bookings.toLocaleString() },
-        { key: 'revenue', label: t('reports.geographic.revenue'), sortable: true, render: r => `EGP ${(r.revenue / 1000).toFixed(0)}K` },
+        { key: 'revenue', label: t('reports.geographic.revenue'), sortable: true, render: r => formatCompactMoney(r.revenue) },
     ];
 
     return (

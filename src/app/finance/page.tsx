@@ -3,7 +3,8 @@
 import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { monthlyRevenueData, mockCommissions, mockPayouts } from '@/mocks/finance';
+import { monthlyRevenueData, platformPayouts, revenueSummary } from '@/mocks/finance';
+import { formatMoney, formatCompactMoney } from '@/lib/market';
 import { forecastRevenue } from '@/lib/analytics';
 import { DollarSign, TrendingUp, CreditCard, Wallet, FileText, Percent, Send, Receipt, LineChart as LineChartIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -11,20 +12,22 @@ import shared from '@/components/admin/shared.module.css';
 
 export default function FinancePage() {
     const { t } = useTranslation();
-    const totalCommissions = mockCommissions.reduce((s, c) => s + c.commission_amount, 0);
-    const pendingPayouts = mockPayouts.filter(p => p.status === 'pending' || p.status === 'processing').reduce((s, p) => s + p.amount, 0);
-    const completedPayouts = mockPayouts.filter(p => p.status === 'completed').reduce((s, p) => s + p.amount, 0);
+    // Derived from paid Visits via platform_finance.ts (see mocks/finance.ts).
+    const platformRevenue = revenueSummary.platform_revenue;
+    const totalCommissions = revenueSummary.commission_total;
+    const pendingPayouts = platformPayouts.filter(p => p.status === 'pending' || p.status === 'processing').reduce((s, p) => s + p.net_payable, 0);
+    const completedPayouts = platformPayouts.filter(p => p.status === 'paid').reduce((s, p) => s + p.net_payable, 0);
     const forecast = forecastRevenue(monthlyRevenueData, 3);
     const nextMonthForecast = forecast[0];
 
     const kpis = [
-        { label: 'Total Revenue (Apr)', value: 'EGP 520K', icon: <DollarSign size={20} />, color: 'var(--color-primary-500)' },
-        { label: 'Commissions Earned', value: `EGP ${totalCommissions.toLocaleString()}`, icon: <TrendingUp size={20} />, color: 'var(--color-success)' },
-        { label: 'Pending Payouts', value: `EGP ${(pendingPayouts / 1000).toFixed(0)}K`, icon: <CreditCard size={20} />, color: 'var(--color-warning)' },
-        { label: 'Completed Payouts', value: `EGP ${(completedPayouts / 1000).toFixed(0)}K`, icon: <Wallet size={20} />, color: 'var(--color-info)' },
+        { label: 'Platform Revenue', value: formatMoney(platformRevenue), icon: <DollarSign size={20} />, color: 'var(--color-primary-500)' },
+        { label: 'Commissions Earned', value: formatMoney(totalCommissions), icon: <TrendingUp size={20} />, color: 'var(--color-success)' },
+        { label: 'Pending Payouts', value: formatMoney(pendingPayouts), icon: <CreditCard size={20} />, color: 'var(--color-warning)' },
+        { label: 'Completed Payouts', value: formatMoney(completedPayouts), icon: <Wallet size={20} />, color: 'var(--color-info)' },
         ...(nextMonthForecast ? [{
             label: `${t('reports.revenue.forecast.nextMonth')} (${nextMonthForecast.month})`,
-            value: `EGP ${Math.round(nextMonthForecast.total / 1000).toLocaleString()}K`,
+            value: formatCompactMoney(nextMonthForecast.total),
             icon: <LineChartIcon size={20} />,
             color: 'var(--color-info)',
         }] : []),
@@ -73,8 +76,8 @@ export default function FinancePage() {
                     <AreaChart data={monthlyRevenueData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
                         <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
-                        <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => [`EGP ${Number(v).toLocaleString()}`, '']} />
+                        <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => formatCompactMoney(Number(v), { withCurrency: false })} />
+                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => [formatCompactMoney(Number(v)), '']} />
                         <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="var(--color-primary-500)" fill="color-mix(in srgb, var(--color-primary-500) 25%, transparent)" name="Subscriptions" />
                         <Area type="monotone" dataKey="commissions" stackId="1" stroke="var(--color-info)" fill="color-mix(in srgb, var(--color-info) 25%, transparent)" name="Commissions" />
                     </AreaChart>

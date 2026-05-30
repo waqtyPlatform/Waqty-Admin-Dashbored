@@ -1,3 +1,14 @@
+/**
+ * Route guard (SA-5).
+ *
+ * NOTE ON THE FILENAME: in Next.js 16 the `middleware` file convention is
+ * DEPRECATED and renamed to `proxy`. This file (`src/proxy.ts`, exporting
+ * `proxy`) IS the active, correctly-named edge guard and runs on every matched
+ * request — renaming it to `middleware.ts` would be moving backwards. The
+ * earlier "decorative roles" gap was caused by mock auth forcing every admin to
+ * `super_admin` (now fixed in AuthContext so demo accounts carry varied roles),
+ * not by this file failing to run.
+ */
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 

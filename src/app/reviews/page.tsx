@@ -7,7 +7,8 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
 import { adminRatingsApi, type RatingObject } from '@/lib/api';
-import { Star, EyeOff, Eye, Trash2, Loader2 } from 'lucide-react';
+import { Star, EyeOff, Eye, Trash2, Loader2, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 import styles from './page.module.css';
 
 export default function ReviewsPage() {
@@ -63,7 +64,12 @@ export default function ReviewsPage() {
 
     return (
         <div className={styles.page}>
-            <h1 className={styles.title}>{t('reviews.title')}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                <h1 className={styles.title}>{t('reviews.title')}</h1>
+                <Link href="/reviews/moderation" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--color-primary-500)', fontSize: '0.875rem', textDecoration: 'none', fontWeight: 500 }}>
+                    <ShieldCheck size={16} /> {t('reviews.moderation.title')}
+                </Link>
+            </div>
 
             <div className={styles.summaryGrid}>
                 {[

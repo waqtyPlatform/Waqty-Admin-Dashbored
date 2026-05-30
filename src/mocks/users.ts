@@ -16,10 +16,11 @@ export const mockUsers: PlatformUser[] = [
 
 export const mockWallets: Wallet[] = mockUsers.filter(u => u.status !== 'soft_deleted').map(u => ({
     id: `wal-${u.id}`, user_id: u.id, user_name: u.name, user_email: u.email,
-    balance: u.wallet_balance, currency: 'EGP',
+    // Wallet money in canonical MINOR units (piastres); 100 = EGP 1.00.
+    balance: u.wallet_balance * 100, currency: 'EGP',
     status: u.id === '6' ? 'frozen' as const : 'active' as const,
-    total_credits: u.wallet_balance + u.total_spent * 0.1,
-    total_debits: u.total_spent * 0.1,
+    total_credits: Math.round((u.wallet_balance + u.total_spent * 0.1) * 100),
+    total_debits: Math.round(u.total_spent * 0.1 * 100),
     last_transaction_at: u.last_booking_at, created_at: u.registered_at, updated_at: u.updated_at,
 }));
 

@@ -38,6 +38,12 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
     cancelled: { label: 'Cancelled', className: styles.statusError },
     past_due: { label: 'Past Due', className: styles.statusError },
     deactivated: { label: 'Deactivated', className: styles.statusNeutral },
+    // Canonical booking lifecycle (waqty_contract BookingStatus)
+    confirmed: { label: 'Confirmed', className: styles.statusInfo },
+    no_show: { label: 'No Show', className: styles.statusError },
+    // Canonical AdStatus (waqty_contract) — X16
+    scheduled: { label: 'Scheduled', className: styles.statusInfo },
+    ended: { label: 'Ended', className: styles.statusNeutral },
 };
 
 export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {

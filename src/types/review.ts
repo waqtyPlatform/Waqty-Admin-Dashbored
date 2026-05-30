@@ -1,19 +1,17 @@
-export type ReviewStatus = 'published' | 'flagged' | 'hidden' | 'pending';
+/**
+ * Reviews — canonical types (SA-4 / SA-8).
+ *
+ * The User app CREATES canonical `Review`s; SuperAdmin MODERATES them
+ * (status pending -> published | flagged | hidden, with an optional
+ * `admin_response`). The moderation queue extends the canonical entity with
+ * user/provider display names via a `*Row` view-model.
+ */
+export type { Review, ReviewStatus } from '@/contract/waqty_contract';
 
-export interface Review {
-    id: string;
-    user_id: string;
+import type { Review } from '@/contract/waqty_contract';
+
+/** Canonical review + user/provider display names (moderation queue). */
+export interface ReviewRow extends Review {
     user_name: string;
-    user_avatar?: string;
-    provider_id: string;
     provider_name: string;
-    booking_id: string;
-    rating: number;
-    comment: string;
-    status: ReviewStatus;
-    flag_reason?: string;
-    admin_response?: string;
-    reported_count: number;
-    created_at: string;
-    updated_at: string;
 }

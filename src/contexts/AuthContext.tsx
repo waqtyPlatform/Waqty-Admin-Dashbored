@@ -37,6 +37,16 @@ const MOCK_ADMINS: Record<string, { name: string; role: SuperAdminRole }> = {
     'viewer@hagzy.com': { name: 'Report Viewer', role: 'viewer' },
 };
 
+const VALID_ROLES: readonly SuperAdminRole[] = ['super_admin', 'admin', 'moderator', 'support', 'finance', 'viewer'];
+
+// Coerce a backend role string into a known SuperAdminRole. Honours the actual
+// role when the API supplies a recognised one (X12); only when it is missing or
+// unrecognised do we fall back to super_admin so a real, non-super-admin identity
+// is respected rather than silently elevated.
+function coerceRole(role: string | null | undefined): SuperAdminRole {
+    return VALID_ROLES.includes(role as SuperAdminRole) ? (role as SuperAdminRole) : 'super_admin';
+}
+
 function buildMockUser(email: string, info: { name: string; role: SuperAdminRole }): SuperAdminUser {
     return {
         id: `SA-${info.role.toUpperCase()}`,
@@ -76,8 +86,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedToken = localStorage.getItem('hagzy_superadmin_token');
         if (storedUser && storedToken) {
             const parsed = JSON.parse(storedUser) as SuperAdminUser;
-            // Ensure the API client has the token available
-            localStorage.setItem('hagzy_token', storedToken);
+            // The API client reads `hagzy_superadmin_token` directly (X11) — no
+            // mirror into the shared `hagzy_token` key, which other apps also use.
             setUser(parsed);
             setAuthCookie(true, parsed.role);
         } else {
@@ -108,23 +118,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user, loading, pathname, router]);
 
     const login = async (email: string, password: string) => {
+        // Mock role demo (SA-5): the known demo accounts resolve to VARIED roles so
+        // the 6-role × 17-module matrix is actually exercised in the UI — a
+        // non-super-admin (e.g. moderator@hagzy.com) is restricted by the sidebar
+        // (can()), PermissionGate, and the proxy.ts route guard. Real backend RBAC
+        // is deferred; unknown emails still go through the live API below.
+        const mock = MOCK_ADMINS[email.trim().toLowerCase()];
+        if (mock) {
+            const mockUser = buildMockUser(email.trim().toLowerCase(), mock);
+            const mockToken = `mock-${mock.role}`;
+            localStorage.setItem('hagzy_superadmin_token', mockToken);
+            localStorage.setItem('hagzy_superadmin_user', JSON.stringify(mockUser));
+            setUser(mockUser);
+            setAuthCookie(true, mockUser.role);
+            router.push('/');
+            return { success: true, user: mockUser };
+        }
+
         try {
             const res = await adminAuthApi.login(email, password);
             const { token, admin } = res.data!;
 
-            // Store JWT so the ApiClient can attach it to every request
-            localStorage.setItem('hagzy_token', token);
-
-            // Build a SuperAdminUser from the API response.
-            // The API only returns id/name/email/active — default role to super_admin
-            // (role-based access can be refined once the backend exposes it).
+            // Build a SuperAdminUser from the API response. Honour the role the
+            // backend assigns (X12) — a non-super-admin identity is respected; we
+            // only fall back to super_admin when the API omits/returns no role.
+            const role = coerceRole(admin.role);
             const apiUser: SuperAdminUser = {
                 id: String(admin.id),
                 uuid: `admin-${admin.id}`,
                 name: admin.name,
                 email: admin.email,
-                role: 'super_admin' as SuperAdminRole,
-                permissions: getPermissionsForRole('super_admin'),
+                role,
+                permissions: getPermissionsForRole(role),
                 active: admin.active,
                 last_login_at: new Date().toISOString(),
                 created_at: new Date().toISOString(),
@@ -167,7 +192,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = () => {
         // Fire-and-forget — invalidate token on server
         adminAuthApi.logout().catch(() => { /* ignore */ });
-        localStorage.removeItem('hagzy_token');
         localStorage.removeItem('hagzy_superadmin_token');
         localStorage.removeItem('hagzy_superadmin_user');
         localStorage.removeItem('hagzy_superadmin_impersonating');

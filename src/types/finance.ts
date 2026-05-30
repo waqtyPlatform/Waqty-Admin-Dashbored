@@ -1,25 +1,27 @@
-export interface CommissionRecord {
-    id: string;
-    provider_id: string;
+/**
+ * Platform money layer — canonical types (SA-2 / SA-8).
+ *
+ * The commission ledger, payouts and transaction fees are the canonical
+ * entities from the shared contract. Admin list views additionally need the
+ * provider's display name joined in, so we extend (never redefine) the
+ * canonical entity with a `*Row` view-model.
+ */
+export type {
+    PlatformCommission,
+    Payout,
+    TransactionFee,
+    PayoutStatus,
+} from '@/contract/waqty_contract';
+export type { PlatformRevenueSummary } from '@/contract/platform_finance';
+
+import type { PlatformCommission, Payout } from '@/contract/waqty_contract';
+
+/** Commission ledger entry + provider display name (admin list). */
+export interface PlatformCommissionRow extends PlatformCommission {
     provider_name: string;
-    booking_id: string;
-    booking_amount: number;
-    commission_rate: number;
-    commission_amount: number;
-    status: 'pending' | 'collected' | 'waived';
-    created_at: string;
 }
 
-export interface PayoutRecord {
-    id: string;
-    provider_id: string;
+/** Provider payout/settlement + provider display name (admin list). */
+export interface PayoutRow extends Payout {
     provider_name: string;
-    amount: number;
-    currency: string;
-    method: 'bank_transfer' | 'wallet' | 'check';
-    status: 'pending' | 'processing' | 'completed' | 'failed';
-    period_start: string;
-    period_end: string;
-    created_at: string;
-    completed_at: string | null;
 }

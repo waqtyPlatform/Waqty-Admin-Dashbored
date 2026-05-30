@@ -37,6 +37,7 @@ import {
 } from '@/mocks/dashboard';
 import { mockProviders } from '@/mocks/providers';
 import { assessChurnRisk } from '@/lib/analytics';
+import { formatMoney, formatCompactMoney } from '@/lib/market';
 import Link from 'next/link';
 import { AlertTriangle } from 'lucide-react';
 import styles from './page.module.css';
@@ -100,7 +101,7 @@ export default function DashboardPage() {
                         <AreaChart data={mockRevenueData}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
                             <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
-                            <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
+                            <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => formatCompactMoney(Number(v), { withCurrency: false })} />
                             <Tooltip
                                 contentStyle={{
                                     background: 'var(--bg-primary)',
@@ -108,7 +109,7 @@ export default function DashboardPage() {
                                     borderRadius: '8px',
                                     fontSize: '13px',
                                 }}
-                                formatter={(value) => [`EGP ${(Number(value) / 1000).toFixed(0)}K`, '']}
+                                formatter={(value) => [formatCompactMoney(Number(value)), '']}
                             />
                             <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="var(--color-primary-500)" fill="var(--color-primary-500)" fillOpacity={0.25} name="Subscriptions" />
                             <Area type="monotone" dataKey="commissions" stackId="1" stroke="var(--color-info)" fill="var(--color-info)" fillOpacity={0.25} name="Commissions" />
@@ -177,7 +178,7 @@ export default function DashboardPage() {
                                         <td className={styles.providerName}>{p.name}</td>
                                         <td>{p.category}</td>
                                         <td>{p.bookings.toLocaleString()}</td>
-                                        <td>EGP {(p.revenue / 1000).toFixed(0)}K</td>
+                                        <td>{formatMoney(p.revenue)}</td>
                                         <td>
                                             <span className={styles.rating}>
                                                 <Star size={14} fill="#f59e0b" stroke="#f59e0b" /> {p.rating}

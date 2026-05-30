@@ -8,11 +8,12 @@ import { PermissionGate } from '@/components/admin/PermissionGate';
 import { ConfirmModal, FormModal, FormField } from '@/components/admin/FormModal';
 import { useToast } from '@/components/ui';
 import { mockSubscriptions } from '@/mocks/subscriptions';
-import type { ProviderSubscription, Invoice } from '@/types/subscription';
+import type { ProviderSubscriptionRow, InvoiceRow } from '@/types/subscription';
+import { formatMoney, toMinor, toMajor, activeMarket } from '@/lib/market';
 import { RefreshCw, ArrowUpCircle, XCircle, Percent, Clock, Receipt, Undo2, Plus, Trash2 } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
 
-const VAT_RATE = 0.14;
+const VAT_RATE = activeMarket.vat_rate;
 
 interface LineItem { id: string; description: string; quantity: number; unit_price: number; }
 
@@ -23,19 +24,19 @@ export default function SubscriptionsPage() {
     const { addToast } = useToast();
     const [subs, setSubs] = useState(mockSubscriptions);
     const [statusFilter, setStatusFilter] = useState('all');
-    const [confirmCancel, setConfirmCancel] = useState<ProviderSubscription | null>(null);
-    const [discountModal, setDiscountModal] = useState<ProviderSubscription | null>(null);
+    const [confirmCancel, setConfirmCancel] = useState<ProviderSubscriptionRow | null>(null);
+    const [discountModal, setDiscountModal] = useState<ProviderSubscriptionRow | null>(null);
     const [discountValue, setDiscountValue] = useState('');
 
-    const [extendTrialSub, setExtendTrialSub] = useState<ProviderSubscription | null>(null);
+    const [extendTrialSub, setExtendTrialSub] = useState<ProviderSubscriptionRow | null>(null);
     const [extendDays, setExtendDays] = useState('7');
     const [extendReason, setExtendReason] = useState('customer_request');
 
-    const [invoiceSub, setInvoiceSub] = useState<ProviderSubscription | null>(null);
+    const [invoiceSub, setInvoiceSub] = useState<ProviderSubscriptionRow | null>(null);
     const [lineItems, setLineItems] = useState<LineItem[]>([emptyLineItem()]);
-    const [generatedInvoices, setGeneratedInvoices] = useState<Invoice[]>([]);
+    const [generatedInvoices, setGeneratedInvoices] = useState<InvoiceRow[]>([]);
 
-    const [refundSub, setRefundSub] = useState<ProviderSubscription | null>(null);
+    const [refundSub, setRefundSub] = useState<ProviderSubscriptionRow | null>(null);
     const [refundType, setRefundType] = useState<'full' | 'partial'>('partial');
     const [refundAmount, setRefundAmount] = useState('');
     const [refundReason, setRefundReason] = useState('');
@@ -51,35 +52,35 @@ export default function SubscriptionsPage() {
         mrr: subs.filter(s => s.status === 'active').reduce((sum, s) => sum + (s.billing_cycle === 'monthly' ? s.amount : s.amount / 12), 0),
     };
 
-    const handleRenew = (id: string) => {
-        setSubs(prev => prev.map(s => s.id === id ? { ...s, status: 'active' as const, current_period_start: new Date().toISOString(), current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(), auto_renew: true } : s));
+    const handleRenew = (uuid: string) => {
+        setSubs(prev => prev.map(s => s.uuid === uuid ? { ...s, status: 'active' as const, current_period_start: new Date().toISOString(), current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(), auto_renew: true } : s));
         addToast('success', 'Subscription renewed');
     };
 
     const handleCancel = () => {
         if (confirmCancel) {
-            setSubs(prev => prev.map(s => s.id === confirmCancel.id ? { ...s, status: 'cancelled' as const, auto_renew: false } : s));
+            setSubs(prev => prev.map(s => s.uuid === confirmCancel.uuid ? { ...s, status: 'cancelled' as const, auto_renew: false } : s));
             addToast('warning', `Subscription cancelled for ${confirmCancel.provider_name}`);
             setConfirmCancel(null);
         }
     };
 
-    const handleUpgrade = (id: string) => {
-        setSubs(prev => prev.map(s => s.id === id ? { ...s, plan_name: 'Pro', plan_tier: 'pro' as const, status: 'active' as const, amount: 599 } : s));
+    const handleUpgrade = (uuid: string) => {
+        setSubs(prev => prev.map(s => s.uuid === uuid ? { ...s, plan_name: 'Pro', plan_tier: 'pro' as const, status: 'active' as const, amount: toMinor(599) } : s));
         addToast('success', 'Upgraded to Pro');
     };
 
     const handleDiscount = () => {
         if (discountModal && discountValue) {
             const pct = Number(discountValue) / 100;
-            setSubs(prev => prev.map(s => s.id === discountModal.id ? { ...s, amount: Math.round(s.amount * (1 - pct)) } : s));
+            setSubs(prev => prev.map(s => s.uuid === discountModal.uuid ? { ...s, amount: Math.round(s.amount * (1 - pct)) } : s));
             addToast('success', `${discountValue}% discount applied`);
             setDiscountModal(null);
             setDiscountValue('');
         }
     };
 
-    const openExtendTrial = (sub: ProviderSubscription) => {
+    const openExtendTrial = (sub: ProviderSubscriptionRow) => {
         setExtendTrialSub(sub);
         setExtendDays('7');
         setExtendReason('customer_request');
@@ -90,14 +91,14 @@ export default function SubscriptionsPage() {
         const days = Math.min(90, Math.max(1, Number(extendDays) || 0));
         const base = extendTrialSub.trial_end ? new Date(extendTrialSub.trial_end) : new Date();
         const newEnd = new Date(base.getTime() + days * 86400000).toISOString();
-        setSubs(prev => prev.map(s => s.id === extendTrialSub.id ? { ...s, trial_end: newEnd, updated_at: new Date().toISOString() } : s));
+        setSubs(prev => prev.map(s => s.uuid === extendTrialSub.uuid ? { ...s, trial_end: newEnd, updated_at: new Date().toISOString() } : s));
         addToast('success', `Trial extended by ${days} days`);
         setExtendTrialSub(null);
     };
 
-    const openGenerateInvoice = (sub: ProviderSubscription) => {
+    const openGenerateInvoice = (sub: ProviderSubscriptionRow) => {
         setInvoiceSub(sub);
-        setLineItems([{ id: emptyLineItem().id, description: `${sub.plan_name} — ${sub.billing_cycle}`, quantity: 1, unit_price: sub.amount }]);
+        setLineItems([{ id: emptyLineItem().id, description: `${sub.plan_name} — ${sub.billing_cycle}`, quantity: 1, unit_price: toMajor(sub.amount) }]);
     };
 
     const invoiceSubtotal = lineItems.reduce((sum, l) => sum + l.quantity * l.unit_price, 0);
@@ -112,14 +113,14 @@ export default function SubscriptionsPage() {
         if (!invoiceSub) return;
         if (lineItems.length === 0 || invoiceSubtotal <= 0) return;
         const now = new Date();
-        const invoice: Invoice = {
-            id: `INV-${Date.now()}`,
-            provider_id: invoiceSub.provider_id,
+        const invoice: InvoiceRow = {
+            uuid: `INV-${Date.now()}`,
+            provider_uuid: invoiceSub.provider_uuid,
             provider_name: invoiceSub.provider_name,
-            subscription_id: invoiceSub.id,
-            amount: invoiceSubtotal,
-            tax: invoiceTax,
-            total: invoiceTotal,
+            subscription_uuid: invoiceSub.uuid,
+            amount: toMinor(invoiceSubtotal),
+            tax: toMinor(invoiceTax),
+            total: toMinor(invoiceTotal),
             currency: invoiceSub.currency,
             status: 'pending',
             issued_at: now.toISOString(),
@@ -133,7 +134,7 @@ export default function SubscriptionsPage() {
         setLineItems([emptyLineItem()]);
     };
 
-    const openRefund = (sub: ProviderSubscription) => {
+    const openRefund = (sub: ProviderSubscriptionRow) => {
         setRefundSub(sub);
         setRefundType('partial');
         setRefundAmount('');
@@ -143,25 +144,27 @@ export default function SubscriptionsPage() {
 
     const handleRefund = () => {
         if (!refundSub) return;
-        const amount = refundType === 'full' ? refundSub.amount : Number(refundAmount);
-        if (!amount || amount <= 0 || amount > refundSub.amount) {
-            addToast('error', `Amount must be between 1 and ${refundSub.amount}`);
+        // Form input is in MAJOR units; refundSub.amount is canonical MINOR units.
+        const lastChargeMajor = toMajor(refundSub.amount);
+        const amountMajor = refundType === 'full' ? lastChargeMajor : Number(refundAmount);
+        if (!amountMajor || amountMajor <= 0 || amountMajor > lastChargeMajor) {
+            addToast('error', `Amount must be between 1 and ${lastChargeMajor}`);
             return;
         }
         if (!refundReason.trim()) {
             addToast('error', 'Reason is required');
             return;
         }
-        addToast('success', `Refund of EGP ${amount.toLocaleString()} processed`);
+        addToast('success', `Refund of ${formatMoney(toMinor(amountMajor))} processed`);
         setRefundSub(null);
     };
 
-    const columns: Column<ProviderSubscription>[] = [
+    const columns: Column<ProviderSubscriptionRow>[] = [
         { key: 'provider_name', label: t('subscriptions.provider'), sortable: true, render: (row) => <span style={{ fontWeight: 500 }}>{row.provider_name}</span> },
         { key: 'plan_name', label: t('subscriptions.plan'), sortable: true, render: (row) => <span style={{ padding: '2px 8px', borderRadius: 4, background: row.plan_tier === 'enterprise' ? 'var(--color-primary-50)' : row.plan_tier === 'pro' ? 'var(--color-info-light)' : 'var(--bg-tertiary)', fontSize: '0.75rem', fontWeight: 500 }}>{row.plan_name}</span> },
         { key: 'billing_cycle', label: t('subscriptions.cycle'), sortable: true, render: (row) => <span style={{ textTransform: 'capitalize' }}>{row.billing_cycle}</span> },
         { key: 'status', label: t('common.status'), sortable: true, render: (row) => <StatusBadge status={row.status} /> },
-        { key: 'amount', label: t('common.amount'), sortable: true, render: (row) => `EGP ${row.amount.toLocaleString()}` },
+        { key: 'amount', label: t('common.amount'), sortable: true, render: (row) => formatMoney(row.amount) },
         { key: 'current_period_end', label: t('subscriptions.renews'), sortable: true, render: (row) => new Date(row.current_period_end).toLocaleDateString() },
         { key: 'auto_renew', label: t('subscriptions.autoRenew'), render: (row) => row.auto_renew ? t('common.yes') : t('common.no') },
         {
@@ -169,8 +172,8 @@ export default function SubscriptionsPage() {
             render: (row) => (
                 <PermissionGate module="subscriptions" action="edit">
                     <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {(row.status === 'active' || row.status === 'past_due') && <ActionBtn icon={<RefreshCw size={13} />} label={t('subscriptions.renew')} onClick={() => handleRenew(row.id)} color={row.status === 'past_due' ? 'var(--color-warning)' : undefined} />}
-                        {row.status === 'trial' && <ActionBtn icon={<ArrowUpCircle size={13} />} label={t('subscriptions.upgrade')} onClick={() => handleUpgrade(row.id)} />}
+                        {(row.status === 'active' || row.status === 'past_due') && <ActionBtn icon={<RefreshCw size={13} />} label={t('subscriptions.renew')} onClick={() => handleRenew(row.uuid)} color={row.status === 'past_due' ? 'var(--color-warning)' : undefined} />}
+                        {row.status === 'trial' && <ActionBtn icon={<ArrowUpCircle size={13} />} label={t('subscriptions.upgrade')} onClick={() => handleUpgrade(row.uuid)} />}
                         {row.status === 'trial' && <ActionBtn icon={<Clock size={13} />} label={t('subscriptions.extendTrial')} onClick={() => openExtendTrial(row)} />}
                         {(row.status === 'active' || row.status === 'past_due') && <ActionBtn icon={<Receipt size={13} />} label={t('subscriptions.invoice')} onClick={() => openGenerateInvoice(row)} />}
                         <ActionBtn icon={<Undo2 size={13} />} label={t('subscriptions.refund')} onClick={() => openRefund(row)} color="var(--color-warning)" />
@@ -192,7 +195,7 @@ export default function SubscriptionsPage() {
                     { label: t('subscriptions.trial'), value: summary.trial, color: 'var(--color-info)' },
                     { label: t('subscriptions.pastDue'), value: summary.past_due, color: 'var(--color-warning)' },
                     { label: t('subscriptions.cancelled'), value: summary.cancelled, color: 'var(--color-error)' },
-                    { label: t('subscriptions.mrr'), value: `EGP ${Math.round(summary.mrr).toLocaleString()}`, color: 'var(--color-primary-500)' },
+                    { label: t('subscriptions.mrr'), value: formatMoney(Math.round(summary.mrr)), color: 'var(--color-primary-500)' },
                 ].map(s => (
                     <div key={s.label} className={shared.summaryCard} style={{ borderTop: `3px solid ${s.color}` }}>
                         <div className={shared.summaryLabel}>{s.label}</div>
@@ -201,7 +204,7 @@ export default function SubscriptionsPage() {
                 ))}
             </div>
 
-            <DataTable<ProviderSubscription> columns={columns} data={filtered} searchKeys={['provider_name', 'plan_name']} searchPlaceholder={t('subscriptions.searchPlaceholder')} getRowKey={row => row.id}
+            <DataTable<ProviderSubscriptionRow> columns={columns} data={filtered} searchKeys={['provider_name', 'plan_name']} searchPlaceholder={t('subscriptions.searchPlaceholder')} getRowKey={row => row.uuid}
                 filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}><option value="all">{t('finance.allStatus')}</option><option value="active">{t('subscriptions.active')}</option><option value="trial">{t('subscriptions.trial')}</option><option value="past_due">{t('subscriptions.pastDue')}</option><option value="cancelled">{t('subscriptions.cancelled')}</option></select>}
             />
 
@@ -209,11 +212,11 @@ export default function SubscriptionsPage() {
 
             <FormModal open={!!discountModal} onClose={() => setDiscountModal(null)} title={`${t('subscriptions.applyDiscount')} — ${discountModal?.provider_name}`} submitLabel={t('subscriptions.applyDiscount')} onSubmit={e => { e.preventDefault(); handleDiscount(); }}>
                 {discountModal && <>
-                    <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}><strong>{t('subscriptions.currentAmount')}:</strong> EGP {discountModal.amount.toLocaleString()} / {discountModal.billing_cycle}</div>
+                    <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}><strong>{t('subscriptions.currentAmount')}:</strong> {formatMoney(discountModal.amount)} / {discountModal.billing_cycle}</div>
                     <FormField label={t('subscriptions.discountPercentage')} required>
                         <input type="number" value={discountValue} onChange={e => setDiscountValue(e.target.value)} required min={1} max={100} className={shared.formInput} placeholder="e.g. 20" />
                     </FormField>
-                    {discountValue && <div style={{ padding: 8, background: 'var(--color-success-light)', borderRadius: 6, fontSize: '0.8125rem', color: '#065f46' }}>{t('subscriptions.newAmount')}: <strong>EGP {Math.round(discountModal.amount * (1 - Number(discountValue) / 100)).toLocaleString()}</strong> ({discountValue}% {t('subscriptions.off')})</div>}
+                    {discountValue && <div style={{ padding: 8, background: 'var(--color-success-light)', borderRadius: 6, fontSize: '0.8125rem', color: '#065f46' }}>{t('subscriptions.newAmount')}: <strong>{formatMoney(Math.round(discountModal.amount * (1 - Number(discountValue) / 100)))}</strong> ({discountValue}% {t('subscriptions.off')})</div>}
                 </>}
             </FormModal>
 
@@ -272,7 +275,7 @@ export default function SubscriptionsPage() {
             <FormModal open={!!refundSub} onClose={() => setRefundSub(null)} title={`${t('subscriptions.refund')} — ${refundSub?.provider_name}`} submitLabel={t('subscriptions.processRefund')} submitVariant="danger" onSubmit={e => { e.preventDefault(); handleRefund(); }}>
                 {refundSub && <>
                     <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                        <strong>{t('subscriptions.lastCharge')}:</strong> EGP {refundSub.amount.toLocaleString()} ({refundSub.billing_cycle})
+                        <strong>{t('subscriptions.lastCharge')}:</strong> {formatMoney(refundSub.amount)} ({refundSub.billing_cycle})
                     </div>
                     <FormField label={t('subscriptions.refundType')} required>
                         <div style={{ display: 'flex', gap: 16 }}>
@@ -280,13 +283,13 @@ export default function SubscriptionsPage() {
                                 <input type="radio" checked={refundType === 'partial'} onChange={() => setRefundType('partial')} /> {t('subscriptions.partial')}
                             </label>
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                <input type="radio" checked={refundType === 'full'} onChange={() => setRefundType('full')} /> {t('subscriptions.full')} ({refundSub.amount.toLocaleString()} EGP)
+                                <input type="radio" checked={refundType === 'full'} onChange={() => setRefundType('full')} /> {t('subscriptions.full')} ({formatMoney(refundSub.amount)})
                             </label>
                         </div>
                     </FormField>
                     {refundType === 'partial' && (
                         <FormField label={t('subscriptions.refundAmount')} required>
-                            <input type="number" min={1} max={refundSub.amount} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} required className={shared.formInput} placeholder={`Max ${refundSub.amount}`} />
+                            <input type="number" min={1} max={toMajor(refundSub.amount)} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} required className={shared.formInput} placeholder={`Max ${toMajor(refundSub.amount)}`} />
                         </FormField>
                     )}
                     <FormField label={t('subscriptions.refundDestination')} required>

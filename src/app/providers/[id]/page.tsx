@@ -14,6 +14,7 @@ import {
     type AdminProviderObject, type BranchObject, type EmployeeObject,
 } from '@/lib/api';
 import { mockPlans } from '@/mocks/subscriptions';
+import { formatMoney, toMajor } from '@/lib/market';
 import type { Provider, ProviderStatus } from '@/types/provider';
 import { scoreProvider, assessChurnRisk } from '@/lib/analytics';
 import {
@@ -37,7 +38,7 @@ const mockServices = [
 const mockBookings = [
     { id: 'BK-1001', customer: 'Fatima Al-Rashid', service: 'Hair Color', date: '2026-04-13', time: '10:00 AM', status: 'confirmed' },
     { id: 'BK-1002', customer: 'Mohamed Ahmed', service: 'Haircut', date: '2026-04-13', time: '11:00 AM', status: 'completed' },
-    { id: 'BK-1003', customer: 'Layla Mahmoud', service: 'Keratin Treatment', date: '2026-04-13', time: '2:00 PM', status: 'confirmed' },
+    { id: 'BK-1003', customer: 'Layla Mahmoud', service: 'Keratin Treatment', date: '2026-04-13', time: '2:00 PM', status: 'in_progress' },
     { id: 'BK-1004', customer: 'Khaled Samir', service: 'Beard Trim', date: '2026-04-12', time: '3:00 PM', status: 'completed' },
     { id: 'BK-1005', customer: 'Reem Adel', service: 'Haircut', date: '2026-04-12', time: '4:00 PM', status: 'cancelled' },
     { id: 'BK-1006', customer: 'Youssef Nabil', service: 'Hair Color', date: '2026-04-11', time: '10:00 AM', status: 'no_show' },
@@ -48,7 +49,7 @@ export default function ProviderDetailPage() {
     const router = useRouter();
     const { startImpersonating } = useAuth();
     const { addToast } = useToast();
-    const { t } = useTranslation();
+    const { t, tn } = useTranslation();
     const [activeTab, setActiveTab] = useState('overview');
     const [provider, setProvider] = useState<Provider | undefined>(undefined);
     const [confirmAction, setConfirmAction] = useState<{ action: string; label: string } | null>(null);
@@ -170,9 +171,9 @@ export default function ProviderDetailPage() {
 
     const handleChangePlan = () => {
         if (!selectedPlanId) return;
-        const plan = mockPlans.find(p => p.id === selectedPlanId);
+        const plan = mockPlans.find(p => p.uuid === selectedPlanId);
         if (!plan) return;
-        setProvider(prev => prev ? { ...prev, subscription_plan_id: plan.id, subscription_status: 'active' } : prev);
+        setProvider(prev => prev ? { ...prev, subscription_plan_uuid: plan.uuid, subscription_status: 'active' } : prev);
         setShowChangePlan(false);
         setSelectedPlanId('');
         addToast('success', `Plan changed to ${plan.name}`);
@@ -185,21 +186,25 @@ export default function ProviderDetailPage() {
     };
 
     const openCommission = () => {
-        setCommissionRate(String(provider?.commission_rate ?? ''));
+        // Model stores a 0..1 fraction; the admin edits in percent (X4a).
+        setCommissionRate(
+            provider ? String(Math.round((provider.commission_rate ?? 0) * 1000) / 10) : '',
+        );
         setCommissionDate(new Date().toISOString().slice(0, 10));
         setCommissionReason('');
         setShowCommission(true);
     };
 
     const handleCommission = () => {
-        const rate = Number(commissionRate);
-        if (!Number.isFinite(rate) || rate < 0 || rate > 50) {
+        const pct = Number(commissionRate);
+        if (!Number.isFinite(pct) || pct < 0 || pct > 50) {
             addToast('error', 'Commission must be between 0 and 50%');
             return;
         }
-        setProvider(prev => prev ? { ...prev, commission_rate: rate, updated_at: new Date().toISOString() } : prev);
+        // Admin edits in percent; the model stores a 0..1 fraction (X4a).
+        setProvider(prev => prev ? { ...prev, commission_rate: pct / 100, updated_at: new Date().toISOString() } : prev);
         setShowCommission(false);
-        addToast('success', `Commission set to ${rate}%`);
+        addToast('success', `Commission set to ${pct}%`);
     };
 
     const handleExport = (type: 'bookings' | 'employees' | 'financial') => {
@@ -213,9 +218,9 @@ export default function ProviderDetailPage() {
             const summary = [{
                 provider: provider.business_name,
                 total_bookings: provider.total_bookings,
-                total_revenue: provider.total_revenue,
+                total_revenue: toMajor(provider.total_revenue), // store is minor units (X4b)
                 commission_rate: provider.commission_rate,
-                commission_earned: Math.round(provider.total_revenue * provider.commission_rate / 100),
+                commission_earned: toMajor(Math.round(provider.total_revenue * provider.commission_rate)),
                 subscription_status: provider.subscription_status,
                 generated_at: new Date().toISOString(),
             }];
@@ -249,7 +254,7 @@ export default function ProviderDetailPage() {
                     <div className={styles.avatar}>{apiProvider.name.charAt(0)}</div>
                     <div>
                         <div className={styles.headerName}>
-                            <h1>{apiProvider.name}</h1>
+                            <h1>{tn(apiProvider.name, apiProvider.name_ar)}</h1>
                             <StatusBadge status={apiProvider.active ? 'active' : 'inactive'} />
                             {apiProvider.blocked && <StatusBadge status="blocked" />}
                             {apiProvider.banned && <StatusBadge status="banned" />}
@@ -306,7 +311,7 @@ export default function ProviderDetailPage() {
                         <div className={styles.infoCard}>
                             <h3>{t('providers.businessInfo')}</h3>
                             <div className={styles.infoRows}>
-                                <InfoRow label="Name" value={apiProvider.name} />
+                                <InfoRow label="Name" value={tn(apiProvider.name, apiProvider.name_ar)} />
                                 <InfoRow label="Email" value={apiProvider.email} />
                                 <InfoRow label="Phone" value={apiProvider.phone} />
                                 <InfoRow label={t('providers.category')} value={apiProvider.category?.name ?? '—'} />
@@ -561,7 +566,7 @@ export default function ProviderDetailPage() {
                     <select value={selectedPlanId} onChange={e => setSelectedPlanId(e.target.value)} required className={shared.formInput}>
                         <option value="">{t('providers.selectPlan')}</option>
                         {mockPlans.filter(p => p.active).map(p => (
-                            <option key={p.id} value={p.id}>{p.name} — EGP {p.price_monthly}/mo (EGP {p.price_yearly}/yr)</option>
+                            <option key={p.uuid} value={p.uuid}>{p.name} — {formatMoney(p.price_monthly)}/mo ({formatMoney(p.price_yearly)}/yr)</option>
                         ))}
                     </select>
                 </FormField>

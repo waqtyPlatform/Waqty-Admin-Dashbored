@@ -45,17 +45,19 @@ export const mockKPIs: DashboardKPI[] = [
     { label: 'dashboard.monthlyRevenue', value: 'EGP 340K', change: 18.4, trend: 'up' },
 ];
 
+// Revenue series — canonical Money (MINOR units; 100 = EGP 1.00), rendered via
+// the market compact formatter on the dashboard chart (FU/minor sweep).
 export const mockRevenueData: RevenueDataPoint[] = [
-    { month: 'Jul', subscriptions: 180000, commissions: 95000 },
-    { month: 'Aug', subscriptions: 195000, commissions: 102000 },
-    { month: 'Sep', subscriptions: 210000, commissions: 108000 },
-    { month: 'Oct', subscriptions: 225000, commissions: 115000 },
-    { month: 'Nov', subscriptions: 240000, commissions: 125000 },
-    { month: 'Dec', subscriptions: 260000, commissions: 138000 },
-    { month: 'Jan', subscriptions: 275000, commissions: 142000 },
-    { month: 'Feb', subscriptions: 290000, commissions: 155000 },
-    { month: 'Mar', subscriptions: 310000, commissions: 168000 },
-    { month: 'Apr', subscriptions: 340000, commissions: 180000 },
+    { month: 'Jul', subscriptions: 18000000, commissions: 9500000 },
+    { month: 'Aug', subscriptions: 19500000, commissions: 10200000 },
+    { month: 'Sep', subscriptions: 21000000, commissions: 10800000 },
+    { month: 'Oct', subscriptions: 22500000, commissions: 11500000 },
+    { month: 'Nov', subscriptions: 24000000, commissions: 12500000 },
+    { month: 'Dec', subscriptions: 26000000, commissions: 13800000 },
+    { month: 'Jan', subscriptions: 27500000, commissions: 14200000 },
+    { month: 'Feb', subscriptions: 29000000, commissions: 15500000 },
+    { month: 'Mar', subscriptions: 31000000, commissions: 16800000 },
+    { month: 'Apr', subscriptions: 34000000, commissions: 18000000 },
 ];
 
 export const mockCategoryBreakdown: CategoryBreakdown[] = [
@@ -75,11 +77,11 @@ export const mockSubscriptionBreakdown: CategoryBreakdown[] = [
 ];
 
 export const mockTopProviders: TopProvider[] = [
-    { id: '1', name: 'Glamour Studio', category: 'Salon', bookings: 3420, revenue: 285000, rating: 4.9 },
-    { id: '2', name: 'Elite Barbers', category: 'Barber', bookings: 2890, revenue: 195000, rating: 4.8 },
-    { id: '3', name: 'Beauty Clinic Cairo', category: 'Clinic', bookings: 2150, revenue: 340000, rating: 4.7 },
-    { id: '4', name: 'Royal Spa & Wellness', category: 'Spa', bookings: 1890, revenue: 278000, rating: 4.8 },
-    { id: '5', name: 'Fresh Cuts Downtown', category: 'Barber', bookings: 1750, revenue: 142000, rating: 4.6 },
+    { id: '1', name: 'Glamour Studio', category: 'Salon', bookings: 3420, revenue: 28500000, rating: 4.9 },
+    { id: '2', name: 'Elite Barbers', category: 'Barber', bookings: 2890, revenue: 19500000, rating: 4.8 },
+    { id: '3', name: 'Beauty Clinic Cairo', category: 'Clinic', bookings: 2150, revenue: 34000000, rating: 4.7 },
+    { id: '4', name: 'Royal Spa & Wellness', category: 'Spa', bookings: 1890, revenue: 27800000, rating: 4.8 },
+    { id: '5', name: 'Fresh Cuts Downtown', category: 'Barber', bookings: 1750, revenue: 14200000, rating: 4.6 },
 ];
 
 export const mockRecentActivity: RecentActivity[] = [

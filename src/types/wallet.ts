@@ -1,3 +1,8 @@
+// ADMIN-ONLY (SA-8′): the wallet/ledger is a SuperAdmin platform concern and has
+// NO canonical contract counterpart — the ecosystem contract models money on
+// `Payment`/`Visit`, not a standing customer wallet. These types are therefore
+// intentionally local and are NOT a duplicate/divergence of any contract entity.
+// `balance`/`total_credits`/`total_debits` are canonical Money (MINOR units, X4b).
 export type WalletAction = 'add' | 'deduct' | 'freeze' | 'unfreeze' | 'refund';
 export type WalletStatus = 'active' | 'frozen';
 

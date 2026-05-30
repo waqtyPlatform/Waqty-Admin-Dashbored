@@ -5,7 +5,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { mockPlans } from '@/mocks/subscriptions';
-import type { SubscriptionPlan } from '@/types/subscription';
+import type { SubscriptionPlanRow } from '@/types/subscription';
+import { formatMoney, toMinor, toMajor } from '@/lib/market';
 import { Check, X, Plus, Edit, Users } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
 
@@ -13,7 +14,7 @@ export default function PlansPage() {
     const { t } = useTranslation();
     const [plans, setPlans] = useState(mockPlans);
     const [showCreate, setShowCreate] = useState(false);
-    const [editPlan, setEditPlan] = useState<SubscriptionPlan | null>(null);
+    const [editPlan, setEditPlan] = useState<SubscriptionPlanRow | null>(null);
 
     return (
         <div className={shared.page}>
@@ -28,7 +29,7 @@ export default function PlansPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: `repeat(${plans.length}, 1fr)`, gap: 20 }}>
                 {plans.map(plan => (
-                    <div key={plan.id} style={{ background: 'var(--bg-primary)', border: plan.tier === 'enterprise' ? '2px solid var(--color-primary-500)' : '1px solid var(--border-color)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 20, position: 'relative' }}>
+                    <div key={plan.uuid} style={{ background: 'var(--bg-primary)', border: plan.tier === 'enterprise' ? '2px solid var(--color-primary-500)' : '1px solid var(--border-color)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 20, position: 'relative' }}>
                         {plan.tier === 'enterprise' && (
                             <span style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', background: 'var(--color-primary-500)', color: 'white', padding: '2px 12px', borderRadius: 9999, fontSize: '0.6875rem', fontWeight: 600 }}>POPULAR</span>
                         )}
@@ -41,10 +42,10 @@ export default function PlansPage() {
                         </div>
 
                         <div>
-                            <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)' }}>EGP {plan.price_monthly}</span>
+                            <span style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text-primary)' }}>{formatMoney(plan.price_monthly)}</span>
                             <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>/month</span>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 2 }}>
-                                or EGP {plan.price_yearly.toLocaleString()}/year (save {Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)}%)
+                                or {formatMoney(plan.price_yearly)}/year (save {Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)}%)
                             </div>
                         </div>
 
@@ -85,9 +86,9 @@ export default function PlansPage() {
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
                 const now = new Date().toISOString();
                 setPlans(prev => [...prev, {
-                    id: `plan-${Date.now()}`, name: String(fd.get('name') || ''), name_ar: String(fd.get('name_ar') || ''),
-                    tier: (fd.get('tier') || 'basic') as SubscriptionPlan['tier'],
-                    price_monthly: Number(fd.get('price_monthly') || 0), price_yearly: Number(fd.get('price_yearly') || 0), currency: 'EGP',
+                    uuid: `plan-${Date.now()}`, name: String(fd.get('name') || ''), name_ar: String(fd.get('name_ar') || ''),
+                    tier: (fd.get('tier') || 'basic') as SubscriptionPlanRow['tier'],
+                    price_monthly: toMinor(Number(fd.get('price_monthly') || 0)), price_yearly: toMinor(Number(fd.get('price_yearly') || 0)), currency: 'EGP',
                     features: [], limits: { max_branches: Number(fd.get('max_branches') || 1), max_employees: Number(fd.get('max_employees') || 5), max_services: 50, max_bookings_per_month: Number(fd.get('max_bookings') || 100), storage_gb: 5 },
                     active: true, trial_days: Number(fd.get('trial_days') || 14), providers_count: 0, created_at: now, updated_at: now,
                 }]);
@@ -115,11 +116,11 @@ export default function PlansPage() {
                 e.preventDefault();
                 if (!editPlan) return;
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
-                setPlans(prev => prev.map(p => p.id === editPlan.id ? {
+                setPlans(prev => prev.map(p => p.uuid === editPlan.uuid ? {
                     ...p,
                     name: String(fd.get('name') || p.name), name_ar: String(fd.get('name_ar') || p.name_ar),
-                    price_monthly: Number(fd.get('price_monthly') || p.price_monthly),
-                    price_yearly: Number(fd.get('price_yearly') || p.price_yearly),
+                    price_monthly: fd.get('price_monthly') ? toMinor(Number(fd.get('price_monthly'))) : p.price_monthly,
+                    price_yearly: fd.get('price_yearly') ? toMinor(Number(fd.get('price_yearly'))) : p.price_yearly,
                     trial_days: Number(fd.get('trial_days') || p.trial_days),
                     limits: { ...p.limits, max_branches: Number(fd.get('max_branches') || p.limits.max_branches), max_employees: Number(fd.get('max_employees') || p.limits.max_employees), max_bookings_per_month: Number(fd.get('max_bookings') || p.limits.max_bookings_per_month) },
                     updated_at: new Date().toISOString(),
@@ -132,8 +133,8 @@ export default function PlansPage() {
                         <FormField label="Plan Name (AR)"><input name="name_ar" type="text" defaultValue={editPlan.name_ar} className={shared.formInput} dir="rtl" /></FormField>
                     </div>
                     <div className={shared.formGrid2}>
-                        <FormField label="Monthly Price (EGP)"><input name="price_monthly" type="number" defaultValue={editPlan.price_monthly} className={shared.formInput} /></FormField>
-                        <FormField label="Yearly Price (EGP)"><input name="price_yearly" type="number" defaultValue={editPlan.price_yearly} className={shared.formInput} /></FormField>
+                        <FormField label="Monthly Price (EGP)"><input name="price_monthly" type="number" defaultValue={toMajor(editPlan.price_monthly)} className={shared.formInput} /></FormField>
+                        <FormField label="Yearly Price (EGP)"><input name="price_yearly" type="number" defaultValue={toMajor(editPlan.price_yearly)} className={shared.formInput} /></FormField>
                     </div>
                     <div className={shared.formGrid3}>
                         <FormField label="Max Branches"><input name="max_branches" type="number" defaultValue={editPlan.limits.max_branches} className={shared.formInput} /></FormField>

@@ -45,36 +45,40 @@ export interface Campaign {
     created_at: string;
 }
 
-export type AdPlacement = 'home_banner' | 'category_banner' | 'search_promoted' | 'between_listings';
-export type AdType = 'image_banner' | 'promotional_card' | 'featured_provider' | 'video_ad';
+// X16 — the ads stream is now billable: an Ad is backed by the canonical
+// `AdPlacement` (type banner|featured|top_search + price + currency + AdStatus),
+// the 3rd platform revenue stream. The contract types are the source of truth.
+import type { AdPlacement, AdType, AdStatus } from '@/contract/waqty_contract';
+export type { AdPlacement, AdType, AdStatus } from '@/contract/waqty_contract';
 
+// Where an ad RENDERS in the apps (a UI slot) — distinct from the canonical
+// `AdType`, which is the billable product purchased. Mapped onto the canonical
+// `AdPlacement.placement` string when the record is created.
+export type AdSlot = 'home_banner' | 'category_banner' | 'search_promoted' | 'between_listings';
+
+// Admin view-model: the billable canonical `AdPlacement` plus the creative /
+// targeting / analytics metadata the wire record intentionally omits.
 export interface Ad {
     id: string;
+    placement: AdPlacement; // canonical billable record — type, price, currency, status, dates
+    providerName: string;   // resolved from placement.provider_uuid
+    slot: AdSlot;           // UI render location
     title: string;
     title_ar: string;
     description: string;
     description_ar: string;
     image_url: string;
     target_url: string;
-    placement: AdPlacement;
-    ad_type: AdType;
     targeting: {
         cities: string[];
         categories: string[];
         user_segments: string[];
     };
-    schedule: {
-        start_date: string;
-        end_date: string;
-    };
     priority: number;
-    status: 'draft' | 'active' | 'paused' | 'expired';
     analytics: {
         impressions: number;
         clicks: number;
         ctr: number;
         conversions: number;
     };
-    created_at: string;
-    updated_at: string;
 }

@@ -4,7 +4,7 @@ import React, { useState, useCallback } from 'react';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
-import { paymentsApi, type PaymentObject, type UpdatePaymentBody, type PaymentMethodType, type PaymentStatus } from '@/lib/api';
+import { paymentsApi, type PaymentObject, type UpdatePaymentBody, type PaymentMethodType, type ApiPaymentStatus } from '@/lib/api';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, FormField } from '@/components/admin/FormModal';
@@ -19,7 +19,7 @@ export default function PaymentsPage() {
     const searchParams = useSearchParams();
 
     // ── Filters ───────────────────────────────────────────
-    const statusFilter   = searchParams.get('status') as PaymentStatus | null;
+    const statusFilter   = searchParams.get('status') as ApiPaymentStatus | null;
     const methodFilter   = searchParams.get('payment_method') as PaymentMethodType | null;
     const [page, setPage] = useState(1);
 
@@ -65,7 +65,7 @@ export default function PaymentsPage() {
         const body: UpdatePaymentBody = {
             payment_method: (fd.get('payment_method') as PaymentMethodType) || undefined,
             amount:         fd.get('amount') ? Number(fd.get('amount')) : undefined,
-            status:         (fd.get('status') as PaymentStatus) || undefined,
+            status:         (fd.get('status') as ApiPaymentStatus) || undefined,
             transaction_id: (fd.get('transaction_id') as string) || undefined,
             notes:          (fd.get('notes') as string) || undefined,
         };
@@ -81,7 +81,7 @@ export default function PaymentsPage() {
     };
 
     // ── Columns ───────────────────────────────────────────
-    const statusColors: Record<PaymentStatus, string> = {
+    const statusColors: Record<ApiPaymentStatus, string> = {
         pending:   '#f59e0b',
         completed: '#10b981',
         failed:    '#ef4444',

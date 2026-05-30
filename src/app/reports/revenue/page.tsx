@@ -4,6 +4,7 @@ import React, { useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ComposedChart, Line, Area } from 'recharts';
 import { monthlyRevenueData } from '@/mocks/finance';
 import { forecastRevenue, linearRegression, type RevenuePoint } from '@/lib/analytics';
+import { formatCompactMoney } from '@/lib/market';
 import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
@@ -50,11 +51,11 @@ export default function RevenueReportPage() {
             <div className={shared.kpiGrid}>
                 <div className={shared.summaryCard}>
                     <span className={shared.summaryLabel}>{t('reports.revenue.totalSevenMonths')}</span>
-                    <span className={shared.summaryValue}>EGP {(totalRev / 1000000).toFixed(2)}M</span>
+                    <span className={shared.summaryValue}>{formatCompactMoney(totalRev)}</span>
                 </div>
                 <div className={shared.summaryCard}>
                     <span className={shared.summaryLabel}>{t('reports.revenue.avgMonthly')}</span>
-                    <span className={shared.summaryValue}>EGP {Math.round(totalRev / 7 / 1000).toLocaleString()}K</span>
+                    <span className={shared.summaryValue}>{formatCompactMoney(Math.round(totalRev / 7))}</span>
                 </div>
                 <div className={shared.summaryCard}>
                     <span className={shared.summaryLabel}>{t('reports.revenue.growthRate')}</span>
@@ -63,9 +64,9 @@ export default function RevenueReportPage() {
                 {nextMonth && (
                     <div className={shared.summaryCard} style={{ borderLeft: '3px solid var(--color-info)' }}>
                         <span className={shared.summaryLabel}>{t('reports.revenue.forecast.nextMonth')} ({nextMonth.month})</span>
-                        <span className={shared.summaryValue} style={{ color: 'var(--color-info)' }}>EGP {Math.round(nextMonth.total / 1000).toLocaleString()}K</span>
+                        <span className={shared.summaryValue} style={{ color: 'var(--color-info)' }}>{formatCompactMoney(nextMonth.total)}</span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                            {t('reports.revenue.forecast.confidence')}: EGP {Math.round((nextMonth.lower ?? 0) / 1000)}K – {Math.round((nextMonth.upper ?? 0) / 1000)}K (R² {r2}%)
+                            {t('reports.revenue.forecast.confidence')}: {formatCompactMoney(nextMonth.lower ?? 0)} – {formatCompactMoney(nextMonth.upper ?? 0)} (R² {r2}%)
                         </span>
                     </div>
                 )}
@@ -76,8 +77,8 @@ export default function RevenueReportPage() {
                     <BarChart data={monthlyRevenueData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
                         <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
-                        <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => [`EGP ${Number(v).toLocaleString()}`, '']} />
+                        <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => formatCompactMoney(Number(v), { withCurrency: false })} />
+                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => [formatCompactMoney(Number(v)), '']} />
                         <Legend />
                         <Bar dataKey="subscriptions" fill="var(--color-primary-500)" name={t('reports.revenue.subscriptions')} radius={[4, 4, 0, 0]} />
                         <Bar dataKey="commissions" fill="var(--color-info)" name={t('reports.revenue.commissions')} radius={[4, 4, 0, 0]} />
@@ -91,8 +92,8 @@ export default function RevenueReportPage() {
                     <ComposedChart data={chartData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
                         <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
-                        <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => v == null ? ['—', ''] : [`EGP ${Number(v).toLocaleString()}`, '']} />
+                        <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => formatCompactMoney(Number(v), { withCurrency: false })} />
+                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => v == null ? ['—', ''] : [formatCompactMoney(Number(v)), '']} />
                         <Legend />
                         <Area type="monotone" dataKey="band" stroke="none" fill="var(--color-info)" fillOpacity={0.15} name={t('reports.revenue.forecast.confidence')} />
                         <Line type="monotone" dataKey="total" stroke="var(--color-primary-500)" strokeWidth={2} dot={{ r: 3 }} name={t('reports.revenue.monthlyBreakdown')} connectNulls={false} />

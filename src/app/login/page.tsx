@@ -103,8 +103,8 @@ export default function LoginPage() {
                 </form>
 
                 <div className={styles.demoHint}>
-                    <p>Demo accounts: superadmin@hagzy.com, admin@hagzy.com, viewer@hagzy.com</p>
-                    <p>Any password with 6+ characters works</p>
+                    <p>Demo accounts (varied roles): superadmin@, admin@, moderator@, support@, finance@, viewer@hagzy.com</p>
+                    <p>Non-super-admin roles are restricted in the sidebar &amp; guarded routes. Any password with 6+ characters works</p>
                 </div>
             </div>
         </div>

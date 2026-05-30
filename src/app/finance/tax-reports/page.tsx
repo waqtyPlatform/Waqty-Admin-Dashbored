@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { monthlyRevenueData } from '@/mocks/finance';
+import { formatMoney, toMajor } from '@/lib/market';
 import { exportToCSV } from '@/lib/utils';
 import { Download } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,7 +24,9 @@ export default function TaxReportsPage() {
             <div className={shared.pageHeader}>
                 <h1 className={shared.pageTitle}>{t('finance.taxReports.title')}</h1>
                 <button onClick={() => {
-                    const data = monthlyRevenueData.map(row => ({ month: `${row.month} 2026`, subscriptions: row.subscriptions, commissions: row.commissions, total: row.total, vat: Math.round(row.total * taxRate), net: row.total - Math.round(row.total * taxRate) }));
+                    // CSV exports MAJOR-unit numbers (toMajor) for readability,
+                    // though the series is stored in canonical minor units.
+                    const data = monthlyRevenueData.map(row => { const vat = Math.round(row.total * taxRate); return { month: `${row.month} 2026`, subscriptions: toMajor(row.subscriptions), commissions: toMajor(row.commissions), total: toMajor(row.total), vat: toMajor(vat), net: toMajor(row.total - vat) }; });
                     exportToCSV(data, 'tax-reports', [{key:'month',label:'Month'},{key:'subscriptions',label:'Subscription Revenue'},{key:'commissions',label:'Commission Revenue'},{key:'total',label:'Total Revenue'},{key:'vat',label:'VAT'},{key:'net',label:'Net Revenue'}]);
                 }} className={shared.exportBtn}><Download size={16} /> {t('finance.taxReports.exportCSV')}</button>
             </div>
@@ -42,11 +45,11 @@ export default function TaxReportsPage() {
                             return (
                                 <tr key={row.month} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <td style={{ padding: '12px 16px', fontWeight: 500 }}>{row.month} 2026</td>
-                                    <td style={{ padding: '12px 16px' }}>EGP {row.subscriptions.toLocaleString()}</td>
-                                    <td style={{ padding: '12px 16px' }}>EGP {row.commissions.toLocaleString()}</td>
-                                    <td style={{ padding: '12px 16px', fontWeight: 600 }}>EGP {row.total.toLocaleString()}</td>
-                                    <td style={{ padding: '12px 16px', color: 'var(--color-error)' }}>EGP {tax.toLocaleString()}</td>
-                                    <td style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-success)' }}>EGP {(row.total - tax).toLocaleString()}</td>
+                                    <td style={{ padding: '12px 16px' }}>{formatMoney(row.subscriptions)}</td>
+                                    <td style={{ padding: '12px 16px' }}>{formatMoney(row.commissions)}</td>
+                                    <td style={{ padding: '12px 16px', fontWeight: 600 }}>{formatMoney(row.total)}</td>
+                                    <td style={{ padding: '12px 16px', color: 'var(--color-error)' }}>{formatMoney(tax)}</td>
+                                    <td style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--color-success)' }}>{formatMoney(row.total - tax)}</td>
                                 </tr>
                             );
                         })}

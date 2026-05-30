@@ -52,7 +52,9 @@ class ApiClient {
 
     private getToken(): string | null {
         if (typeof window === 'undefined') return null;
-        return localStorage.getItem('hagzy_token');
+        // App-scoped token key (X11) — never the shared `hagzy_token`, so logging
+        // into another Hagzy web app can't clobber the super-admin session.
+        return localStorage.getItem('hagzy_superadmin_token');
     }
 
     async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -78,7 +80,7 @@ class ApiClient {
         if (!response.ok) {
             // 401 — clear stored credentials so the proxy redirects to login
             if (response.status === 401 && typeof window !== 'undefined') {
-                localStorage.removeItem('hagzy_token');
+                localStorage.removeItem('hagzy_superadmin_token');
                 document.cookie = 'hagzy_superadmin_logged_in=; Max-Age=0; path=/';
                 document.cookie = 'hagzy_superadmin_auth=; Max-Age=0; path=/';
             }
@@ -177,6 +179,9 @@ export interface AdminObject {
     name: string;
     email: string;
     active: boolean;
+    // Backend-assigned RBAC role. Optional until the API exposes it; when present
+    // it is honoured verbatim instead of assuming super_admin (X12).
+    role?: string | null;
 }
 
 export interface AdminLoginResponse {
@@ -452,13 +457,17 @@ export const governoratesApi = {
 // ── Payments API ────────────────────────────────────────
 
 export type PaymentMethodType = 'cash' | 'paymob';
-export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+// Live /admin/payments wire status — the backend's own enum (it uses 'completed'
+// where the canonical ledger uses 'paid'). Named distinctly (SA-8′) so it does
+// NOT shadow the contract's canonical `PaymentStatus` re-exported from here; this
+// is the gateway DTO status, not the ecosystem ledger status.
+export type ApiPaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 export interface PaymentObject {
     uuid: string;
     payment_method: PaymentMethodType;
     amount: number;
-    status: PaymentStatus;
+    status: ApiPaymentStatus;
     transaction_id?: string | null;
     notes?: string | null;
     booking_uuid?: string | null;
@@ -470,7 +479,7 @@ export interface PaymentObject {
 
 export interface PaymentListFilters {
     payment_method?: PaymentMethodType;
-    status?: PaymentStatus;
+    status?: ApiPaymentStatus;
     booking_uuid?: string;
     provider_uuid?: string;
     from_date?: string;
@@ -483,7 +492,7 @@ export interface PaymentListFilters {
 export interface UpdatePaymentBody {
     payment_method?: PaymentMethodType;
     amount?: number;
-    status?: PaymentStatus;
+    status?: ApiPaymentStatus;
     transaction_id?: string;
     notes?: string;
 }
@@ -521,6 +530,7 @@ export const paymentsApi = {
 export interface AdminProviderObject {
     uuid: string;
     name: string;
+    name_ar?: string | null;
     email: string;
     phone: string;
     code?: string | null;
@@ -963,7 +973,11 @@ export const adminPricingGroupsApi = {
 
 // ── Bookings ──────────────────────────────────────────────────────────────────
 
-export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled' | 'no_show';
+// Canonical 6-state booking lifecycle (incl. `in_progress`). Single source:
+// re-exported from the shared contract so admin booking views can represent and
+// filter an in-progress visit. See src/contract/waqty_contract.ts.
+export type { BookingStatus } from '@/contract/waqty_contract';
+import type { BookingStatus } from '@/contract/waqty_contract';
 
 export interface BookingObject {
     uuid: string;
@@ -1637,7 +1651,7 @@ export interface Booking {
     booking_date: string;
     start_time: string;
     end_time: string | null;
-    status: string; // pending | confirmed | completed | cancelled | no_show
+    status: BookingStatus; // canonical 6-state union (incl. in_progress)
     notes: string | null;
     created_at: string;
     updated_at: string;
@@ -1861,7 +1875,7 @@ export const providerApi = {
         return api.get<Booking[]>(`/api/provider/bookings${qs ? `?${qs}` : ''}`);
     },
     getBooking: (uuid: string) => api.get<Booking>(`/api/provider/bookings/${uuid}`),
-    updateBookingStatus: (uuid: string, status: string) =>
+    updateBookingStatus: (uuid: string, status: BookingStatus) =>
         api.patch(`/api/provider/bookings/${uuid}/status`, { status }),
 
     // Attendance
@@ -2083,7 +2097,7 @@ export const employeeApi = {
         return api.get<Booking[]>(`/api/employee/bookings${qs ? `?${qs}` : ''}`);
     },
     getBooking: (uuid: string) => api.get<Booking>(`/api/employee/bookings/${uuid}`),
-    updateBookingStatus: (uuid: string, status: string) =>
+    updateBookingStatus: (uuid: string, status: BookingStatus) =>
         api.patch(`/api/employee/bookings/${uuid}/status`, { status }),
 };
 

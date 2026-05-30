@@ -1,0 +1,21 @@
+name: Contract drift
+
+# Fails if this repo's vendored copy of the canonical ecosystem contract
+# (src/contract/) drifts from its committed baseline (src/contract/contract.lock).
+# Re-sync from <repo-root>/contract via `node ../contract/sync.mjs`, then
+# re-baseline with `npm run contract:check -- --write`.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # Zero-dependency check — no `npm install` needed.
+      - run: node scripts/check-contract.mjs
