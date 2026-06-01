@@ -10,19 +10,15 @@ import { Plus, Image as ImageIcon, Eye, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
 
-const PLACEMENTS: { value: BannerPlacement; label: string }[] = [
-    { value: 'home_top',    label: 'Home Top' },
-    { value: 'home_middle', label: 'Home Middle' },
-    { value: 'home_bottom', label: 'Home Bottom' },
-    { value: 'category',   label: 'Category Page' },
-    { value: 'sidebar',    label: 'Sidebar' },
+const PLACEMENT_KEYS: { value: BannerPlacement; key: string }[] = [
+    { value: 'home_top',    key: 'marketing.banners.placeHomeTop' },
+    { value: 'home_middle', key: 'marketing.banners.placeHomeMiddle' },
+    { value: 'home_bottom', key: 'marketing.banners.placeHomeBottom' },
+    { value: 'category',   key: 'marketing.banners.placeCategory' },
+    { value: 'sidebar',    key: 'marketing.banners.placeSidebar' },
 ];
 
 const DIMENSIONS = ['1200x400', '1200x600', '800x400', '600x300'];
-
-function placementLabel(p: string) {
-    return PLACEMENTS.find(x => x.value === p)?.label ?? p;
-}
 
 function bannerStatus(b: BannerObject): string {
     if (b.deleted_at) return 'deleted';
@@ -36,6 +32,11 @@ export default function BannersPage() {
     const { t } = useTranslation();
     const [showCreate, setShowCreate] = useState(false);
     const [editItem, setEditItem] = useState<BannerObject | null>(null);
+
+    const placementLabel = (p: string) => {
+        const found = PLACEMENT_KEYS.find(x => x.value === p);
+        return found ? t(found.key) : p;
+    };
 
     const { data, loading, refetch } = useApiQuery(
         () => adminBannersApi.list({ per_page: 50 }),
@@ -95,10 +96,10 @@ export default function BannersPage() {
 
             {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, gap: 10, color: 'var(--text-tertiary)' }}>
-                    <Loader2 size={22} /> Loading...
+                    <Loader2 size={22} /> {t('common.loading')}
                 </div>
             ) : list.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>No banners found.</div>
+                <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>{t('marketing.banners.noBanners')}</div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
                     {list.map(b => {
@@ -132,20 +133,20 @@ export default function BannersPage() {
                                                 onClick={() => setEditItem(b)}
                                                 style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}
                                             >
-                                                Edit
+                                                {t('common.edit')}
                                             </button>
                                             <button
                                                 onClick={async () => { await toggleActive({ uuid: b.uuid, active: !b.active }); refetch(); }}
                                                 style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: b.active ? 'var(--color-error)' : 'var(--color-success)', fontFamily: 'var(--font-sans)' }}
                                             >
-                                                {b.active ? 'Hide' : 'Publish'}
+                                                {b.active ? t('reviews.hide') : t('content.announcements.publish')}
                                             </button>
                                             <PermissionGate module="marketing" action="delete">
                                                 <button
                                                     onClick={async () => { await deleteBanner(b.uuid); refetch(); }}
                                                     style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--color-error)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
                                                 >
-                                                    <Trash2 size={13} /> Delete
+                                                    <Trash2 size={13} /> {t('common.delete')}
                                                 </button>
                                             </PermissionGate>
                                         </div>
@@ -162,19 +163,19 @@ export default function BannersPage() {
                 open={showCreate}
                 onClose={() => setShowCreate(false)}
                 title={t('marketing.banners.upload')}
-                submitLabel={creating ? 'Creating...' : t('marketing.banners.createBanner')}
+                submitLabel={creating ? t('marketing.banners.creating') : t('marketing.banners.createBanner')}
                 onSubmit={handleCreate}
             >
                 <FormField label={t('marketing.banners.bannerTitle')} required>
-                    <input name="title" type="text" required className={shared.formInput} placeholder="e.g. Summer Sale Banner" />
+                    <input name="title" type="text" required className={shared.formInput} placeholder={t('marketing.banners.titlePlaceholder')} />
                 </FormField>
-                <FormField label="Image">
+                <FormField label={t('marketing.banners.image')}>
                     <input name="image" type="file" accept="image/jpeg,image/png,image/webp" className={shared.formInput} />
                 </FormField>
                 <div className={shared.formGrid2}>
                     <FormField label={t('marketing.banners.placement')}>
                         <select name="placement" className={shared.formInput}>
-                            {PLACEMENTS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                            {PLACEMENT_KEYS.map(p => <option key={p.value} value={p.value}>{t(p.key)}</option>)}
                         </select>
                     </FormField>
                     <FormField label={t('marketing.banners.dimensions')}>
@@ -197,8 +198,8 @@ export default function BannersPage() {
             <FormModal
                 open={!!editItem}
                 onClose={() => setEditItem(null)}
-                title={editItem ? `Edit: ${editItem.title}` : ''}
-                submitLabel={saving ? 'Saving...' : 'Save Changes'}
+                title={editItem ? `${t('marketing.banners.editPrefix')} ${editItem.title}` : ''}
+                submitLabel={saving ? t('common.saving') : t('common.saveChanges')}
                 onSubmit={handleUpdate}
             >
                 {editItem && (
@@ -206,13 +207,13 @@ export default function BannersPage() {
                         <FormField label={t('marketing.banners.bannerTitle')} required>
                             <input name="title" type="text" defaultValue={editItem.title} required className={shared.formInput} />
                         </FormField>
-                        <FormField label="Replace Image">
+                        <FormField label={t('marketing.banners.replaceImage')}>
                             <input name="image" type="file" accept="image/jpeg,image/png,image/webp" className={shared.formInput} />
                         </FormField>
                         <div className={shared.formGrid2}>
                             <FormField label={t('marketing.banners.placement')}>
                                 <select name="placement" defaultValue={editItem.placement} className={shared.formInput}>
-                                    {PLACEMENTS.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+                                    {PLACEMENT_KEYS.map(p => <option key={p.value} value={p.value}>{t(p.key)}</option>)}
                                 </select>
                             </FormField>
                             <FormField label={t('marketing.banners.dimensions')}>

@@ -166,10 +166,10 @@ export default function DashboardPage() {
                             <thead>
                                 <tr>
                                     <th>{t('common.name')}</th>
-                                    <th>Category</th>
-                                    <th>Bookings</th>
-                                    <th>Revenue</th>
-                                    <th>Rating</th>
+                                    <th>{t('providers.category')}</th>
+                                    <th>{t('providers.bookings')}</th>
+                                    <th>{t('providers.revenue')}</th>
+                                    <th>{t('dashboard.col.rating')}</th>
                                 </tr>
                             </thead>
                             <tbody>

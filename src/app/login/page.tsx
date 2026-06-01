@@ -25,7 +25,7 @@ export default function LoginPage() {
         setLoading(true);
         const result = await login(email, password);
         if (!result.success) {
-            setError(result.error || 'Login failed');
+            setError(result.error || t('auth.loginFailed'));
         }
         setLoading(false);
     };
@@ -48,7 +48,7 @@ export default function LoginPage() {
                     <h1 className={styles.title}>{t('auth.loginTitle')}</h1>
                     <p className={styles.subtitle}>{t('auth.loginSubtitle')}</p>
                     <span style={{ display: 'inline-block', marginTop: 8, padding: '2px 10px', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', background: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)', border: '1px solid color-mix(in srgb, var(--color-warning) 40%, transparent)', borderRadius: 999 }}>
-                        Demo Mode
+                        {t('auth.demoMode')}
                     </span>
                 </div>
 
@@ -75,7 +75,7 @@ export default function LoginPage() {
                                 type={showPassword ? 'text' : 'password'}
                                 value={password}
                                 onChange={e => setPassword(e.target.value)}
-                                placeholder="Enter your password"
+                                placeholder={t('auth.passwordPlaceholder')}
                                 className={styles.input}
                                 required
                                 autoComplete="current-password"
@@ -103,8 +103,8 @@ export default function LoginPage() {
                 </form>
 
                 <div className={styles.demoHint}>
-                    <p>Demo accounts (varied roles): superadmin@, admin@, moderator@, support@, finance@, viewer@hagzy.com</p>
-                    <p>Non-super-admin roles are restricted in the sidebar &amp; guarded routes. Any password with 6+ characters works</p>
+                    <p>{t('auth.demoAccounts')}</p>
+                    <p>{t('auth.demoHint')}</p>
                 </div>
             </div>
         </div>

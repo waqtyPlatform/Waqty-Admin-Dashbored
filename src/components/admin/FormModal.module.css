@@ -29,6 +29,9 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--space-2);
+    /* Keep the PRIMARY action on the right even in RTL (product rule): pin the
+       footer to LTR so [Cancel, Submit] stays Cancel-left / Submit-right. */
+    direction: ltr;
 }
 
 .cancelBtn {

@@ -119,7 +119,7 @@ export default function PromoCodesPage() {
             render: r => <StatusBadge status={promoStatus(r)} />,
         },
         {
-            key: 'uuid', label: 'Actions',
+            key: 'uuid', label: t('common.actions'),
             render: r => (
                 <PermissionGate module="marketing" action="edit">
                     <div style={{ display: 'flex', gap: 6 }}>
@@ -127,20 +127,20 @@ export default function PromoCodesPage() {
                             onClick={() => setEditItem(r)}
                             style={{ padding: '3px 8px', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 5, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}
                         >
-                            Edit
+                            {t('common.edit')}
                         </button>
                         <button
                             onClick={async () => { await toggleActive({ uuid: r.uuid, active: !r.active }); refetch(); }}
                             style={{ padding: '3px 8px', fontSize: '0.75rem', border: '1px solid var(--border-color)', borderRadius: 5, background: 'var(--bg-primary)', cursor: 'pointer', color: r.active ? 'var(--color-error)' : 'var(--color-success)', fontFamily: 'var(--font-sans)' }}
                         >
-                            {r.active ? 'Disable' : 'Enable'}
+                            {r.active ? t('common.disable') : t('common.enable')}
                         </button>
                         <PermissionGate module="marketing" action="delete">
                             <button
                                 onClick={async () => { await deleteCode(r.uuid); refetch(); }}
                                 style={{ padding: '3px 8px', fontSize: '0.75rem', border: '1px solid var(--color-error)', borderRadius: 5, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 3 }}
                             >
-                                <Trash2 size={11} /> Delete
+                                <Trash2 size={11} /> {t('common.delete')}
                             </button>
                         </PermissionGate>
                     </div>
@@ -154,7 +154,7 @@ export default function PromoCodesPage() {
             <div className={shared.page}>
                 <h1 className={shared.pageTitle}>{t('marketing.promoCodes.title')}</h1>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, gap: 10, color: 'var(--text-tertiary)' }}>
-                    <Loader2 size={22} /> Loading...
+                    <Loader2 size={22} /> {t('common.loading')}
                 </div>
             </div>
         );
@@ -184,7 +184,7 @@ export default function PromoCodesPage() {
                 open={showCreate}
                 onClose={() => setShowCreate(false)}
                 title={t('marketing.promoCodes.createPromoCode')}
-                submitLabel={creating ? 'Creating...' : t('common.create')}
+                submitLabel={creating ? t('marketing.promoCodes.creating') : t('common.create')}
                 onSubmit={handleCreate}
             >
                 <FormField label={t('marketing.promoCodes.code')} required>
@@ -206,12 +206,12 @@ export default function PromoCodesPage() {
                         <input name="min_order" type="number" min="0" step="0.01" className={shared.formInput} placeholder="0" />
                     </FormField>
                     <FormField label={t('marketing.promoCodes.maxDiscount')}>
-                        <input name="max_discount" type="number" min="0" step="0.01" className={shared.formInput} placeholder="Leave empty for none" />
+                        <input name="max_discount" type="number" min="0" step="0.01" className={shared.formInput} placeholder={t('marketing.promoCodes.maxDiscountPlaceholder')} />
                     </FormField>
                 </div>
                 <div className={shared.formGrid2}>
                     <FormField label={t('marketing.promoCodes.usageLimit')}>
-                        <input name="usage_limit" type="number" min="1" step="1" className={shared.formInput} placeholder="Leave empty for unlimited" />
+                        <input name="usage_limit" type="number" min="1" step="1" className={shared.formInput} placeholder={t('marketing.promoCodes.usageLimitPlaceholder')} />
                     </FormField>
                     <FormField label={t('marketing.promoCodes.validUntil')} required>
                         <input name="valid_until" type="date" required className={shared.formInput} />
@@ -223,8 +223,8 @@ export default function PromoCodesPage() {
             <FormModal
                 open={!!editItem}
                 onClose={() => setEditItem(null)}
-                title={editItem ? `Edit: ${editItem.code}` : ''}
-                submitLabel={saving ? 'Saving...' : 'Save Changes'}
+                title={editItem ? `${t('marketing.promoCodes.editPrefix')} ${editItem.code}` : ''}
+                submitLabel={saving ? t('common.saving') : t('common.saveChanges')}
                 onSubmit={handleUpdate}
             >
                 {editItem && (

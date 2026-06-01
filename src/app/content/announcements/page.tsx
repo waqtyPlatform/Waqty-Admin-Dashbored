@@ -96,6 +96,20 @@ export default function AnnouncementsPage() {
 
     const list = data ?? [];
 
+    const targetLabel: Record<string, string> = {
+        all: t('content.announcements.targetAll'),
+        users: t('content.announcements.targetUsers'),
+        providers: t('content.announcements.targetProviders'),
+        employees: t('content.announcements.targetEmployees'),
+        branches: t('content.announcements.targetBranches'),
+    };
+    const priorityLabel: Record<string, string> = {
+        normal: t('content.announcements.priorityNormal'),
+        low: t('content.announcements.priorityLow'),
+        high: t('content.announcements.priorityHigh'),
+        urgent: t('content.announcements.priorityUrgent'),
+    };
+
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
@@ -112,10 +126,10 @@ export default function AnnouncementsPage() {
 
             {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, gap: 10, color: 'var(--text-tertiary)' }}>
-                    <Loader2 size={22} /> Loading...
+                    <Loader2 size={22} /> {t('common.loading')}
                 </div>
             ) : list.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>No announcements found.</div>
+                <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>{t('content.announcements.noneFound')}</div>
             ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                     {list.map(a => (
@@ -124,11 +138,11 @@ export default function AnnouncementsPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <span style={{ fontWeight: 600 }}>{a.title_en}</span>
                                     <StatusBadge status={a.active ? 'active' : 'draft'} />
-                                    <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: priorityColors[a.priority], textTransform: 'uppercase' }}>{a.priority}</span>
-                                    <span style={{ fontSize: '0.6875rem', padding: '2px 6px', background: 'var(--bg-tertiary)', borderRadius: 4, textTransform: 'capitalize' }}>{a.target}</span>
+                                    <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: priorityColors[a.priority], textTransform: 'uppercase' }}>{priorityLabel[a.priority] ?? a.priority}</span>
+                                    <span style={{ fontSize: '0.6875rem', padding: '2px 6px', background: 'var(--bg-tertiary)', borderRadius: 4 }}>{targetLabel[a.target] ?? a.target}</span>
                                 </div>
                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                    {a.ends_at ? `Ends ${a.ends_at.slice(0, 10)}` : 'No expiry'}
+                                    {a.ends_at ? `${t('content.announcements.endsPrefix')} ${a.ends_at.slice(0, 10)}` : t('content.announcements.noExpiry')}
                                 </span>
                             </div>
                             <p style={{ margin: 0, fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{a.message_en}</p>
@@ -139,20 +153,20 @@ export default function AnnouncementsPage() {
                                         onClick={() => setEditItem(a)}
                                         style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--text-primary)', fontFamily: 'var(--font-sans)' }}
                                     >
-                                        Edit
+                                        {t('common.edit')}
                                     </button>
                                     <button
                                         onClick={async () => { await toggleActive({ uuid: a.uuid, active: !a.active }); refetch(); }}
                                         style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: a.active ? 'var(--color-error)' : 'var(--color-success)', fontFamily: 'var(--font-sans)' }}
                                     >
-                                        {a.active ? 'Hide' : 'Publish'}
+                                        {a.active ? t('content.announcements.hide') : t('content.announcements.publish')}
                                     </button>
                                     <PermissionGate module="content" action="delete">
                                         <button
                                             onClick={async () => { await deleteItem(a.uuid); refetch(); }}
                                             style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--color-error)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
                                         >
-                                            <Trash2 size={13} /> Delete
+                                            <Trash2 size={13} /> {t('common.delete')}
                                         </button>
                                     </PermissionGate>
                                 </div>
@@ -167,7 +181,7 @@ export default function AnnouncementsPage() {
                 open={showCreate}
                 onClose={() => setShowCreate(false)}
                 title={t('content.announcements.new')}
-                submitLabel={creating ? 'Publishing...' : t('content.announcements.publish')}
+                submitLabel={creating ? t('content.announcements.publishing') : t('content.announcements.publish')}
                 onSubmit={handleCreate}
             >
                 <div className={shared.formGrid2}>
@@ -189,19 +203,19 @@ export default function AnnouncementsPage() {
                 <div className={shared.formGrid3}>
                     <FormField label={t('content.announcements.target')}>
                         <select name="target" className={shared.formInput}>
-                            <option value="all">All</option>
-                            <option value="users">Users</option>
-                            <option value="providers">Providers</option>
-                            <option value="employees">Employees</option>
-                            <option value="branches">Branches</option>
+                            <option value="all">{t('content.announcements.targetAll')}</option>
+                            <option value="users">{t('content.announcements.targetUsers')}</option>
+                            <option value="providers">{t('content.announcements.targetProviders')}</option>
+                            <option value="employees">{t('content.announcements.targetEmployees')}</option>
+                            <option value="branches">{t('content.announcements.targetBranches')}</option>
                         </select>
                     </FormField>
                     <FormField label={t('content.announcements.priority')}>
                         <select name="priority" className={shared.formInput}>
-                            <option value="normal">Normal</option>
-                            <option value="low">Low</option>
-                            <option value="high">High</option>
-                            <option value="urgent">Urgent</option>
+                            <option value="normal">{t('content.announcements.priorityNormal')}</option>
+                            <option value="low">{t('content.announcements.priorityLow')}</option>
+                            <option value="high">{t('content.announcements.priorityHigh')}</option>
+                            <option value="urgent">{t('content.announcements.priorityUrgent')}</option>
                         </select>
                     </FormField>
                     <FormField label={t('content.announcements.endDate')}>
@@ -214,8 +228,8 @@ export default function AnnouncementsPage() {
             <FormModal
                 open={!!editItem}
                 onClose={() => setEditItem(null)}
-                title={editItem ? `Edit: ${editItem.title_en}` : ''}
-                submitLabel={saving ? 'Saving...' : 'Save Changes'}
+                title={editItem ? `${t('content.announcements.editPrefix')} ${editItem.title_en}` : ''}
+                submitLabel={saving ? t('common.saving') : t('common.saveChanges')}
                 onSubmit={handleUpdate}
             >
                 {editItem && (
@@ -239,19 +253,19 @@ export default function AnnouncementsPage() {
                         <div className={shared.formGrid3}>
                             <FormField label={t('content.announcements.target')}>
                                 <select name="target" defaultValue={editItem.target} className={shared.formInput}>
-                                    <option value="all">All</option>
-                                    <option value="users">Users</option>
-                                    <option value="providers">Providers</option>
-                                    <option value="employees">Employees</option>
-                                    <option value="branches">Branches</option>
+                                    <option value="all">{t('content.announcements.targetAll')}</option>
+                                    <option value="users">{t('content.announcements.targetUsers')}</option>
+                                    <option value="providers">{t('content.announcements.targetProviders')}</option>
+                                    <option value="employees">{t('content.announcements.targetEmployees')}</option>
+                                    <option value="branches">{t('content.announcements.targetBranches')}</option>
                                 </select>
                             </FormField>
                             <FormField label={t('content.announcements.priority')}>
                                 <select name="priority" defaultValue={editItem.priority} className={shared.formInput}>
-                                    <option value="normal">Normal</option>
-                                    <option value="low">Low</option>
-                                    <option value="high">High</option>
-                                    <option value="urgent">Urgent</option>
+                                    <option value="normal">{t('content.announcements.priorityNormal')}</option>
+                                    <option value="low">{t('content.announcements.priorityLow')}</option>
+                                    <option value="high">{t('content.announcements.priorityHigh')}</option>
+                                    <option value="urgent">{t('content.announcements.priorityUrgent')}</option>
                                 </select>
                             </FormField>
                             <FormField label={t('content.announcements.endDate')}>

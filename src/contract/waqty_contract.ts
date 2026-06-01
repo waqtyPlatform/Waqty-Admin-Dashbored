@@ -409,6 +409,40 @@ export interface WaitlistEntry {
   updated_at: IsoDateTime;
 }
 
+/* ============================================ QUEUE STATUS (ephemeral, computed) */
+
+// Provider-side COMPUTED, ephemeral place of ONE visit in today's branch queue.
+// NOT persisted on Visit (recomputed + polled). Privacy-safe: the customer only
+// ever sees their own number / how many are ahead — never other customers'
+// bookings. Turn order = today's appointments at the same branch sorted by
+// scheduled_start; people_ahead = how many of those earlier appointments are
+// still active (not completed/cancelled/no_show). expected_start = the booked
+// slot shifted by the branch's current running delay (delay_mins). Distinct from
+// Visit.visit_number (nth visit of this customer) and WaitlistEntry.position.
+export interface VisitQueueStatus {
+  visit_uuid: Uuid;
+  number: number;                  // 1-based turn number today (appointment-time order)
+  total_today: number;             // total appointments today in that order
+  people_ahead: number;            // earlier-today appointments still active
+  scheduled_start: IsoDateTime;    // booked slot (mirror of Visit.scheduled_start)
+  expected_start: IsoDateTime;     // delay-adjusted ETA = scheduled_start + delay_mins
+  delay_mins: number;              // branch's current running delay (minutes)
+}
+
+// Short, human-readable check-in code for a Visit, derived DETERMINISTICALLY
+// from the visit uuid (FNV-1a 32-bit -> 6 digits). The User app shows it on the
+// "I've arrived" screen and the Provider Dashboard computes the SAME value with
+// no backend round-trip — the manual fallback when reception has no QR scanner:
+// the customer reads the code, reception confirms/enters it, a match = arrived.
+export function checkInCode(visitUuid: Uuid): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < visitUuid.length; i++) {
+    h = (h ^ visitUuid.charCodeAt(i)) >>> 0;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return (h % 1000000).toString().padStart(6, "0");
+}
+
 /* ================================================= MARKETING (offers/promos) */
 
 export interface Offer {

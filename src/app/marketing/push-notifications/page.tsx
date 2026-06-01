@@ -26,14 +26,17 @@ export default function PushNotificationsPage() {
     const [showCreate, setShowCreate] = useState(false);
     const [form, setForm] = useState({ title: '', title_ar: '', body: '', body_ar: '', target_app: 'user', target_segment: 'all' });
 
+    const appLabel: Record<string, string> = { user: t('marketing.push.appUser'), employee: t('marketing.push.appEmployee'), all: t('marketing.push.appAll') };
+    const segmentLabel: Record<string, string> = { all: t('marketing.push.segAll'), active: t('marketing.push.segActive'), inactive: t('marketing.push.segInactive'), new: t('marketing.push.segNew') };
+
     const columns: Column<PushNotification>[] = [
         { key: 'title', label: t('marketing.push.title2'), sortable: true, render: r => <div><div style={{ fontWeight: 500 }}>{r.title}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.body.slice(0, 50)}...</div></div> },
-        { key: 'target_app', label: t('marketing.push.app'), render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.target_app}</span> },
-        { key: 'target_segment', label: t('marketing.push.segment'), render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.target_segment}</span> },
+        { key: 'target_app', label: t('marketing.push.app'), render: r => <span style={{ fontSize: '0.8125rem' }}>{appLabel[r.target_app] ?? r.target_app}</span> },
+        { key: 'target_segment', label: t('marketing.push.segment'), render: r => <span style={{ fontSize: '0.8125rem' }}>{segmentLabel[r.target_segment] ?? r.target_segment}</span> },
         { key: 'status', label: t('common.status'), sortable: true, render: r => <StatusBadge status={r.status === 'sent' ? 'completed' : r.status} /> },
         { key: 'recipients_count', label: t('marketing.push.recipients'), sortable: true, render: r => r.recipients_count.toLocaleString() },
         { key: 'opened_count', label: t('marketing.push.opened'), sortable: true, render: r => r.sent_at ? `${r.opened_count.toLocaleString()} (${r.recipients_count ? Math.round(r.opened_count / r.recipients_count * 100) : 0}%)` : '-' },
-        { key: 'sent_at', label: t('marketing.push.sent'), render: r => r.sent_at ? new Date(r.sent_at).toLocaleDateString() : r.scheduled_at ? `Scheduled: ${new Date(r.scheduled_at).toLocaleDateString()}` : 'Draft' },
+        { key: 'sent_at', label: t('marketing.push.sent'), render: r => r.sent_at ? new Date(r.sent_at).toLocaleDateString() : r.scheduled_at ? `${t('marketing.push.scheduledPrefix')} ${new Date(r.scheduled_at).toLocaleDateString()}` : t('marketing.push.draft') },
     ];
 
     return (
@@ -63,16 +66,16 @@ export default function PushNotificationsPage() {
                 setShowCreate(false);
             }}>
                 <div className={shared.formGrid2}>
-                    <FormField label={t('marketing.push.titleEn')} required><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required className={shared.formInput} placeholder="Notification title" /></FormField>
-                    <FormField label={t('marketing.push.titleAr')} required><input type="text" value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} required className={shared.formInput} placeholder="عنوان الإشعار" dir="rtl" /></FormField>
+                    <FormField label={t('marketing.push.titleEn')} required><input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required className={shared.formInput} placeholder={t('marketing.push.titlePlaceholderEn')} /></FormField>
+                    <FormField label={t('marketing.push.titleAr')} required><input type="text" value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} required className={shared.formInput} placeholder={t('marketing.push.titlePlaceholderAr')} dir="rtl" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label={t('marketing.push.bodyEn')} required><textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="Notification body" /></FormField>
-                    <FormField label={t('marketing.push.bodyAr')} required><textarea value={form.body_ar} onChange={e => setForm(f => ({ ...f, body_ar: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder="نص الإشعار" dir="rtl" /></FormField>
+                    <FormField label={t('marketing.push.bodyEn')} required><textarea value={form.body} onChange={e => setForm(f => ({ ...f, body: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder={t('marketing.push.bodyPlaceholderEn')} /></FormField>
+                    <FormField label={t('marketing.push.bodyAr')} required><textarea value={form.body_ar} onChange={e => setForm(f => ({ ...f, body_ar: e.target.value }))} required style={{ ...inputStyle, minHeight: 80, resize: 'vertical' }} placeholder={t('marketing.push.bodyPlaceholderAr')} dir="rtl" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
-                    <FormField label={t('marketing.push.targetApp')}><select value={form.target_app} onChange={e => setForm(f => ({ ...f, target_app: e.target.value }))} className={shared.formInput}><option value="user">User App</option><option value="employee">Employee App</option><option value="all">All Apps</option></select></FormField>
-                    <FormField label={t('marketing.push.targetSegment')}><select value={form.target_segment} onChange={e => setForm(f => ({ ...f, target_segment: e.target.value }))} className={shared.formInput}><option value="all">All Users</option><option value="active">Active Users</option><option value="inactive">Inactive Users</option><option value="new">New Users</option></select></FormField>
+                    <FormField label={t('marketing.push.targetApp')}><select value={form.target_app} onChange={e => setForm(f => ({ ...f, target_app: e.target.value }))} className={shared.formInput}><option value="user">{t('marketing.push.appUser')}</option><option value="employee">{t('marketing.push.appEmployee')}</option><option value="all">{t('marketing.push.appAll')}</option></select></FormField>
+                    <FormField label={t('marketing.push.targetSegment')}><select value={form.target_segment} onChange={e => setForm(f => ({ ...f, target_segment: e.target.value }))} className={shared.formInput}><option value="all">{t('marketing.push.segAll')}</option><option value="active">{t('marketing.push.segActive')}</option><option value="inactive">{t('marketing.push.segInactive')}</option><option value="new">{t('marketing.push.segNew')}</option></select></FormField>
                 </div>
             </FormModal>
         </div>

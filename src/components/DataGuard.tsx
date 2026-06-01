@@ -2,6 +2,7 @@
 
 import React, { ReactNode } from 'react';
 import { EmptyState, Skeleton } from '@/components/ui';
+import { useTranslation } from '@/hooks/useTranslation';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 interface DataGuardProps {
@@ -31,6 +32,7 @@ export function DataGuard({
     skeletonCount = 3,
     skeletonVariant = 'card',
 }: DataGuardProps) {
+    const { t } = useTranslation();
     if (loading) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem 0' }}>
@@ -45,7 +47,7 @@ export function DataGuard({
         return (
             <EmptyState
                 icon={<AlertTriangle size={48} />}
-                title="Something went wrong"
+                title={t('common.somethingWentWrong')}
                 description={error}
                 action={
                     onRetry ? (
@@ -64,7 +66,7 @@ export function DataGuard({
                                 fontSize: '0.875rem',
                             }}
                         >
-                            <RefreshCw size={16} /> Retry
+                            <RefreshCw size={16} /> {t('common.retry')}
                         </button>
                     ) : undefined
                 }

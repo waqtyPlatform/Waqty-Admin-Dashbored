@@ -83,14 +83,14 @@ export default function ContentPagesPage() {
                 </div>
                 <PermissionGate module="content" action="create">
                     <button onClick={() => setShowCreate(true)} className={shared.btnPrimary} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Plus size={16} /> New Page
+                        <Plus size={16} /> {t('content.pages.newPageBtn')}
                     </button>
                 </PermissionGate>
             </div>
 
             {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, gap: 10, color: 'var(--text-tertiary)' }}>
-                    <Loader2 size={22} /> Loading...
+                    <Loader2 size={22} /> {t('common.loading')}
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
@@ -102,7 +102,7 @@ export default function ContentPagesPage() {
                             </div>
                             <p style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', margin: '0 0 4px' }}>{page.title_ar}</p>
                             <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 12px' }}>
-                                Last updated{page.updated_by ? ` by ${page.updated_by.name}` : ''} on {page.updated_at.slice(0, 10)}
+                                {t('content.pages.lastUpdated')}{page.updated_by ? ` ${t('content.pages.by')} ${page.updated_by.name}` : ''} {t('content.pages.on')} {page.updated_at.slice(0, 10)}
                             </p>
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <PermissionGate module="content" action="edit">
@@ -116,7 +116,7 @@ export default function ContentPagesPage() {
                                         onClick={async () => { await toggleActive({ uuid: page.uuid, active: !page.active }); refetch(); }}
                                         style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: page.active ? 'var(--color-error)' : 'var(--color-success)', fontSize: '0.8125rem', cursor: 'pointer', fontFamily: 'var(--font-sans)' }}
                                     >
-                                        {page.active ? 'Hide' : 'Publish'}
+                                        {page.active ? t('content.pages.hide') : t('content.pages.publish')}
                                     </button>
                                 </PermissionGate>
                             </div>
@@ -130,7 +130,7 @@ export default function ContentPagesPage() {
                 open={!!editPage}
                 onClose={() => setEditPage(null)}
                 title={editPage ? `${t('common.edit')}: ${editPage.title_en}` : ''}
-                submitLabel={saving ? 'Saving...' : t('content.pages.saveChanges')}
+                submitLabel={saving ? t('common.saving') : t('content.pages.saveChanges')}
                 onSubmit={handleEdit}
             >
                 {editPage && (
@@ -157,12 +157,12 @@ export default function ContentPagesPage() {
             <FormModal
                 open={showCreate}
                 onClose={() => setShowCreate(false)}
-                title="New Content Page"
-                submitLabel={creating ? 'Creating...' : 'Create Page'}
+                title={t('content.pages.newPage')}
+                submitLabel={creating ? t('content.pages.creating') : t('content.pages.createPage')}
                 onSubmit={handleCreate}
             >
                 <div className={shared.formGrid2}>
-                    <FormField label="Slug">
+                    <FormField label={t('content.pages.slug')}>
                         <input name="slug" type="text" placeholder="e.g. terms-conditions" className={shared.formInput} />
                     </FormField>
                     <div />

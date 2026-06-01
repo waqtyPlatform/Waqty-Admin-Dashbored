@@ -231,8 +231,8 @@ export default function ProviderDetailPage() {
     const stats = [
         { label: t('providers.branches'), value: (branches ?? []).length, icon: <Building2 size={18} /> },
         { label: t('providers.employees'), value: (employees ?? []).length, icon: <Users size={18} /> },
-        { label: 'Joined', value: new Date(apiProvider.created_at).toLocaleDateString(), icon: <CalendarDays size={18} /> },
-        { label: 'Category', value: apiProvider.category?.name ?? '—', icon: <DollarSign size={18} /> },
+        { label: t('providers.detail.joined'), value: new Date(apiProvider.created_at).toLocaleDateString(), icon: <CalendarDays size={18} /> },
+        { label: t('providers.category'), value: apiProvider.category?.name ?? '—', icon: <DollarSign size={18} /> },
     ];
 
     const tabs: { key: string; label: string }[] = [
@@ -270,20 +270,20 @@ export default function ProviderDetailPage() {
                 <div className={styles.headerActions}>
                     <PermissionGate module="providers" action="edit">
                         {!apiProvider.deleted_at && (apiProvider.active
-                            ? <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'suspended', label: 'Deactivate' })}><Pause size={14} /> Deactivate</button>
-                            : <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'active', label: 'Activate' })}><Play size={14} /> Activate</button>
+                            ? <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'suspended', label: t('common.deactivate') })}><Pause size={14} /> {t('common.deactivate')}</button>
+                            : <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'active', label: t('common.activate') })}><Play size={14} /> {t('common.activate')}</button>
                         )}
                         {!apiProvider.deleted_at && (apiProvider.blocked
-                            ? <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'unblock', label: 'Unblock' })}><ShieldCheck size={14} /> Unblock</button>
-                            : <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'block', label: 'Block' })}><Ban size={14} /> Block</button>
+                            ? <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'unblock', label: t('common.unblock') })}><ShieldCheck size={14} /> {t('common.unblock')}</button>
+                            : <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'block', label: t('common.block') })}><Ban size={14} /> {t('common.block')}</button>
                         )}
-                        {apiProvider.deleted_at && <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'restore', label: 'Restore' })}><RotateCcw size={14} /> Restore</button>}
+                        {apiProvider.deleted_at && <button className={styles.actionBtn} onClick={() => setConfirmAction({ action: 'restore', label: t('common.restore') })}><RotateCcw size={14} /> {t('common.restore')}</button>}
                     </PermissionGate>
                     <PermissionGate module="providers" action="impersonate">
                         {apiProvider.active && !apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.impersonateBtn}`} onClick={handleImpersonate}><LogIn size={14} /> {t('providers.impersonate')}</button>}
                     </PermissionGate>
                     <PermissionGate module="providers" action="delete">
-                        {!apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'soft_deleted', label: 'Delete' })}><Trash2 size={14} /> Delete</button>}
+                        {!apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => setConfirmAction({ action: 'soft_deleted', label: t('common.delete') })}><Trash2 size={14} /> {t('common.delete')}</button>}
                     </PermissionGate>
                 </div>
             </div>
@@ -311,20 +311,20 @@ export default function ProviderDetailPage() {
                         <div className={styles.infoCard}>
                             <h3>{t('providers.businessInfo')}</h3>
                             <div className={styles.infoRows}>
-                                <InfoRow label="Name" value={tn(apiProvider.name, apiProvider.name_ar)} />
-                                <InfoRow label="Email" value={apiProvider.email} />
-                                <InfoRow label="Phone" value={apiProvider.phone} />
+                                <InfoRow label={t('common.name')} value={tn(apiProvider.name, apiProvider.name_ar)} />
+                                <InfoRow label={t('common.email')} value={apiProvider.email} />
+                                <InfoRow label={t('common.phone')} value={apiProvider.phone} />
                                 <InfoRow label={t('providers.category')} value={apiProvider.category?.name ?? '—'} />
-                                <InfoRow label="Registered" value={new Date(apiProvider.created_at).toLocaleDateString()} />
-                                {apiProvider.deleted_at && <InfoRow label="Deleted" value={new Date(apiProvider.deleted_at).toLocaleDateString()} />}
+                                <InfoRow label={t('providers.detail.registered')} value={new Date(apiProvider.created_at).toLocaleDateString()} />
+                                {apiProvider.deleted_at && <InfoRow label={t('providers.detail.deleted')} value={new Date(apiProvider.deleted_at).toLocaleDateString()} />}
                             </div>
                         </div>
                         <div className={styles.infoCard}>
-                            <h3>Account Status</h3>
+                            <h3>{t('providers.detail.accountStatus')}</h3>
                             <div className={styles.infoRows}>
-                                <div className={styles.infoRow}><span>Active</span><span><StatusBadge status={apiProvider.active ? 'active' : 'inactive'} /></span></div>
-                                <div className={styles.infoRow}><span>Blocked</span><span><StatusBadge status={apiProvider.blocked ? 'blocked' : 'active'} /></span></div>
-                                <div className={styles.infoRow}><span>Banned</span><span><StatusBadge status={apiProvider.banned ? 'banned' : 'active'} /></span></div>
+                                <div className={styles.infoRow}><span>{t('common.active')}</span><span><StatusBadge status={apiProvider.active ? 'active' : 'inactive'} /></span></div>
+                                <div className={styles.infoRow}><span>{t('common.blocked')}</span><span><StatusBadge status={apiProvider.blocked ? 'blocked' : 'active'} /></span></div>
+                                <div className={styles.infoRow}><span>{t('common.banned')}</span><span><StatusBadge status={apiProvider.banned ? 'banned' : 'active'} /></span></div>
                             </div>
                         </div>
                     </div>
@@ -338,11 +338,11 @@ export default function ProviderDetailPage() {
                                 <Loader2 size={24} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
                             </div>
                         ) : (branches ?? []).length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>No branches found</div>
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>{t('providers.detail.noBranches')}</div>
                         ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', marginTop: 16 }}>
                             <thead><tr style={{ background: 'var(--bg-secondary)' }}>
-                                {['Branch', 'Phone', 'Main', 'Status', 'Actions'].map(h => (
+                                {[t('providers.detail.colBranch'), t('common.phone'), t('common.main'), t('common.status'), t('common.actions')].map(h => (
                                     <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
                                 ))}
                             </tr></thead>
@@ -350,8 +350,8 @@ export default function ProviderDetailPage() {
                                 <tr key={b.uuid} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <td style={{ padding: '10px 12px', fontWeight: 500 }}>
                                         {b.name}
-                                        {b.is_main && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-primary-50)', color: 'var(--color-primary-600)', borderRadius: 4, marginLeft: 8 }}>Main</span>}
-                                        {b.deleted_at && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-error-light)', color: 'var(--color-error)', borderRadius: 4, marginLeft: 8 }}>Deleted</span>}
+                                        {b.is_main && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-primary-50)', color: 'var(--color-primary-600)', borderRadius: 4, marginLeft: 8 }}>{t('common.main')}</span>}
+                                        {b.deleted_at && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-error-light)', color: 'var(--color-error)', borderRadius: 4, marginLeft: 8 }}>{t('common.deleted')}</span>}
                                     </td>
                                     <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{b.phone ?? '—'}</td>
                                     <td style={{ padding: '10px 12px' }}>
@@ -370,16 +370,16 @@ export default function ProviderDetailPage() {
                                             {branchMenuId === b.uuid && (
                                                 <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 150, padding: 4 }} onClick={e => e.stopPropagation()}>
                                                     {!b.deleted_at && (b.active
-                                                        ? <button onClick={() => handleBranchAction(b, 'deactivate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Pause size={14} /> Deactivate</button>
-                                                        : <button onClick={() => handleBranchAction(b, 'activate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> Activate</button>
+                                                        ? <button onClick={() => handleBranchAction(b, 'deactivate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Pause size={14} /> {t('common.deactivate')}</button>
+                                                        : <button onClick={() => handleBranchAction(b, 'activate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> {t('common.activate')}</button>
                                                     )}
                                                     {!b.deleted_at && (b.blocked
-                                                        ? <button onClick={() => handleBranchAction(b, 'unblock')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> Unblock</button>
-                                                        : <button onClick={() => handleBranchAction(b, 'block')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> Block</button>
+                                                        ? <button onClick={() => handleBranchAction(b, 'unblock')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> {t('common.unblock')}</button>
+                                                        : <button onClick={() => handleBranchAction(b, 'block')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> {t('common.block')}</button>
                                                     )}
                                                     {b.deleted_at
-                                                        ? <button onClick={() => handleBranchAction(b, 'restore')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> Restore</button>
-                                                        : <button onClick={() => handleBranchAction(b, 'delete')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> Delete</button>
+                                                        ? <button onClick={() => handleBranchAction(b, 'restore')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> {t('common.restore')}</button>
+                                                        : <button onClick={() => handleBranchAction(b, 'delete')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> {t('common.delete')}</button>
                                                     }
                                                 </div>
                                             )}
@@ -401,11 +401,11 @@ export default function ProviderDetailPage() {
                                 <Loader2 size={24} strokeWidth={1.5} style={{ animation: 'spin 1s linear infinite' }} />
                             </div>
                         ) : (employees ?? []).length === 0 ? (
-                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>No employees found</div>
+                            <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>{t('providers.detail.noEmployees')}</div>
                         ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', marginTop: 16 }}>
                             <thead><tr style={{ background: 'var(--bg-secondary)' }}>
-                                {['Employee', 'Branch', 'Status', 'Blocked', 'Actions'].map(h => (
+                                {[t('providers.detail.colEmployee'), t('common.branch'), t('common.status'), t('common.blocked'), t('common.actions')].map(h => (
                                     <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
                                 ))}
                             </tr></thead>
@@ -414,7 +414,7 @@ export default function ProviderDetailPage() {
                                     <td style={{ padding: '10px 12px' }}>
                                         <div style={{ fontWeight: 600 }}>{e.name}</div>
                                         {e.email && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{e.email}</div>}
-                                        {e.deleted_at && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-error-light)', color: 'var(--color-error)', borderRadius: 4 }}>Deleted</span>}
+                                        {e.deleted_at && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-error-light)', color: 'var(--color-error)', borderRadius: 4 }}>{t('common.deleted')}</span>}
                                     </td>
                                     <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{e.branch?.name ?? '—'}</td>
                                     <td style={{ padding: '10px 12px' }}><StatusBadge status={e.active ? 'active' : 'inactive'} /></td>
@@ -431,16 +431,16 @@ export default function ProviderDetailPage() {
                                             {employeeMenuId === e.uuid && (
                                                 <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 150, padding: 4 }} onClick={ev => ev.stopPropagation()}>
                                                     {!e.deleted_at && (e.active
-                                                        ? <button onClick={() => handleEmployeeAction(e, 'deactivate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Pause size={14} /> Deactivate</button>
-                                                        : <button onClick={() => handleEmployeeAction(e, 'activate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> Activate</button>
+                                                        ? <button onClick={() => handleEmployeeAction(e, 'deactivate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Pause size={14} /> {t('common.deactivate')}</button>
+                                                        : <button onClick={() => handleEmployeeAction(e, 'activate')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> {t('common.activate')}</button>
                                                     )}
                                                     {!e.deleted_at && (e.blocked
-                                                        ? <button onClick={() => handleEmployeeAction(e, 'unblock')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> Unblock</button>
-                                                        : <button onClick={() => handleEmployeeAction(e, 'block')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> Block</button>
+                                                        ? <button onClick={() => handleEmployeeAction(e, 'unblock')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> {t('common.unblock')}</button>
+                                                        : <button onClick={() => handleEmployeeAction(e, 'block')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> {t('common.block')}</button>
                                                     )}
                                                     {e.deleted_at
-                                                        ? <button onClick={() => handleEmployeeAction(e, 'restore')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> Restore</button>
-                                                        : <button onClick={() => handleEmployeeAction(e, 'delete')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> Delete</button>
+                                                        ? <button onClick={() => handleEmployeeAction(e, 'restore')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> {t('common.restore')}</button>
+                                                        : <button onClick={() => handleEmployeeAction(e, 'delete')} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> {t('common.delete')}</button>
                                                     }
                                                 </div>
                                             )}

@@ -56,7 +56,7 @@ export default function AppVersionsPage() {
                 setShowCreate(false);
             }}>
                 <div className={shared.formGrid2}>
-                    <FormField label={t('appVersions.app')} required><select name="app" required className={shared.formInput}><option value="user_ios">User (iOS)</option><option value="user_android">User (Android)</option><option value="employee_ios">Employee (iOS)</option><option value="employee_android">Employee (Android)</option></select></FormField>
+                    <FormField label={t('appVersions.app')} required><select name="app" required className={shared.formInput}><option value="user_ios">{t('appVersions.userIos')}</option><option value="user_android">{t('appVersions.userAndroid')}</option><option value="employee_ios">{t('appVersions.employeeIos')}</option><option value="employee_android">{t('appVersions.employeeAndroid')}</option></select></FormField>
                     <FormField label={t('appVersions.version')} required><input name="version" type="text" required className={shared.formInput} placeholder="e.g. 2.1.59" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
@@ -64,8 +64,8 @@ export default function AppVersionsPage() {
                     <FormField label={t('appVersions.minRequiredVersion')}><input name="min_required_version" type="text" className={shared.formInput} placeholder="e.g. 2.0.0" /></FormField>
                 </div>
                 <FormField label={t('appVersions.forceUpdate')}><select name="force_update" className={shared.formInput}><option value="false">{t('common.no')}</option><option value="true">{t('common.yes')}</option></select></FormField>
-                <FormField label={t('appVersions.releaseNotesEn')}><textarea name="release_notes" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="What's new in this version" /></FormField>
-                <FormField label={t('appVersions.releaseNotesAr')}><textarea name="release_notes_ar" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="ملاحظات الإصدار" dir="rtl" /></FormField>
+                <FormField label={t('appVersions.releaseNotesEn')}><textarea name="release_notes" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder={t('appVersions.notesPlaceholderEn')} /></FormField>
+                <FormField label={t('appVersions.releaseNotesAr')}><textarea name="release_notes_ar" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder={t('appVersions.notesPlaceholderAr')} dir="rtl" /></FormField>
             </FormModal>
         </div>
     );

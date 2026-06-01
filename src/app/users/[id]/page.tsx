@@ -69,17 +69,22 @@ export default function UserDetailPage() {
     if (userLoading) {
         return (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80, gap: 12, color: 'var(--text-tertiary)' }}>
-                <Loader2 size={24} /> Loading...
+                <Loader2 size={24} /> {t('common.loading')}
             </div>
         );
     }
 
     if (!user) {
-        return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-tertiary)' }}>User not found</div>;
+        return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-tertiary)' }}>{t('users.notFound')}</div>;
     }
 
     const status = deriveStatus(user);
     const tabs = ['overview', 'bookings'];
+    const genderLabel = user.gender === 'male' ? t('users.genderMale') : user.gender === 'female' ? t('users.genderFemale') : '--';
+    const statusLabelMap: Record<string, string> = {
+        active: t('common.active'), inactive: t('common.inactive'),
+        blocked: t('common.blocked'), banned: t('common.banned'), deleted: t('common.deleted'),
+    };
 
     return (
         <div className={shared.page}>
@@ -101,33 +106,33 @@ export default function UserDetailPage() {
                         <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Mail size={14} /> {user.email}</span>
                             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Phone size={14} /> {user.phone}</span>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={14} /> Joined {fmtDate(user.created_at)}</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={14} /> {t('users.joined')} {fmtDate(user.created_at)}</span>
                         </div>
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
                     <PermissionGate module="users" action="edit">
                         {status === 'deleted'
-                            ? <ActionBtn icon={<RotateCcw size={14} />} label="Restore" onClick={() => handleAction('restore')} />
+                            ? <ActionBtn icon={<RotateCcw size={14} />} label={t('common.restore')} onClick={() => handleAction('restore')} />
                             : <>
                                 {!user.active
-                                    ? <ActionBtn icon={<ShieldCheck size={14} />} label="Activate" onClick={() => handleAction('activate')} />
-                                    : <ActionBtn icon={<UserX size={14} />} label="Deactivate" onClick={() => handleAction('deactivate')} />
+                                    ? <ActionBtn icon={<ShieldCheck size={14} />} label={t('common.activate')} onClick={() => handleAction('activate')} />
+                                    : <ActionBtn icon={<UserX size={14} />} label={t('common.deactivate')} onClick={() => handleAction('deactivate')} />
                                 }
                                 {!user.blocked
-                                    ? <ActionBtn icon={<Ban size={14} />} label="Block" onClick={() => handleAction('block')} danger />
-                                    : <ActionBtn icon={<ShieldCheck size={14} />} label="Unblock" onClick={() => handleAction('unblock')} />
+                                    ? <ActionBtn icon={<Ban size={14} />} label={t('common.block')} onClick={() => handleAction('block')} danger />
+                                    : <ActionBtn icon={<ShieldCheck size={14} />} label={t('common.unblock')} onClick={() => handleAction('unblock')} />
                                 }
                                 {!user.banned
-                                    ? <ActionBtn icon={<AlertTriangle size={14} />} label="Ban" onClick={() => handleAction('ban')} danger />
-                                    : <ActionBtn icon={<ShieldCheck size={14} />} label="Unban" onClick={() => handleAction('unban')} />
+                                    ? <ActionBtn icon={<AlertTriangle size={14} />} label={t('common.ban')} onClick={() => handleAction('ban')} danger />
+                                    : <ActionBtn icon={<ShieldCheck size={14} />} label={t('common.unban')} onClick={() => handleAction('unban')} />
                                 }
                             </>
                         }
                     </PermissionGate>
                     <PermissionGate module="users" action="delete">
                         {status !== 'deleted' && (
-                            <ActionBtn icon={<Trash2 size={14} />} label="Delete" onClick={() => handleAction('delete')} danger />
+                            <ActionBtn icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => handleAction('delete')} danger />
                         )}
                     </PermissionGate>
                 </div>
@@ -136,10 +141,10 @@ export default function UserDetailPage() {
             {/* Stats row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16 }}>
                 {[
-                    { label: 'Gender', value: user.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : '--', icon: <Star size={18} /> },
-                    { label: 'Date of Birth', value: fmtDate(user.date_birth), icon: <CalendarDays size={18} /> },
-                    { label: 'Email Verified', value: user.email_verified_at ? 'Yes' : 'No', icon: <Mail size={18} /> },
-                    { label: 'Wallet', value: 'View Wallets', icon: <Wallet size={18} /> },
+                    { label: t('users.gender'), value: genderLabel, icon: <Star size={18} /> },
+                    { label: t('users.dateOfBirth'), value: fmtDate(user.date_birth), icon: <CalendarDays size={18} /> },
+                    { label: t('users.emailVerified'), value: user.email_verified_at ? t('common.yes') : t('common.no'), icon: <Mail size={18} /> },
+                    { label: t('users.wallet'), value: t('users.viewWallets'), icon: <Wallet size={18} /> },
                 ].map(s => (
                     <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16 }}>
                         <div style={{ width: 40, height: 40, borderRadius: 8, background: 'var(--color-primary-50)', color: 'var(--color-primary-500)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{s.icon}</div>
@@ -154,7 +159,7 @@ export default function UserDetailPage() {
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 4, overflowX: 'auto' }}>
                 {tabs.map(tab => (
-                    <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '8px 16px', border: 'none', borderRadius: 8, background: activeTab === tab ? 'var(--color-primary-500)' : 'transparent', color: activeTab === tab ? 'white' : 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap', textTransform: 'capitalize' }}>{tab}</button>
+                    <button key={tab} onClick={() => setActiveTab(tab)} style={{ padding: '8px 16px', border: 'none', borderRadius: 8, background: activeTab === tab ? 'var(--color-primary-500)' : 'transparent', color: activeTab === tab ? 'white' : 'var(--text-secondary)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'var(--font-sans)', whiteSpace: 'nowrap' }}>{tab === 'overview' ? t('users.tabOverview') : t('users.tabBookings')}</button>
                 ))}
             </div>
 
@@ -162,31 +167,31 @@ export default function UserDetailPage() {
             {activeTab === 'overview' && (
                 <div className={shared.formGrid2}>
                     <div className={shared.infoCard}>
-                        <h3 className={shared.infoCardHeader}>Personal Information</h3>
+                        <h3 className={shared.infoCardHeader}>{t('users.personalInformation')}</h3>
                         <div className={shared.infoRows}>
                             {([
-                                ['Gender', user.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : '--'],
-                                ['Date of Birth', fmtDate(user.date_birth)],
-                                ['Phone', user.phone],
-                                ['Email', user.email],
+                                [t('users.gender'), genderLabel],
+                                [t('users.dateOfBirth'), fmtDate(user.date_birth)],
+                                [t('common.phone'), user.phone],
+                                [t('common.email'), user.email],
                             ] as [string, string][]).map(([k, v]) => (
                                 <div key={k} className={shared.infoRow}><span>{k}</span><span>{v}</span></div>
                             ))}
                         </div>
                     </div>
                     <div className={shared.infoCard}>
-                        <h3 className={shared.infoCardHeader}>Account Details</h3>
+                        <h3 className={shared.infoCardHeader}>{t('users.accountDetails')}</h3>
                         <div className={shared.infoRows}>
                             {([
-                                ['Status', status],
-                                ['Active', user.active ? 'Yes' : 'No'],
-                                ['Blocked', user.blocked ? 'Yes' : 'No'],
-                                ['Banned', user.banned ? 'Yes' : 'No'],
-                                ['Email Verified', user.email_verified_at ? fmtDate(user.email_verified_at) : 'No'],
-                                ['Created', fmtDate(user.created_at)],
-                                ['Updated', fmtDate(user.updated_at)],
+                                [t('common.status'), statusLabelMap[status] ?? status],
+                                [t('users.activeField'), user.active ? t('common.yes') : t('common.no')],
+                                [t('users.blockedField'), user.blocked ? t('common.yes') : t('common.no')],
+                                [t('users.bannedField'), user.banned ? t('common.yes') : t('common.no')],
+                                [t('users.emailVerified'), user.email_verified_at ? fmtDate(user.email_verified_at) : t('common.no')],
+                                [t('users.created'), fmtDate(user.created_at)],
+                                [t('users.updated'), fmtDate(user.updated_at)],
                             ] as [string, string][]).map(([k, v]) => (
-                                <div key={k} className={shared.infoRow}><span>{k}</span><span style={{ textTransform: 'capitalize' }}>{v}</span></div>
+                                <div key={k} className={shared.infoRow}><span>{k}</span><span>{v}</span></div>
                             ))}
                         </div>
                     </div>
@@ -196,19 +201,19 @@ export default function UserDetailPage() {
             {/* Bookings */}
             {activeTab === 'bookings' && (
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
-                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>Booking History</h3>
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('users.bookingHistory')}</h3>
                     {bookingsLoading ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 40, gap: 8, color: 'var(--text-tertiary)' }}>
-                            <Loader2 size={18} /> Loading...
+                            <Loader2 size={18} /> {t('common.loading')}
                         </div>
                     ) : !bookings || bookings.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>No bookings found.</div>
+                        <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-tertiary)' }}>{t('users.noBookingsFound')}</div>
                     ) : (
                         <div style={{ overflowX: 'auto' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                                 <thead>
                                     <tr style={{ background: 'var(--bg-secondary)' }}>
-                                        {['Provider', 'Branch', 'Date', 'Status'].map(h => (
+                                        {[t('subscriptions.provider'), t('common.branch'), t('common.date'), t('common.status')].map(h => (
                                             <th key={h} style={{ textAlign: 'start', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
                                         ))}
                                     </tr>

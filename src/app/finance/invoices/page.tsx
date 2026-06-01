@@ -69,8 +69,8 @@ export default function FinanceInvoicesPage() {
             key: 'actions', label: '', width: '100px',
             render: r => (
                 <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={e => { e.stopPropagation(); setViewInvoice(r); }} title="View" style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Eye size={14} /></button>
-                    <button onClick={e => { e.stopPropagation(); handleDownload(r); }} title="Download PDF" style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-info)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Download size={14} /></button>
+                    <button onClick={e => { e.stopPropagation(); setViewInvoice(r); }} title={t('finance.invoices.view')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Eye size={14} /></button>
+                    <button onClick={e => { e.stopPropagation(); handleDownload(r); }} title={t('finance.invoices.downloadPDF')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-info)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><Download size={14} /></button>
                 </div>
             ),
         },

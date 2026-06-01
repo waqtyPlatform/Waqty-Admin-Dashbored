@@ -24,6 +24,13 @@ export default function CampaignsPage() {
     const [campaigns, setCampaigns] = useState(initialCampaigns);
     const [showCreate, setShowCreate] = useState(false);
 
+    const typeLabel: Record<Campaign['type'], string> = {
+        push: t('marketing.campaigns.typePush'),
+        email: t('marketing.campaigns.typeEmail'),
+        banner: t('marketing.campaigns.typeBanner'),
+        featured_listing: t('marketing.campaigns.typeFeaturedListing'),
+    };
+
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
@@ -42,7 +49,7 @@ export default function CampaignsPage() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <span style={{ fontWeight: 600, fontSize: '1rem' }}>{c.name}</span>
                                 <StatusBadge status={c.status} />
-                                <span style={{ fontSize: '0.6875rem', padding: '2px 6px', background: 'var(--bg-tertiary)', borderRadius: 4, color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{c.type.replace('_', ' ')}</span>
+                                <span style={{ fontSize: '0.6875rem', padding: '2px 6px', background: 'var(--bg-tertiary)', borderRadius: 4, color: 'var(--text-secondary)' }}>{typeLabel[c.type]}</span>
                             </div>
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{c.start_date} → {c.end_date}</span>
                         </div>
@@ -51,7 +58,7 @@ export default function CampaignsPage() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Eye size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.impressions')}</div><div style={{ fontWeight: 600 }}>{c.impressions.toLocaleString()}</div></div></div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><MousePointerClick size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.clicks')}</div><div style={{ fontWeight: 600 }}>{c.clicks.toLocaleString()}</div></div></div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Target size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.conversions')}</div><div style={{ fontWeight: 600 }}>{c.conversions.toLocaleString()}</div></div></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><DollarSign size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.budgetLabel')}</div><div style={{ fontWeight: 600 }}>{c.budget > 0 ? `EGP ${c.spent.toLocaleString()} / ${c.budget.toLocaleString()}` : 'N/A'}</div></div></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><DollarSign size={16} color="var(--text-tertiary)" /><div><div style={{ fontSize: '0.6875rem', color: 'var(--text-tertiary)' }}>{t('marketing.campaigns.budgetLabel')}</div><div style={{ fontWeight: 600 }}>{c.budget > 0 ? `EGP ${c.spent.toLocaleString()} / ${c.budget.toLocaleString()}` : t('marketing.campaigns.na')}</div></div></div>
                         </div>
                     </div>
                 ))}
@@ -69,11 +76,11 @@ export default function CampaignsPage() {
                 }, ...prev]);
                 setShowCreate(false);
             }}>
-                <FormField label={t('marketing.campaigns.campaignName')} required><input name="name" type="text" required className={shared.formInput} placeholder="e.g. Summer Promotion 2026" /></FormField>
-                <FormField label={t('marketing.campaigns.description')}><textarea name="description" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder="Campaign description" /></FormField>
+                <FormField label={t('marketing.campaigns.campaignName')} required><input name="name" type="text" required className={shared.formInput} placeholder={t('marketing.campaigns.namePlaceholder')} /></FormField>
+                <FormField label={t('marketing.campaigns.description')}><textarea name="description" style={{ ...inputStyle, minHeight: 60, resize: 'vertical' }} placeholder={t('marketing.campaigns.descriptionPlaceholder')} /></FormField>
                 <div className={shared.formGrid2}>
-                    <FormField label={t('marketing.campaigns.type')}><select name="type" className={shared.formInput}><option value="push">Push Notification</option><option value="email">{t('common.email')}</option><option value="banner">Banner</option><option value="featured_listing">Featured Listing</option></select></FormField>
-                    <FormField label={t('marketing.campaigns.budget')}><input name="budget" type="number" className={shared.formInput} placeholder="0 for unlimited" /></FormField>
+                    <FormField label={t('marketing.campaigns.type')}><select name="type" className={shared.formInput}><option value="push">{t('marketing.campaigns.typePush')}</option><option value="email">{t('marketing.campaigns.typeEmail')}</option><option value="banner">{t('marketing.campaigns.typeBanner')}</option><option value="featured_listing">{t('marketing.campaigns.typeFeaturedListing')}</option></select></FormField>
+                    <FormField label={t('marketing.campaigns.budget')}><input name="budget" type="number" className={shared.formInput} placeholder={t('marketing.campaigns.budgetPlaceholder')} /></FormField>
                 </div>
                 <div className={shared.formGrid2}>
                     <FormField label={t('marketing.campaigns.startDate')} required><input name="start_date" type="date" required className={shared.formInput} /></FormField>

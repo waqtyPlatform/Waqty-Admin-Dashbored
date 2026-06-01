@@ -135,9 +135,9 @@ export default function LocalizationSettingsPage() {
                     </Field>
                     <Field label={t('settings.localization.firstDayOfWeek')}>
                         <select value={firstDayOfWeek} onChange={e => setFirstDayOfWeek(e.target.value)} style={selectStyle}>
-                            <option value="sunday">Sunday</option>
-                            <option value="monday">Monday</option>
-                            <option value="saturday">Saturday</option>
+                            <option value="sunday">{t('settings.localization.sunday')}</option>
+                            <option value="monday">{t('settings.localization.monday')}</option>
+                            <option value="saturday">{t('settings.localization.saturday')}</option>
                         </select>
                     </Field>
                 </div>
@@ -151,7 +151,7 @@ export default function LocalizationSettingsPage() {
                         <div key={c.code} style={{ padding: '8px 14px', border: `1px solid ${defaultCurrency === c.code ? 'var(--color-primary-500)' : 'var(--border-color)'}`, borderRadius: 8, background: defaultCurrency === c.code ? 'var(--color-primary-50)' : 'var(--bg-primary)', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 8 }}>
                             <strong>{c.code}</strong>
                             <span style={{ color: 'var(--text-secondary)' }}>{c.name}</span>
-                            {defaultCurrency === c.code && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-primary-500)', color: 'white', borderRadius: 3 }}>DEFAULT</span>}
+                            {defaultCurrency === c.code && <span style={{ fontSize: '0.6875rem', padding: '1px 6px', background: 'var(--color-primary-500)', color: 'white', borderRadius: 3 }}>{t('settings.localization.defaultBadge')}</span>}
                         </div>
                     ))}
                 </div>

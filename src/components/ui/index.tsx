@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, createContext, useContext, ReactNode } from 'react';
 import { X, Search, ChevronRight, Check, Plus } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from './ui.module.css';
 
 // ─── Button ──────────────────────────────────────────────────────────
@@ -137,6 +138,7 @@ export function Checkbox({ checked = false, onChange, label }: CheckboxProps) {
 interface ModalProps { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; }
 
 export function Modal({ open, onClose, title, children, footer }: ModalProps) {
+    const { t } = useTranslation();
     useEffect(() => {
         if (!open) return;
         const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -151,7 +153,7 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
             <div className={styles.modal} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
                     <div className={styles.modalTitle}>{title}</div>
-                    <button className={styles.modalClose} onClick={onClose} aria-label="Close"><X size={18} /></button>
+                    <button className={styles.modalClose} onClick={onClose} aria-label={t('common.close')}><X size={18} /></button>
                 </div>
                 <div className={styles.modalBody}>{children}</div>
                 {footer && <div className={styles.modalFooter}>{footer}</div>}
@@ -216,6 +218,7 @@ const ToastCtx = createContext<{ addToast: (type: ToastType, message: string, un
 export function useToast() { return useContext(ToastCtx); }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+    const { t: tr } = useTranslation();
     const [toasts, setToasts] = useState<ToastItem[]>([]);
 
     const addToast = useCallback((type: ToastType, message: string, undoAction?: () => void) => {
@@ -240,7 +243,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 {toasts.map((t) => (
                     <div key={t.id} className={`${styles.toast} ${typeClass[t.type]}`}>
                         <span>{t.message}</span>
-                        {t.undoAction && <span className={styles.toastUndo} onClick={() => { t.undoAction?.(); remove(t.id); }}>Undo</span>}
+                        {t.undoAction && <span className={styles.toastUndo} onClick={() => { t.undoAction?.(); remove(t.id); }}>{tr('common.undo')}</span>}
                         <span className={styles.toastClose} onClick={() => remove(t.id)}><X size={14} /></span>
                     </div>
                 ))}
@@ -356,13 +359,14 @@ export function Timeline({ events }: { events: TimelineEvent[] }) {
 // ─── SearchBar ───────────────────────────────────────────────────────
 interface SearchBarProps { placeholder?: string; value?: string; onChange?: (val: string) => void; shortcut?: string; }
 
-export function SearchBar({ placeholder = 'Search...', value, onChange, shortcut }: SearchBarProps) {
+export function SearchBar({ placeholder, value, onChange, shortcut }: SearchBarProps) {
+    const { t } = useTranslation();
     return (
         <div className={styles.searchBar}>
             <Search size={16} className={styles.searchBarIcon} />
             <input
                 className={styles.searchBarInput}
-                placeholder={placeholder}
+                placeholder={placeholder ?? t('common.search')}
                 value={value}
                 onChange={(e) => onChange?.(e.target.value)}
             />

@@ -54,27 +54,27 @@ export default function SubscriptionsPage() {
 
     const handleRenew = (uuid: string) => {
         setSubs(prev => prev.map(s => s.uuid === uuid ? { ...s, status: 'active' as const, current_period_start: new Date().toISOString(), current_period_end: new Date(Date.now() + 30 * 86400000).toISOString(), auto_renew: true } : s));
-        addToast('success', 'Subscription renewed');
+        addToast('success', t('subscriptions.toastRenewed'));
     };
 
     const handleCancel = () => {
         if (confirmCancel) {
             setSubs(prev => prev.map(s => s.uuid === confirmCancel.uuid ? { ...s, status: 'cancelled' as const, auto_renew: false } : s));
-            addToast('warning', `Subscription cancelled for ${confirmCancel.provider_name}`);
+            addToast('warning', t('subscriptions.toastCancelled').replace('{name}', confirmCancel.provider_name));
             setConfirmCancel(null);
         }
     };
 
     const handleUpgrade = (uuid: string) => {
         setSubs(prev => prev.map(s => s.uuid === uuid ? { ...s, plan_name: 'Pro', plan_tier: 'pro' as const, status: 'active' as const, amount: toMinor(599) } : s));
-        addToast('success', 'Upgraded to Pro');
+        addToast('success', t('subscriptions.toastUpgraded'));
     };
 
     const handleDiscount = () => {
         if (discountModal && discountValue) {
             const pct = Number(discountValue) / 100;
             setSubs(prev => prev.map(s => s.uuid === discountModal.uuid ? { ...s, amount: Math.round(s.amount * (1 - pct)) } : s));
-            addToast('success', `${discountValue}% discount applied`);
+            addToast('success', t('subscriptions.toastDiscountApplied').replace('{pct}', discountValue));
             setDiscountModal(null);
             setDiscountValue('');
         }
@@ -92,7 +92,7 @@ export default function SubscriptionsPage() {
         const base = extendTrialSub.trial_end ? new Date(extendTrialSub.trial_end) : new Date();
         const newEnd = new Date(base.getTime() + days * 86400000).toISOString();
         setSubs(prev => prev.map(s => s.uuid === extendTrialSub.uuid ? { ...s, trial_end: newEnd, updated_at: new Date().toISOString() } : s));
-        addToast('success', `Trial extended by ${days} days`);
+        addToast('success', t('subscriptions.toastTrialExtended').replace('{days}', String(days)));
         setExtendTrialSub(null);
     };
 
@@ -129,7 +129,7 @@ export default function SubscriptionsPage() {
             pdf_url: null,
         };
         setGeneratedInvoices(prev => [invoice, ...prev]);
-        addToast('success', `Invoice generated — EGP ${invoiceTotal.toLocaleString()}`);
+        addToast('success', t('subscriptions.toastInvoiceGenerated').replace('{amount}', invoiceTotal.toLocaleString()));
         setInvoiceSub(null);
         setLineItems([emptyLineItem()]);
     };
@@ -148,21 +148,21 @@ export default function SubscriptionsPage() {
         const lastChargeMajor = toMajor(refundSub.amount);
         const amountMajor = refundType === 'full' ? lastChargeMajor : Number(refundAmount);
         if (!amountMajor || amountMajor <= 0 || amountMajor > lastChargeMajor) {
-            addToast('error', `Amount must be between 1 and ${lastChargeMajor}`);
+            addToast('error', t('subscriptions.toastAmountRange').replace('{max}', String(lastChargeMajor)));
             return;
         }
         if (!refundReason.trim()) {
-            addToast('error', 'Reason is required');
+            addToast('error', t('subscriptions.toastReasonRequired'));
             return;
         }
-        addToast('success', `Refund of ${formatMoney(toMinor(amountMajor))} processed`);
+        addToast('success', t('subscriptions.toastRefundProcessed').replace('{amount}', formatMoney(toMinor(amountMajor))));
         setRefundSub(null);
     };
 
     const columns: Column<ProviderSubscriptionRow>[] = [
         { key: 'provider_name', label: t('subscriptions.provider'), sortable: true, render: (row) => <span style={{ fontWeight: 500 }}>{row.provider_name}</span> },
         { key: 'plan_name', label: t('subscriptions.plan'), sortable: true, render: (row) => <span style={{ padding: '2px 8px', borderRadius: 4, background: row.plan_tier === 'enterprise' ? 'var(--color-primary-50)' : row.plan_tier === 'pro' ? 'var(--color-info-light)' : 'var(--bg-tertiary)', fontSize: '0.75rem', fontWeight: 500 }}>{row.plan_name}</span> },
-        { key: 'billing_cycle', label: t('subscriptions.cycle'), sortable: true, render: (row) => <span style={{ textTransform: 'capitalize' }}>{row.billing_cycle}</span> },
+        { key: 'billing_cycle', label: t('subscriptions.cycle'), sortable: true, render: (row) => <span>{row.billing_cycle === 'monthly' ? t('subscriptions.cycleMonthly') : t('subscriptions.cycleYearly')}</span> },
         { key: 'status', label: t('common.status'), sortable: true, render: (row) => <StatusBadge status={row.status} /> },
         { key: 'amount', label: t('common.amount'), sortable: true, render: (row) => formatMoney(row.amount) },
         { key: 'current_period_end', label: t('subscriptions.renews'), sortable: true, render: (row) => new Date(row.current_period_end).toLocaleDateString() },
@@ -208,7 +208,7 @@ export default function SubscriptionsPage() {
                 filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}><option value="all">{t('finance.allStatus')}</option><option value="active">{t('subscriptions.active')}</option><option value="trial">{t('subscriptions.trial')}</option><option value="past_due">{t('subscriptions.pastDue')}</option><option value="cancelled">{t('subscriptions.cancelled')}</option></select>}
             />
 
-            <ConfirmModal open={!!confirmCancel} onClose={() => setConfirmCancel(null)} onConfirm={handleCancel} title={t('providers.cancelSubscription')} message={`Are you sure you want to cancel the subscription for "${confirmCancel?.provider_name}"? They will lose access at the end of the current billing period.`} confirmLabel={t('providers.cancelSubscription')} variant="danger" />
+            <ConfirmModal open={!!confirmCancel} onClose={() => setConfirmCancel(null)} onConfirm={handleCancel} title={t('providers.cancelSubscription')} message={t('subscriptions.cancelConfirmMessage').replace('{name}', confirmCancel?.provider_name ?? '')} confirmLabel={t('providers.cancelSubscription')} variant="danger" />
 
             <FormModal open={!!discountModal} onClose={() => setDiscountModal(null)} title={`${t('subscriptions.applyDiscount')} — ${discountModal?.provider_name}`} submitLabel={t('subscriptions.applyDiscount')} onSubmit={e => { e.preventDefault(); handleDiscount(); }}>
                 {discountModal && <>
@@ -254,7 +254,7 @@ export default function SubscriptionsPage() {
                                 <input value={line.description} onChange={e => updateLineItem(line.id, { description: e.target.value })} placeholder={t('subscriptions.description')} className={shared.formInput} />
                                 <input type="number" min={1} value={line.quantity} onChange={e => updateLineItem(line.id, { quantity: Math.max(1, Number(e.target.value) || 0) })} className={shared.formInput} />
                                 <input type="number" min={0} step="0.01" value={line.unit_price} onChange={e => updateLineItem(line.id, { unit_price: Math.max(0, Number(e.target.value) || 0) })} className={shared.formInput} />
-                                <button type="button" onClick={() => setLineItems(prev => prev.filter(l => l.id !== line.id))} disabled={lineItems.length === 1} style={{ padding: '0 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: lineItems.length === 1 ? 'not-allowed' : 'pointer', opacity: lineItems.length === 1 ? 0.4 : 1 }} aria-label="Remove line"><Trash2 size={14} /></button>
+                                <button type="button" onClick={() => setLineItems(prev => prev.filter(l => l.id !== line.id))} disabled={lineItems.length === 1} style={{ padding: '0 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: lineItems.length === 1 ? 'not-allowed' : 'pointer', opacity: lineItems.length === 1 ? 0.4 : 1 }} aria-label={t('subscriptions.removeLine')}><Trash2 size={14} /></button>
                             </div>
                         ))}
                         <button type="button" onClick={() => setLineItems(prev => [...prev, emptyLineItem()])} style={{ alignSelf: 'flex-start', padding: '6px 10px', border: '1px dashed var(--border-color)', borderRadius: 6, background: 'transparent', color: 'var(--text-secondary)', fontSize: '0.8125rem', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -266,7 +266,7 @@ export default function SubscriptionsPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}><span>{t('common.total')}</span><strong>EGP {invoiceTotal.toLocaleString()}</strong></div>
                         </div>
                         {generatedInvoices.length > 0 && (
-                            <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{generatedInvoices.length} invoice(s) generated this session</div>
+                            <div style={{ marginTop: 8, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{t('subscriptions.invoicesGeneratedSession').replace('{count}', String(generatedInvoices.length))}</div>
                         )}
                     </div>
                 </>}
@@ -289,7 +289,7 @@ export default function SubscriptionsPage() {
                     </FormField>
                     {refundType === 'partial' && (
                         <FormField label={t('subscriptions.refundAmount')} required>
-                            <input type="number" min={1} max={toMajor(refundSub.amount)} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} required className={shared.formInput} placeholder={`Max ${toMajor(refundSub.amount)}`} />
+                            <input type="number" min={1} max={toMajor(refundSub.amount)} value={refundAmount} onChange={e => setRefundAmount(e.target.value)} required className={shared.formInput} placeholder={t('subscriptions.maxPlaceholder').replace('{max}', String(toMajor(refundSub.amount)))} />
                         </FormField>
                     )}
                     <FormField label={t('subscriptions.refundDestination')} required>

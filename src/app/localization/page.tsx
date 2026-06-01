@@ -78,10 +78,10 @@ export default function LocalizationPage() {
                 }
                 setShowCreate(false); setEditEntry(null);
             }}>
-                <FormField label={t('localization.key')} required><input name="key" type="text" required defaultValue={editEntry?.key || ''} className={shared.formInput} placeholder="e.g. booking.confirmTitle" /></FormField>
-                <FormField label={t('localization.module')}><input name="module" type="text" defaultValue={editEntry?.module || ''} className={shared.formInput} placeholder="e.g. booking" /></FormField>
-                <FormField label={t('localization.english')} required><input name="en" type="text" required defaultValue={editEntry?.en || ''} className={shared.formInput} placeholder="English translation" /></FormField>
-                <FormField label={t('localization.arabic')} required><input name="ar" type="text" required defaultValue={editEntry?.ar || ''} className={shared.formInput} placeholder="الترجمة العربية" dir="rtl" /></FormField>
+                <FormField label={t('localization.key')} required><input name="key" type="text" required defaultValue={editEntry?.key || ''} className={shared.formInput} placeholder={t('localization.keyPlaceholder')} /></FormField>
+                <FormField label={t('localization.module')}><input name="module" type="text" defaultValue={editEntry?.module || ''} className={shared.formInput} placeholder={t('localization.modulePlaceholder')} /></FormField>
+                <FormField label={t('localization.english')} required><input name="en" type="text" required defaultValue={editEntry?.en || ''} className={shared.formInput} placeholder={t('localization.enPlaceholder')} /></FormField>
+                <FormField label={t('localization.arabic')} required><input name="ar" type="text" required defaultValue={editEntry?.ar || ''} className={shared.formInput} placeholder={t('localization.arPlaceholder')} dir="rtl" /></FormField>
             </FormModal>
         </div>
     );

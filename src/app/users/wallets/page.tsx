@@ -29,7 +29,7 @@ export default function WalletsPage() {
 
     const columns: Column<Wallet>[] = [
         {
-            key: 'user_name', label: 'User', sortable: true,
+            key: 'user_name', label: t('users.wallets.user'), sortable: true,
             render: (row) => (
                 <div>
                     <div style={{ fontWeight: 500 }}>{row.user_name}</div>
@@ -37,22 +37,22 @@ export default function WalletsPage() {
                 </div>
             ),
         },
-        { key: 'balance', label: 'Balance', sortable: true, render: (row) => <strong style={{ color: row.balance > 0 ? 'var(--color-success)' : 'var(--text-tertiary)' }}>{formatMoney(row.balance)}</strong> },
-        { key: 'total_credits', label: 'Total Credits', sortable: true, render: (row) => formatMoney(row.total_credits) },
-        { key: 'total_debits', label: 'Total Debits', sortable: true, render: (row) => formatMoney(row.total_debits) },
-        { key: 'status', label: 'Status', sortable: true, render: (row) => <StatusBadge status={row.status} /> },
-        { key: 'last_transaction_at', label: 'Last Transaction', sortable: true, render: (row) => row.last_transaction_at ? new Date(row.last_transaction_at).toLocaleDateString() : '-' },
+        { key: 'balance', label: t('users.wallets.balance'), sortable: true, render: (row) => <strong style={{ color: row.balance > 0 ? 'var(--color-success)' : 'var(--text-tertiary)' }}>{formatMoney(row.balance)}</strong> },
+        { key: 'total_credits', label: t('users.wallets.totalCredits'), sortable: true, render: (row) => formatMoney(row.total_credits) },
+        { key: 'total_debits', label: t('users.wallets.totalDebits'), sortable: true, render: (row) => formatMoney(row.total_debits) },
+        { key: 'status', label: t('common.status'), sortable: true, render: (row) => <StatusBadge status={row.status} /> },
+        { key: 'last_transaction_at', label: t('users.wallets.lastTransaction'), sortable: true, render: (row) => row.last_transaction_at ? new Date(row.last_transaction_at).toLocaleDateString() : '-' },
         {
             key: 'actions', label: '', width: '140px',
             render: (row) => (
                 <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'add' }); setActionAmount(''); setActionReason(''); }} title="Add Funds" style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'add' }); setActionAmount(''); setActionReason(''); }} title={t('users.wallets.addFunds')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Plus size={14} />
                     </button>
-                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'deduct' }); setActionAmount(''); setActionReason(''); }} title="Deduct" style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'deduct' }); setActionAmount(''); setActionReason(''); }} title={t('users.wallets.deduct')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Minus size={14} />
                     </button>
-                    <button onClick={e => { e.stopPropagation(); handleToggleFreeze(row.id); }} title={row.status === 'frozen' ? 'Unfreeze' : 'Freeze'} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: row.status === 'frozen' ? 'var(--color-info)' : 'var(--color-warning)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); handleToggleFreeze(row.id); }} title={row.status === 'frozen' ? t('users.wallets.unfreeze') : t('users.wallets.freeze')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: row.status === 'frozen' ? 'var(--color-info)' : 'var(--color-warning)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         {row.status === 'frozen' ? <Unlock size={14} /> : <Lock size={14} />}
                     </button>
                 </div>
@@ -69,13 +69,13 @@ export default function WalletsPage() {
             <DataTable<Wallet>
                 columns={columns} data={filtered}
                 searchKeys={['user_name', 'user_email']}
-                searchPlaceholder="Search wallets..."
+                searchPlaceholder={t('users.wallets.searchPlaceholder')}
                 getRowKey={row => row.id}
                 filters={
                     <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}>
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="frozen">Frozen</option>
+                        <option value="all">{t('common.allStatus')}</option>
+                        <option value="active">{t('common.active')}</option>
+                        <option value="frozen">{t('users.wallets.frozen')}</option>
                     </select>
                 }
             />
@@ -84,8 +84,8 @@ export default function WalletsPage() {
             <FormModal
                 open={!!walletAction}
                 onClose={() => setWalletAction(null)}
-                title={walletAction ? `${walletAction.type === 'add' ? 'Add Funds to' : 'Deduct from'} ${walletAction.wallet.user_name}'s Wallet` : ''}
-                submitLabel={walletAction?.type === 'add' ? 'Add Funds' : 'Deduct'}
+                title={walletAction ? `${walletAction.type === 'add' ? t('users.wallets.addFundsTo') : t('users.wallets.deductFrom')} ${walletAction.wallet.user_name} — ${t('users.wallets.walletSuffix')}` : ''}
+                submitLabel={walletAction?.type === 'add' ? t('users.wallets.addFunds') : t('users.wallets.deduct')}
                 submitVariant={walletAction?.type === 'deduct' ? 'danger' : 'primary'}
                 onSubmit={e => {
                     e.preventDefault();
@@ -104,13 +104,13 @@ export default function WalletsPage() {
                 {walletAction && (
                     <>
                         <div style={{ padding: 12, background: 'var(--bg-tertiary)', borderRadius: 8, fontSize: '0.875rem' }}>
-                            <strong>Current Balance:</strong> {formatMoney(walletAction.wallet.balance)}
+                            <strong>{t('users.wallets.currentBalance')}:</strong> {formatMoney(walletAction.wallet.balance)}
                         </div>
-                        <FormField label="Amount (EGP)" required>
-                            <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)} required min={1} max={walletAction.type === 'deduct' ? toMajor(walletAction.wallet.balance) : 100000} className={shared.formInput} placeholder="Enter amount" />
+                        <FormField label={t('users.wallets.amountEgp')} required>
+                            <input type="number" value={actionAmount} onChange={e => setActionAmount(e.target.value)} required min={1} max={walletAction.type === 'deduct' ? toMajor(walletAction.wallet.balance) : 100000} className={shared.formInput} placeholder={t('users.wallets.enterAmount')} />
                         </FormField>
-                        <FormField label="Reason" required>
-                            <input type="text" value={actionReason} onChange={e => setActionReason(e.target.value)} required className={shared.formInput} placeholder={walletAction.type === 'add' ? 'e.g. Loyalty reward, Refund' : 'e.g. Duplicate refund correction'} />
+                        <FormField label={t('common.reason')} required>
+                            <input type="text" value={actionReason} onChange={e => setActionReason(e.target.value)} required className={shared.formInput} placeholder={walletAction.type === 'add' ? t('users.wallets.addReasonPlaceholder') : t('users.wallets.deductReasonPlaceholder')} />
                         </FormField>
                     </>
                 )}

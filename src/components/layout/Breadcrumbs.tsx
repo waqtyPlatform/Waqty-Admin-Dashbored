@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ChevronRight } from 'lucide-react';
 
 const labelize = (segment: string) =>
@@ -12,6 +13,7 @@ const labelize = (segment: string) =>
 
 export function Breadcrumbs() {
     const pathname = usePathname();
+    const { t } = useTranslation();
     if (!pathname || pathname === '/') return null;
 
     const parts = pathname.split('/').filter(Boolean);
@@ -23,7 +25,7 @@ export function Breadcrumbs() {
 
     return (
         <nav
-            aria-label="Breadcrumb"
+            aria-label={t('common.breadcrumb')}
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -34,7 +36,7 @@ export function Breadcrumbs() {
                 flexWrap: 'wrap',
             }}
         >
-            <Link href="/" style={{ color: 'var(--text-tertiary)', textDecoration: 'none' }}>Home</Link>
+            <Link href="/" style={{ color: 'var(--text-tertiary)', textDecoration: 'none' }}>{t('common.home')}</Link>
             {crumbs.map(c => (
                 <React.Fragment key={c.href}>
                     <ChevronRight size={14} />

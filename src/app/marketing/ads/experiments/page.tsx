@@ -50,8 +50,8 @@ export default function ExperimentsPage() {
             started_at: new Date().toISOString(),
             ended_at: null,
             variants: {
-                A: { id: `${id}-a`, label: newForm.labelA || 'Variant A', impressions: 0, clicks: 0, conversions: 0 },
-                B: { id: `${id}-b`, label: newForm.labelB || 'Variant B', impressions: 0, clicks: 0, conversions: 0 },
+                A: { id: `${id}-a`, label: newForm.labelA || t('marketing.experiments.variantA'), impressions: 0, clicks: 0, conversions: 0 },
+                B: { id: `${id}-b`, label: newForm.labelB || t('marketing.experiments.variantB'), impressions: 0, clicks: 0, conversions: 0 },
             },
             traffic_split: 50,
         }, ...prev]);
@@ -114,7 +114,7 @@ export default function ExperimentsPage() {
                                     {exp.status === 'running' && (
                                         <>
                                             <button className={shared.actionBtn} onClick={() => togglePause(exp.id)}>
-                                                <Pause size={14} /> {t('common.pause') || 'Pause'}
+                                                <Pause size={14} /> {t('common.pause')}
                                             </button>
                                             <button className={`${shared.actionBtn} ${shared.dangerBtn}`} onClick={() => setConfirmEnd(exp.id)}>
                                                 <Square size={14} /> {t('marketing.experiments.endExperiment')}
@@ -123,7 +123,7 @@ export default function ExperimentsPage() {
                                     )}
                                     {exp.status === 'paused' && (
                                         <button className={shared.actionBtn} onClick={() => togglePause(exp.id)}>
-                                            <Play size={14} /> {t('common.resume') || 'Resume'}
+                                            <Play size={14} /> {t('common.resume')}
                                         </button>
                                     )}
                                 </div>
@@ -151,7 +151,7 @@ export default function ExperimentsPage() {
                                     }}>{winnerLabel}</span>
                                 </div>
                                 <div style={{ marginLeft: 'auto', color: 'var(--text-tertiary)' }}>
-                                    Sample: {result.sampleSize.toLocaleString()} {winnerColor(result.winner) ? '' : ''}
+                                    {t('marketing.experiments.sample')}: {result.sampleSize.toLocaleString()} {winnerColor(result.winner) ? '' : ''}
                                 </div>
                             </div>
                         </div>
@@ -175,10 +175,10 @@ export default function ExperimentsPage() {
                 </FormField>
                 <div className={shared.formGrid2}>
                     <FormField label={t('marketing.experiments.variantA')}>
-                        <input className={shared.formInput} value={newForm.labelA} onChange={e => setNewForm(f => ({ ...f, labelA: e.target.value }))} placeholder="e.g. Control" />
+                        <input className={shared.formInput} value={newForm.labelA} onChange={e => setNewForm(f => ({ ...f, labelA: e.target.value }))} placeholder={t('marketing.experiments.controlPlaceholder')} />
                     </FormField>
                     <FormField label={t('marketing.experiments.variantB')}>
-                        <input className={shared.formInput} value={newForm.labelB} onChange={e => setNewForm(f => ({ ...f, labelB: e.target.value }))} placeholder="e.g. Treatment" />
+                        <input className={shared.formInput} value={newForm.labelB} onChange={e => setNewForm(f => ({ ...f, labelB: e.target.value }))} placeholder={t('marketing.experiments.treatmentPlaceholder')} />
                     </FormField>
                 </div>
             </FormModal>
@@ -202,9 +202,9 @@ export default function ExperimentsPage() {
                         </div>
                         <ResponsiveContainer width="100%" height={240}>
                             <BarChart data={[
-                                { metric: 'Impressions', A: detail.exp.variants.A.impressions, B: detail.exp.variants.B.impressions },
-                                { metric: 'Clicks', A: detail.exp.variants.A.clicks, B: detail.exp.variants.B.clicks },
-                                { metric: 'Conversions', A: detail.exp.variants.A.conversions, B: detail.exp.variants.B.conversions },
+                                { metric: t('marketing.experiments.impressions'), A: detail.exp.variants.A.impressions, B: detail.exp.variants.B.impressions },
+                                { metric: t('marketing.experiments.clicks'), A: detail.exp.variants.A.clicks, B: detail.exp.variants.B.clicks },
+                                { metric: t('marketing.experiments.conversions'), A: detail.exp.variants.A.conversions, B: detail.exp.variants.B.conversions },
                             ]}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
                                 <XAxis dataKey="metric" stroke="var(--text-tertiary)" fontSize={12} />
@@ -217,19 +217,19 @@ export default function ExperimentsPage() {
                         </ResponsiveContainer>
                         <div className={shared.formGrid2}>
                             <div className={shared.summaryCard}>
-                                <span className={shared.summaryLabel}>CTR A</span>
+                                <span className={shared.summaryLabel}>{t('marketing.experiments.ctrA')}</span>
                                 <span className={shared.summaryValue}>{(detail.result.ctrA * 100).toFixed(2)}%</span>
                             </div>
                             <div className={shared.summaryCard}>
-                                <span className={shared.summaryLabel}>CTR B</span>
+                                <span className={shared.summaryLabel}>{t('marketing.experiments.ctrB')}</span>
                                 <span className={shared.summaryValue}>{(detail.result.ctrB * 100).toFixed(2)}%</span>
                             </div>
                             <div className={shared.summaryCard}>
-                                <span className={shared.summaryLabel}>Conv A</span>
+                                <span className={shared.summaryLabel}>{t('marketing.experiments.convA')}</span>
                                 <span className={shared.summaryValue}>{(detail.result.convA * 100).toFixed(2)}%</span>
                             </div>
                             <div className={shared.summaryCard}>
-                                <span className={shared.summaryLabel}>Conv B</span>
+                                <span className={shared.summaryLabel}>{t('marketing.experiments.convB')}</span>
                                 <span className={shared.summaryValue}>{(detail.result.convB * 100).toFixed(2)}%</span>
                             </div>
                             <div className={shared.summaryCard}>
@@ -251,21 +251,22 @@ export default function ExperimentsPage() {
 }
 
 function VariantCard({ title, label, v, ctr, conv }: { title: string; label: string; v: { impressions: number; clicks: number; conversions: number }; ctr: number; conv: number }) {
+    const { t } = useTranslation();
     return (
         <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, padding: 12, background: 'var(--bg-primary)' }}>
             <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', textTransform: 'uppercase', fontWeight: 500 }}>{title}</div>
             <div style={{ fontSize: '0.875rem', fontWeight: 600, marginTop: 2, marginBottom: 8 }}>{label}</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, fontSize: '0.8125rem' }}>
                 <div>
-                    <div style={{ color: 'var(--text-tertiary)', fontSize: '0.6875rem', textTransform: 'uppercase' }}>Impr.</div>
+                    <div style={{ color: 'var(--text-tertiary)', fontSize: '0.6875rem', textTransform: 'uppercase' }}>{t('marketing.experiments.imprShort')}</div>
                     <div style={{ fontWeight: 600 }}>{v.impressions.toLocaleString()}</div>
                 </div>
                 <div>
-                    <div style={{ color: 'var(--text-tertiary)', fontSize: '0.6875rem', textTransform: 'uppercase' }}>Clicks</div>
+                    <div style={{ color: 'var(--text-tertiary)', fontSize: '0.6875rem', textTransform: 'uppercase' }}>{t('marketing.experiments.clicksShort')}</div>
                     <div style={{ fontWeight: 600 }}>{v.clicks.toLocaleString()} <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>({(ctr * 100).toFixed(1)}%)</span></div>
                 </div>
                 <div>
-                    <div style={{ color: 'var(--text-tertiary)', fontSize: '0.6875rem', textTransform: 'uppercase' }}>Conv.</div>
+                    <div style={{ color: 'var(--text-tertiary)', fontSize: '0.6875rem', textTransform: 'uppercase' }}>{t('marketing.experiments.convShort')}</div>
                     <div style={{ fontWeight: 600 }}>{v.conversions.toLocaleString()} <span style={{ color: 'var(--text-secondary)', fontWeight: 400 }}>({(conv * 100).toFixed(1)}%)</span></div>
                 </div>
             </div>

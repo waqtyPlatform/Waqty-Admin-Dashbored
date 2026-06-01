@@ -90,26 +90,26 @@ export default function ReviewsPage() {
                     <option value="all">{t('reviews.allStatus')}</option>
                     <option value="published">{t('reviews.published')}</option>
                     <option value="hidden">{t('reviews.hidden')}</option>
-                    <option value="deleted">Deleted</option>
+                    <option value="deleted">{t('reviews.deleted')}</option>
                 </select>
             </div>
 
             {error && (
                 <div style={{ padding: '12px 16px', background: 'var(--color-error-50)', color: 'var(--color-error)', borderRadius: 8, fontSize: '0.875rem' }}>
-                    Failed to load ratings.
+                    {t('reviews.failedToLoad')}
                 </div>
             )}
 
             {loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 60, gap: 10, color: 'var(--text-tertiary)' }}>
-                    <Loader2 size={22} /> Loading...
+                    <Loader2 size={22} /> {t('common.loading')}
                 </div>
             ) : list.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>No ratings found.</div>
+                <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-tertiary)' }}>{t('reviews.noneFound')}</div>
             ) : (
                 <div className={styles.reviewsList}>
                     {list.map(rating => {
-                        const userName  = rating.user?.name ?? 'Unknown User';
+                        const userName  = rating.user?.name ?? t('reviews.unknownUser');
                         const provider  = rating.booking?.provider?.name ?? '--';
                         const dateStr   = rating.created_at?.slice(0, 10) ?? '';
                         const isHidden  = !rating.active;
@@ -123,7 +123,7 @@ export default function ReviewsPage() {
                                         <div>
                                             <div className={styles.reviewUserName}>{userName}</div>
                                             <div className={styles.reviewMeta}>
-                                                on <strong>{provider}</strong> &middot; {dateStr}
+                                                {t('reviews.on')} <strong>{provider}</strong> &middot; {dateStr}
                                             </div>
                                         </div>
                                     </div>
@@ -155,7 +155,7 @@ export default function ReviewsPage() {
                                         <PermissionGate module="reviews" action="delete">
                                             {!isDeleted && (
                                                 <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => handleDelete(rating.uuid)}>
-                                                    <Trash2 size={14} /> Delete
+                                                    <Trash2 size={14} /> {t('common.delete')}
                                                 </button>
                                             )}
                                         </PermissionGate>

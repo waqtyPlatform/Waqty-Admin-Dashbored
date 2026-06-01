@@ -96,8 +96,8 @@ export default function UsersPage() {
             ),
         },
         { key: 'phone', label: t('common.phone'), sortable: true },
-        { key: 'gender', label: 'Gender', sortable: true, render: (row) => row.gender ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1) : '—' },
-        { key: 'date_birth', label: 'Date of Birth', render: (row) => row.date_birth ?? '—' },
+        { key: 'gender', label: t('users.gender'), sortable: true, render: (row) => row.gender ? row.gender.charAt(0).toUpperCase() + row.gender.slice(1) : '—' },
+        { key: 'date_birth', label: t('users.dateOfBirth'), render: (row) => row.date_birth ?? '—' },
         {
             key: 'active', label: t('common.status'), sortable: true,
             render: (row) => <StatusBadge status={deriveStatus(row)} />,
@@ -116,30 +116,30 @@ export default function UsersPage() {
                         {actionMenuId === row.uuid && (
                             <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, minWidth: 180, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)', padding: '4px' }}>
                                 {status === 'deleted' && can('users', 'edit') && (
-                                    <ActionItem icon={<RotateCcw size={14} />} label="Restore" onClick={() => handleAction(row, 'restore')} />
+                                    <ActionItem icon={<RotateCcw size={14} />} label={t('common.restore')} onClick={() => handleAction(row, 'restore')} />
                                 )}
                                 {status !== 'deleted' && (
                                     <>
                                         {!row.active && can('users', 'edit') && (
-                                            <ActionItem icon={<ShieldCheck size={14} />} label="Activate" onClick={() => handleAction(row, 'activate')} />
+                                            <ActionItem icon={<ShieldCheck size={14} />} label={t('common.activate')} onClick={() => handleAction(row, 'activate')} />
                                         )}
                                         {row.active && can('users', 'edit') && (
-                                            <ActionItem icon={<UserX size={14} />} label="Deactivate" onClick={() => handleAction(row, 'deactivate')} />
+                                            <ActionItem icon={<UserX size={14} />} label={t('common.deactivate')} onClick={() => handleAction(row, 'deactivate')} />
                                         )}
                                         {!row.blocked && can('users', 'edit') && (
-                                            <ActionItem icon={<Ban size={14} />} label="Block" onClick={() => handleAction(row, 'block')} />
+                                            <ActionItem icon={<Ban size={14} />} label={t('common.block')} onClick={() => handleAction(row, 'block')} />
                                         )}
                                         {row.blocked && can('users', 'edit') && (
-                                            <ActionItem icon={<ShieldCheck size={14} />} label="Unblock" onClick={() => handleAction(row, 'unblock')} />
+                                            <ActionItem icon={<ShieldCheck size={14} />} label={t('common.unblock')} onClick={() => handleAction(row, 'unblock')} />
                                         )}
                                         {!row.banned && can('users', 'edit') && (
-                                            <ActionItem icon={<AlertTriangle size={14} />} label="Ban" onClick={() => handleAction(row, 'ban')} />
+                                            <ActionItem icon={<AlertTriangle size={14} />} label={t('common.ban')} onClick={() => handleAction(row, 'ban')} />
                                         )}
                                         {row.banned && can('users', 'edit') && (
-                                            <ActionItem icon={<ShieldCheck size={14} />} label="Unban" onClick={() => handleAction(row, 'unban')} />
+                                            <ActionItem icon={<ShieldCheck size={14} />} label={t('common.unban')} onClick={() => handleAction(row, 'unban')} />
                                         )}
                                         {can('users', 'delete') && (
-                                            <ActionItem icon={<Trash2 size={14} />} label="Delete" onClick={() => handleAction(row, 'delete')} danger />
+                                            <ActionItem icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => handleAction(row, 'delete')} danger />
                                         )}
                                     </>
                                 )}
@@ -158,7 +158,7 @@ export default function UsersPage() {
             </div>
             {error && (
                 <div style={{ padding: '12px 16px', background: 'var(--color-error-50)', color: 'var(--color-error)', borderRadius: 8, marginBottom: 16, fontSize: '0.875rem' }}>
-                    Failed to load users.
+                    {t('users.failedToLoad')}
                 </div>
             )}
             <DataTable<UserObject>
@@ -166,28 +166,28 @@ export default function UsersPage() {
                 data={users ?? []}
                 loading={loading}
                 searchKeys={['name', 'email', 'phone']}
-                searchPlaceholder="Search users..."
+                searchPlaceholder={t('users.searchPlaceholder')}
                 getRowKey={row => row.uuid}
                 onRowClick={row => router.push(`/users/${row.uuid}`)}
                 filters={
                     <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}>
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                        <option value="blocked">Blocked</option>
-                        <option value="banned">Banned</option>
-                        <option value="deleted">Deleted</option>
+                        <option value="all">{t('common.allStatus')}</option>
+                        <option value="active">{t('common.active')}</option>
+                        <option value="inactive">{t('common.inactive')}</option>
+                        <option value="blocked">{t('common.blocked')}</option>
+                        <option value="banned">{t('common.banned')}</option>
+                        <option value="deleted">{t('common.deleted')}</option>
                     </select>
                 }
                 actions={
                     <PermissionGate module="users" action="export">
                         <button
                             onClick={() => exportToCSV(users ?? [], 'users', [
-                                { key: 'name', label: 'Name' },
-                                { key: 'email', label: 'Email' },
-                                { key: 'phone', label: 'Phone' },
-                                { key: 'gender', label: 'Gender' },
-                                { key: 'date_birth', label: 'Date of Birth' },
+                                { key: 'name', label: t('common.name') },
+                                { key: 'email', label: t('common.email') },
+                                { key: 'phone', label: t('common.phone') },
+                                { key: 'gender', label: t('users.gender') },
+                                { key: 'date_birth', label: t('users.dateOfBirth') },
                             ])}
                             className={shared.exportBtn}>
                             <Download size={16} /> {t('common.export')}

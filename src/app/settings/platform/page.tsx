@@ -24,27 +24,27 @@ export default function PlatformSettingsPage() {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 700 }}>
             <div className={shared.pageHeader}>
-                <h1 className={shared.pageTitle}>Platform Settings</h1>
+                <h1 className={shared.pageTitle}>{t('settings.platform.title')}</h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {saved && <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: 500 }}>Settings saved!</span>}
+                    {saved && <span style={{ color: 'var(--color-success)', fontSize: '0.875rem', fontWeight: 500 }}>{t('settings.platform.saved')}</span>}
                     <button onClick={handleSave} className={shared.addBtn}><Save size={16} /> {t('common.save')}</button>
                 </div>
             </div>
             {[
-                { section: 'General', fields: [
-                    { label: 'Platform Name', key: 'platformName', type: 'text' },
-                    { label: 'Default Commission Rate (%)', key: 'defaultCommissionRate', type: 'number' },
-                    { label: 'Default Trial Days', key: 'trialDays', type: 'number' },
-                    { label: 'Default Currency', key: 'defaultCurrency', type: 'text' },
+                { section: t('settings.platform.secGeneral'), fields: [
+                    { label: t('settings.platform.platformName'), key: 'platformName', type: 'text' },
+                    { label: t('settings.platform.commissionRate'), key: 'defaultCommissionRate', type: 'number' },
+                    { label: t('settings.platform.trialDays'), key: 'trialDays', type: 'number' },
+                    { label: t('settings.platform.defaultCurrency'), key: 'defaultCurrency', type: 'text' },
                 ]},
-                { section: 'Bookings', fields: [
-                    { label: 'Minimum Booking Amount (EGP)', key: 'minBookingAmount', type: 'number' },
-                    { label: 'Max Refund Percentage (%)', key: 'maxRefundPercent', type: 'number' },
+                { section: t('settings.platform.secBookings'), fields: [
+                    { label: t('settings.platform.minBooking'), key: 'minBookingAmount', type: 'number' },
+                    { label: t('settings.platform.maxRefund'), key: 'maxRefundPercent', type: 'number' },
                 ]},
-                { section: 'Access Control', fields: [
-                    { label: 'Maintenance Mode', key: 'maintenanceMode', type: 'toggle' },
-                    { label: 'Registration Open', key: 'registrationOpen', type: 'toggle' },
-                    { label: 'Require Documents for Registration', key: 'requireDocuments', type: 'toggle' },
+                { section: t('settings.platform.secAccess'), fields: [
+                    { label: t('settings.platform.maintenanceMode'), key: 'maintenanceMode', type: 'toggle' },
+                    { label: t('settings.platform.registrationOpen'), key: 'registrationOpen', type: 'toggle' },
+                    { label: t('settings.platform.requireDocuments'), key: 'requireDocuments', type: 'toggle' },
                 ]},
             ].map(section => (
                 <div key={section.section} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 24 }}>

@@ -67,6 +67,13 @@ export default function AdsPage() {
         top_search: t('marketing.ads.typeTopSearch'),
     };
 
+    const slotLabel: Record<AdSlot, string> = {
+        home_banner: t('marketing.ads.slotHomeBanner'),
+        category_banner: t('marketing.ads.slotCategoryBanner'),
+        search_promoted: t('marketing.ads.slotSearchPromoted'),
+        between_listings: t('marketing.ads.slotBetweenListings'),
+    };
+
     const openCreate = () => { setEditingAd(null); setForm(emptyAdForm()); setShowCreate(true); };
     const openEdit = (ad: Ad) => {
         setEditingAd(ad);
@@ -187,13 +194,13 @@ export default function AdsPage() {
                                 <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>{ad.title}</span>
                                 <StatusBadge status={ad.placement.status} />
                                 <span style={{ fontSize: '0.6875rem', padding: '2px 6px', background: 'var(--color-primary-50, #eff6ff)', borderRadius: 4, color: 'var(--color-primary-600)' }}>{typeLabel[ad.placement.type]}</span>
-                                <span style={{ fontSize: '0.6875rem', padding: '2px 6px', background: 'var(--bg-tertiary)', borderRadius: 4, color: 'var(--text-secondary)' }}>{ad.slot.replace(/_/g, ' ')}</span>
+                                <span style={{ fontSize: '0.6875rem', padding: '2px 6px', background: 'var(--bg-tertiary)', borderRadius: 4, color: 'var(--text-secondary)' }}>{slotLabel[ad.slot]}</span>
                             </div>
                             <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginTop: 4 }}>{ad.description}</div>
                             <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
                                 <span>{ad.placement.start_date} → {ad.placement.end_date}</span>
                                 <span>{ad.providerName}</span>
-                                <span>{t('marketing.ads.cities')}: {ad.targeting.cities.length > 0 ? ad.targeting.cities.join(', ') : 'All'}</span>
+                                <span>{t('marketing.ads.cities')}: {ad.targeting.cities.length > 0 ? ad.targeting.cities.join(', ') : t('marketing.ads.allCities')}</span>
                             </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, flexShrink: 0 }}>
@@ -222,11 +229,11 @@ export default function AdsPage() {
 
             {/* Create/Edit Ad Modal */}
             <FormModal open={showCreate} onClose={closeForm} title={editingAd ? `${t('marketing.ads.editAd')} — ${editingAd.title}` : t('marketing.ads.createNewAd')} submitLabel={editingAd ? t('marketing.ads.saveChanges') : t('marketing.ads.createAd')} onSubmit={handleSubmit}>
-                <FormField label={t('marketing.ads.titleEn')} required><input type="text" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={shared.formInput} placeholder="e.g. Summer Sale 50% OFF" /></FormField>
-                <FormField label={t('marketing.ads.titleAr')} required><input type="text" required value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} className={shared.formInput} placeholder="العنوان بالعربي" dir="rtl" /></FormField>
+                <FormField label={t('marketing.ads.titleEn')} required><input type="text" required value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={shared.formInput} placeholder={t('marketing.ads.titlePlaceholderEn')} /></FormField>
+                <FormField label={t('marketing.ads.titleAr')} required><input type="text" required value={form.title_ar} onChange={e => setForm(f => ({ ...f, title_ar: e.target.value }))} className={shared.formInput} placeholder={t('marketing.ads.titlePlaceholderAr')} dir="rtl" /></FormField>
                 <div className={shared.formGrid2}>
                     <FormField label={t('marketing.ads.adType')}><select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value as AdType }))} className={shared.formInput}><option value="banner">{typeLabel.banner}</option><option value="featured">{typeLabel.featured}</option><option value="top_search">{typeLabel.top_search}</option></select></FormField>
-                    <FormField label={t('marketing.ads.placement')}><select value={form.slot} onChange={e => setForm(f => ({ ...f, slot: e.target.value as AdSlot }))} className={shared.formInput}><option value="home_banner">Home Banner</option><option value="category_banner">Category Banner</option><option value="search_promoted">Search Promoted</option><option value="between_listings">Between Listings</option></select></FormField>
+                    <FormField label={t('marketing.ads.placement')}><select value={form.slot} onChange={e => setForm(f => ({ ...f, slot: e.target.value as AdSlot }))} className={shared.formInput}><option value="home_banner">{t('marketing.ads.slotHomeBanner')}</option><option value="category_banner">{t('marketing.ads.slotCategoryBanner')}</option><option value="search_promoted">{t('marketing.ads.slotSearchPromoted')}</option><option value="between_listings">{t('marketing.ads.slotBetweenListings')}</option></select></FormField>
                 </div>
                 <div className={shared.formGrid2}>
                     <FormField label={`${t('marketing.ads.price')} (${activeMarket.currency})`} required><input type="number" min="0" required value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} className={shared.formInput} placeholder="0" /></FormField>
@@ -239,7 +246,7 @@ export default function AdsPage() {
             </FormModal>
 
             {/* Delete Confirm */}
-            <ConfirmModal open={!!deleteAd} onClose={() => setDeleteAd(null)} onConfirm={handleDelete} title={t('marketing.ads.deleteAdTitle')} message={`Are you sure you want to delete "${deleteAd?.title}"? This action cannot be undone.`} confirmLabel={t('common.delete')} variant="danger" />
+            <ConfirmModal open={!!deleteAd} onClose={() => setDeleteAd(null)} onConfirm={handleDelete} title={t('marketing.ads.deleteAdTitle')} message={t('marketing.ads.deleteConfirmMessage').replace('{title}', deleteAd?.title ?? '')} confirmLabel={t('common.delete')} variant="danger" />
 
             {/* Analytics Detail */}
             <FormModal open={!!analyticsAd} onClose={() => setAnalyticsAd(null)} title={`${t('marketing.ads.analytics')} — ${analyticsAd?.title}`} submitLabel={t('common.close')} onSubmit={e => { e.preventDefault(); setAnalyticsAd(null); }}>

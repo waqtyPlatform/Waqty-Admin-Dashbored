@@ -132,7 +132,7 @@ export default function CountriesPage() {
     };
 
     const handleDelete = async (uuid: string) => {
-        if (!confirm('Are you sure you want to delete this item?')) return;
+        if (!confirm(t('settings.countries.confirmDelete'))) return;
         setActionMenuId(null);
         if (tab === 'countries') { await deleteCountry(uuid); refetchCountries(); }
         else if (tab === 'cities') { await deleteCity(uuid); refetchCities(); }
@@ -172,7 +172,7 @@ export default function CountriesPage() {
         }
 
         if (result) { setShowCreate(false); }
-        else { setFormError('Failed to create. Please check the details and try again.'); }
+        else { setFormError(t('settings.countries.failedCreate')); }
     };
 
     const handleUpdate = async (e: React.FormEvent) => {
@@ -199,7 +199,7 @@ export default function CountriesPage() {
         }
 
         if (result) { setEditTarget(null); }
-        else { setFormError('Failed to update. Please check the details and try again.'); }
+        else { setFormError(t('settings.countries.failedUpdate')); }
     };
 
     // ── Shared column builders ────────────────────────────
@@ -237,8 +237,8 @@ export default function CountriesPage() {
                         <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, minWidth: 170, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)', padding: '4px' }}>
                             <ActionItem icon={<Pencil size={14} />} label={t('common.edit')} onClick={() => { setActionMenuId(null); setEditTarget(row as unknown as CountryObject); }} />
                             {item.active
-                                ? <ActionItem icon={<ShieldOff size={14} />} label="Deactivate" onClick={() => handleToggle(row as unknown as CountryObject)} danger />
-                                : <ActionItem icon={<ShieldCheck size={14} />} label="Activate" onClick={() => handleToggle(row as unknown as CountryObject)} />
+                                ? <ActionItem icon={<ShieldOff size={14} />} label={t('common.deactivate')} onClick={() => handleToggle(row as unknown as CountryObject)} danger />
+                                : <ActionItem icon={<ShieldCheck size={14} />} label={t('common.activate')} onClick={() => handleToggle(row as unknown as CountryObject)} />
                             }
                             <ActionItem icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => handleDelete(item.uuid)} danger />
                         </div>
@@ -250,8 +250,8 @@ export default function CountriesPage() {
 
     const countryColumns: Column<CountryObject>[] = [
         nameCol<CountryObject>(),
-        { key: 'iso2', label: 'ISO2', render: r => r.iso2 ? <code style={{ fontWeight: 600 }}>{r.iso2}</code> : '—' },
-        { key: 'phone_code', label: 'Phone Code', render: r => r.phone_code ?? '—' },
+        { key: 'iso2', label: t('settings.countries.iso2'), render: r => r.iso2 ? <code style={{ fontWeight: 600 }}>{r.iso2}</code> : '—' },
+        { key: 'phone_code', label: t('settings.countries.phoneCode'), render: r => r.phone_code ?? '—' },
         statusCol<CountryObject>(),
         actionsCol<CountryObject>(),
     ];
@@ -269,14 +269,14 @@ export default function CountriesPage() {
     ];
 
     const currentLoading = tab === 'countries' ? countriesLoading : tab === 'cities' ? citiesLoading : governoratesLoading;
-    const tabTitle = tab === 'countries' ? t('settings.countries.title') : tab === 'cities' ? 'Cities' : 'Governorates';
+    const tabTitle = tab === 'countries' ? t('settings.countries.title') : tab === 'cities' ? t('settings.countries.citiesTitle') : t('settings.countries.governoratesTitle');
     const tabIcon  = tab === 'countries' ? <Globe size={24} /> : tab === 'cities' ? <Building2 size={24} /> : <MapPin size={24} />;
 
     const statusFilter = (
         <select value={activeFilter ?? 'all'} onChange={e => handleFilter('active', e.target.value)} className={shared.filterSelect}>
             <option value="all">{t('common.all')} {t('common.status')}</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
+            <option value="true">{t('common.active')}</option>
+            <option value="false">{t('common.inactive')}</option>
         </select>
     );
 
@@ -298,7 +298,7 @@ export default function CountriesPage() {
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border-color)' }}>
                 {(['countries', 'cities', 'governorates'] as Tab[]).map(tabKey => (
                     <button key={tabKey} onClick={() => handleTabChange(tabKey)} style={{ padding: '8px 20px', border: 'none', borderBottom: tab === tabKey ? '2px solid var(--color-primary-500)' : '2px solid transparent', background: 'transparent', color: tab === tabKey ? 'var(--color-primary-500)' : 'var(--text-secondary)', fontWeight: tab === tabKey ? 600 : 400, cursor: 'pointer', fontSize: '0.875rem', marginBottom: -1, transition: 'color 0.15s' }}>
-                        {tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}
+                        {tabKey === 'countries' ? t('settings.countries.tabCountries') : tabKey === 'cities' ? t('settings.countries.tabCities') : t('settings.countries.tabGovernorates')}
                     </button>
                 ))}
             </div>
@@ -312,14 +312,14 @@ export default function CountriesPage() {
             )}
             {tab === 'cities' && (
                 <DataTable<CityObject> columns={cityColumns} data={cities ?? []} loading={currentLoading}
-                    searchKeys={['name']} searchPlaceholder="Search cities..."
+                    searchKeys={['name']} searchPlaceholder={t('settings.countries.searchCities')}
                     getRowKey={r => r.uuid} filters={statusFilter}
                     serverPagination currentPage={page} totalPages={activeMeta?.pagination?.last_page ?? 1}
                     totalCount={activeMeta?.pagination?.total} onPageChange={setPage} />
             )}
             {tab === 'governorates' && (
                 <DataTable<GovernorateObject> columns={governorateColumns} data={governorates ?? []} loading={currentLoading}
-                    searchKeys={['name']} searchPlaceholder="Search governorates..."
+                    searchKeys={['name']} searchPlaceholder={t('settings.countries.searchGovernorates')}
                     getRowKey={r => r.uuid} filters={statusFilter}
                     serverPagination currentPage={page} totalPages={activeMeta?.pagination?.last_page ?? 1}
                     totalCount={activeMeta?.pagination?.total} onPageChange={setPage} />
@@ -329,33 +329,33 @@ export default function CountriesPage() {
             <FormModal
                 open={showCreate}
                 onClose={() => { setShowCreate(false); setFormError(null); }}
-                title={`Add ${tab === 'countries' ? 'Country' : tab === 'cities' ? 'City' : 'Governorate'}`}
+                title={tab === 'countries' ? t('settings.countries.addCountry') : tab === 'cities' ? t('settings.countries.addCity') : t('settings.countries.addGovernorate')}
                 submitLabel={isCreating ? t('common.saving') : t('settings.countries.add')}
                 onSubmit={handleCreate}
             >
                 {formError && <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>}
                 <div className={shared.formGrid2}>
                     <FormField label={t('settings.countries.nameEn')} required>
-                        <input name="name_en" type="text" required className={shared.formInput} placeholder="English name" />
+                        <input name="name_en" type="text" required className={shared.formInput} placeholder={t('settings.countries.namePlaceholderEn')} />
                     </FormField>
                     <FormField label={t('settings.countries.nameAr')} required>
-                        <input name="name_ar" type="text" required className={shared.formInput} placeholder="الاسم بالعربية" dir="rtl" />
+                        <input name="name_ar" type="text" required className={shared.formInput} placeholder={t('settings.countries.namePlaceholderAr')} dir="rtl" />
                     </FormField>
                 </div>
                 {tab === 'countries' && (
                     <div className={shared.formGrid2}>
-                        <FormField label="ISO2 Code">
+                        <FormField label={t('settings.countries.iso2Code')}>
                             <input name="iso2" type="text" className={shared.formInput} placeholder="EG" maxLength={2} />
                         </FormField>
-                        <FormField label="Phone Code">
+                        <FormField label={t('settings.countries.phoneCode')}>
                             <input name="phone_code" type="text" className={shared.formInput} placeholder="+20" />
                         </FormField>
                     </div>
                 )}
                 {(tab === 'cities' || tab === 'governorates') && (
-                    <FormField label="Country" required>
+                    <FormField label={t('settings.countries.country')} required>
                         <select name="country_uuid" required className={shared.formInput}>
-                            <option value="">— Select country —</option>
+                            <option value="">{t('settings.countries.selectCountry')}</option>
                             {(allCountries ?? []).map(c => (
                                 <option key={c.uuid} value={c.uuid}>{c.name.en}</option>
                             ))}
@@ -383,10 +383,10 @@ export default function CountriesPage() {
                 </div>
                 {tab === 'countries' && editTarget && (
                     <div className={shared.formGrid2}>
-                        <FormField label="ISO2 Code">
+                        <FormField label={t('settings.countries.iso2Code')}>
                             <input name="iso2" type="text" className={shared.formInput} defaultValue={(editTarget as CountryObject).iso2 ?? ''} maxLength={2} />
                         </FormField>
-                        <FormField label="Phone Code">
+                        <FormField label={t('settings.countries.phoneCode')}>
                             <input name="phone_code" type="text" className={shared.formInput} defaultValue={(editTarget as CountryObject).phone_code ?? ''} />
                         </FormField>
                     </div>

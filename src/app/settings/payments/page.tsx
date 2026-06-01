@@ -71,7 +71,7 @@ export default function PaymentsPage() {
         };
         const result = await updatePayment({ uuid: editTarget.uuid, body });
         if (result) { setEditTarget(null); refetch(); }
-        else setFormError('Failed to update payment.');
+        else setFormError(t('settings.payments.failedUpdate'));
     };
 
     const handleDelete = async () => {
@@ -96,36 +96,36 @@ export default function PaymentsPage() {
         },
         {
             key: 'payment_method',
-            label: 'Method',
+            label: t('settings.payments.method'),
             render: r => (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                     <CreditCard size={14} />
-                    {r.payment_method === 'paymob' ? 'Paymob' : 'Cash'}
+                    {r.payment_method === 'paymob' ? 'Paymob' : t('settings.payments.cash')}
                 </span>
             ),
         },
         {
             key: 'amount',
-            label: 'Amount',
+            label: t('common.amount'),
             render: r => <span style={{ fontWeight: 600 }}>EGP {Number(r.amount).toFixed(2)}</span>,
         },
         {
             key: 'status',
-            label: 'Status',
+            label: t('common.status'),
             render: r => (
                 <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600, background: `color-mix(in srgb, ${statusColors[r.status]} 15%, transparent)`, color: statusColors[r.status] }}>
-                    {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                    {t(`settings.payments.${r.status}`)}
                 </span>
             ),
         },
         {
             key: 'transaction_id',
-            label: 'Transaction ID',
+            label: t('settings.payments.transactionId'),
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{r.transaction_id ?? '—'}</span>,
         },
         {
             key: 'created_at',
-            label: 'Date',
+            label: t('common.date'),
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{new Date(r.created_at).toLocaleDateString()}</span>,
         },
         {
@@ -142,13 +142,13 @@ export default function PaymentsPage() {
                             <PermissionGate module="settings" action="edit">
                                 <button onClick={() => { setEditTarget(r); setActionMenuId(null); }}
                                     style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}>
-                                    <Pencil size={14} /> Edit
+                                    <Pencil size={14} /> {t('common.edit')}
                                 </button>
                             </PermissionGate>
                             <PermissionGate module="settings" action="delete">
                                 <button onClick={() => { setDeleteTarget(r); setActionMenuId(null); }}
                                     style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}>
-                                    <Trash2 size={14} /> Delete
+                                    <Trash2 size={14} /> {t('common.delete')}
                                 </button>
                             </PermissionGate>
                         </div>
@@ -162,15 +162,15 @@ export default function PaymentsPage() {
     const filterControls = (
         <div style={{ display: 'flex', gap: 8 }}>
             <select value={statusFilter ?? 'all'} onChange={e => setFilter('status', e.target.value)} className={shared.filterSelect}>
-                <option value="all">All Statuses</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-                <option value="failed">Failed</option>
-                <option value="refunded">Refunded</option>
+                <option value="all">{t('settings.payments.allStatuses')}</option>
+                <option value="pending">{t('settings.payments.pending')}</option>
+                <option value="completed">{t('settings.payments.completed')}</option>
+                <option value="failed">{t('settings.payments.failed')}</option>
+                <option value="refunded">{t('settings.payments.refunded')}</option>
             </select>
             <select value={methodFilter ?? 'all'} onChange={e => setFilter('payment_method', e.target.value)} className={shared.filterSelect}>
-                <option value="all">All Methods</option>
-                <option value="cash">Cash</option>
+                <option value="all">{t('settings.payments.allMethods')}</option>
+                <option value="cash">{t('settings.payments.cash')}</option>
                 <option value="paymob">Paymob</option>
             </select>
         </div>
@@ -181,7 +181,7 @@ export default function PaymentsPage() {
             <div className={shared.pageHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <CreditCard size={24} />
-                    <h1 className={shared.pageTitle}>Payments</h1>
+                    <h1 className={shared.pageTitle}>{t('settings.payments.pageTitle')}</h1>
                 </div>
             </div>
 
@@ -190,7 +190,7 @@ export default function PaymentsPage() {
                 data={payments ?? []}
                 loading={loading}
                 searchKeys={['uuid', 'transaction_id']}
-                searchPlaceholder="Search by UUID or transaction ID…"
+                searchPlaceholder={t('settings.payments.searchPlaceholder')}
                 getRowKey={r => r.uuid}
                 filters={filterControls}
                 serverPagination
@@ -205,34 +205,34 @@ export default function PaymentsPage() {
                 <FormModal
                     open={!!editTarget}
                     onClose={() => { setEditTarget(null); setFormError(null); }}
-                    title="Edit Payment"
-                    submitLabel={updating ? t('common.saving') : 'Save Changes'}
+                    title={t('settings.payments.editPayment')}
+                    submitLabel={updating ? t('common.saving') : t('common.saveChanges')}
                     onSubmit={handleUpdate}
                 >
                     {formError && (
                         <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>
                     )}
-                    <FormField label="Payment Method" required>
+                    <FormField label={t('settings.payments.paymentMethod')} required>
                         <select name="payment_method" defaultValue={editTarget.payment_method} className={shared.filterSelect} style={{ width: '100%' }}>
-                            <option value="cash">Cash</option>
+                            <option value="cash">{t('settings.payments.cash')}</option>
                             <option value="paymob">Paymob</option>
                         </select>
                     </FormField>
-                    <FormField label="Amount (EGP)" required>
+                    <FormField label={t('settings.payments.amountEgp')} required>
                         <input name="amount" type="number" defaultValue={String(editTarget.amount)} required className={shared.filterSelect} style={{ width: '100%' }} />
                     </FormField>
-                    <FormField label="Status" required>
+                    <FormField label={t('common.status')} required>
                         <select name="status" defaultValue={editTarget.status} className={shared.filterSelect} style={{ width: '100%' }}>
-                            <option value="pending">Pending</option>
-                            <option value="completed">Completed</option>
-                            <option value="failed">Failed</option>
-                            <option value="refunded">Refunded</option>
+                            <option value="pending">{t('settings.payments.pending')}</option>
+                            <option value="completed">{t('settings.payments.completed')}</option>
+                            <option value="failed">{t('settings.payments.failed')}</option>
+                            <option value="refunded">{t('settings.payments.refunded')}</option>
                         </select>
                     </FormField>
-                    <FormField label="Transaction ID">
+                    <FormField label={t('settings.payments.transactionId')}>
                         <input name="transaction_id" defaultValue={editTarget.transaction_id ?? ''} className={shared.filterSelect} style={{ width: '100%' }} />
                     </FormField>
-                    <FormField label="Notes">
+                    <FormField label={t('settings.payments.notes')}>
                         <input name="notes" defaultValue={editTarget.notes ?? ''} className={shared.filterSelect} style={{ width: '100%' }} />
                     </FormField>
                 </FormModal>
@@ -243,13 +243,13 @@ export default function PaymentsPage() {
                 <FormModal
                     open={!!deleteTarget}
                     onClose={() => setDeleteTarget(null)}
-                    title="Delete Payment"
-                    submitLabel={deleting ? 'Deleting…' : 'Delete'}
+                    title={t('settings.payments.deletePayment')}
+                    submitLabel={deleting ? t('common.loading') : t('common.delete')}
                     onSubmit={async e => { e.preventDefault(); await handleDelete(); }}
                     submitVariant="danger"
                 >
                     <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                        Are you sure you want to delete payment <strong style={{ fontFamily: 'monospace' }}>{deleteTarget.uuid.slice(0, 8)}…</strong>? This action cannot be undone.
+                        {t('settings.payments.confirmDeletePrefix')} <strong style={{ fontFamily: 'monospace' }}>{deleteTarget.uuid.slice(0, 8)}…</strong>{t('settings.payments.confirmDeleteSuffix')}
                     </p>
                 </FormModal>
             )}

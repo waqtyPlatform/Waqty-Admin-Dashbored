@@ -119,13 +119,13 @@ export default function CategoriesPage() {
             const fd = buildFormData(el);
             const result = await createCat(fd);
             if (result) { resetForm(); refetchCats(); }
-            else setFormError('Failed to create category.');
+            else setFormError(t('content.categories.failedCreate'));
         } else {
             const catUuid = (el.elements.namedItem('category_uuid') as HTMLSelectElement)?.value ?? '';
             const fd = buildFormData(el, catUuid);
             const result = await createSub(fd);
             if (result) { resetForm(); refetchSubs(); }
-            else setFormError('Failed to create subcategory.');
+            else setFormError(t('content.categories.failedCreateSub'));
         }
     };
 
@@ -138,14 +138,14 @@ export default function CategoriesPage() {
             const fd = buildFormData(el);
             const result = await updateCat({ uuid: editTarget.uuid, fd });
             if (result) { resetForm(); refetchCats(); }
-            else setFormError('Failed to update category.');
+            else setFormError(t('content.categories.failedUpdate'));
         } else {
             const sub = editTarget as AdminSubcategoryObject;
             const catUuid = (el.elements.namedItem('category_uuid') as HTMLSelectElement)?.value ?? sub.category_uuid;
             const fd = buildFormData(el, catUuid);
             const result = await updateSub({ uuid: editTarget.uuid, fd });
             if (result) { resetForm(); refetchSubs(); }
-            else setFormError('Failed to update subcategory.');
+            else setFormError(t('content.categories.failedUpdateSub'));
         }
     };
 
@@ -179,25 +179,25 @@ export default function CategoriesPage() {
                     <PermissionGate module="content" action="edit">
                         <button onClick={() => { setEditTarget(row); setActionMenuId(null); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}>
-                            <Pencil size={14} /> Edit
+                            <Pencil size={14} /> {t('common.edit')}
                         </button>
                         <button onClick={() => handleToggle(row.uuid, !row.active)}
                             style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}>
                             {row.active ? <ToggleLeft size={14} /> : <ToggleRight size={14} />}
-                            {row.active ? 'Deactivate' : 'Activate'}
+                            {row.active ? t('common.deactivate') : t('common.activate')}
                         </button>
                     </PermissionGate>
                     {row.deleted_at
                         ? <PermissionGate module="content" action="edit">
                             <button onClick={() => handleRestore(row.uuid)}
                                 style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}>
-                                <RotateCcw size={14} /> Restore
+                                <RotateCcw size={14} /> {t('common.restore')}
                             </button>
                           </PermissionGate>
                         : <PermissionGate module="content" action="delete">
                             <button onClick={() => handleDelete(row.uuid)}
                                 style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}>
-                                <Trash2 size={14} /> Delete
+                                <Trash2 size={14} /> {t('common.delete')}
                             </button>
                           </PermissionGate>
                     }
@@ -210,7 +210,7 @@ export default function CategoriesPage() {
     const catColumns: Column<AdminCategoryObject>[] = [
         {
             key: 'name',
-            label: 'Name',
+            label: t('common.name'),
             render: r => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {r.image_url
@@ -224,21 +224,21 @@ export default function CategoriesPage() {
                 </div>
             ),
         },
-        { key: 'sort_order', label: 'Order', render: r => <span style={{ color: 'var(--text-secondary)' }}>{r.sort_order ?? '—'}</span> },
-        { key: 'subcategories_count', label: 'Subcategories', render: r => <span style={{ color: 'var(--text-secondary)' }}>{r.subcategories_count ?? '—'}</span> },
+        { key: 'sort_order', label: t('content.categories.order'), render: r => <span style={{ color: 'var(--text-secondary)' }}>{r.sort_order ?? '—'}</span> },
+        { key: 'subcategories_count', label: t('content.categories.subcategories'), render: r => <span style={{ color: 'var(--text-secondary)' }}>{r.subcategories_count ?? '—'}</span> },
         {
             key: 'active',
-            label: 'Status',
+            label: t('common.status'),
             render: r => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <StatusBadge status={r.active ? 'active' : 'inactive'} />
                     <PermissionGate module="content" action="edit">
                         <button
                             onClick={e => { e.stopPropagation(); handleToggle(r.uuid, !r.active); }}
-                            title={r.active ? 'Deactivate' : 'Activate'}
+                            title={r.active ? t('common.deactivate') : t('common.activate')}
                             style={{ padding: '3px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: '0.75rem', color: r.active ? 'var(--color-error)' : 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 4 }}>
                             {r.active ? <ToggleLeft size={14} /> : <ToggleRight size={14} />}
-                            {r.active ? 'Disable' : 'Enable'}
+                            {r.active ? t('common.disable') : t('common.enable')}
                         </button>
                     </PermissionGate>
                 </div>
@@ -250,7 +250,7 @@ export default function CategoriesPage() {
     const subColumns: Column<AdminSubcategoryObject>[] = [
         {
             key: 'name',
-            label: 'Name',
+            label: t('common.name'),
             render: r => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {r.image_url
@@ -266,25 +266,25 @@ export default function CategoriesPage() {
         },
         {
             key: 'category',
-            label: 'Category',
+            label: t('content.categories.category'),
             render: r => r.category
                 ? <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>{r.category.name.en}</span>
                 : <span style={{ color: 'var(--text-tertiary)' }}>—</span>,
         },
-        { key: 'sort_order', label: 'Order', render: r => <span style={{ color: 'var(--text-secondary)' }}>{r.sort_order ?? '—'}</span> },
+        { key: 'sort_order', label: t('content.categories.order'), render: r => <span style={{ color: 'var(--text-secondary)' }}>{r.sort_order ?? '—'}</span> },
         {
             key: 'active',
-            label: 'Status',
+            label: t('common.status'),
             render: r => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <StatusBadge status={r.active ? 'active' : 'inactive'} />
                     <PermissionGate module="content" action="edit">
                         <button
                             onClick={e => { e.stopPropagation(); handleToggle(r.uuid, !r.active); }}
-                            title={r.active ? 'Deactivate' : 'Activate'}
+                            title={r.active ? t('common.deactivate') : t('common.activate')}
                             style={{ padding: '3px 8px', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-secondary)', cursor: 'pointer', fontSize: '0.75rem', color: r.active ? 'var(--color-error)' : 'var(--color-success)', display: 'flex', alignItems: 'center', gap: 4 }}>
                             {r.active ? <ToggleLeft size={14} /> : <ToggleRight size={14} />}
-                            {r.active ? 'Disable' : 'Enable'}
+                            {r.active ? t('common.disable') : t('common.enable')}
                         </button>
                     </PermissionGate>
                 </div>
@@ -297,8 +297,8 @@ export default function CategoriesPage() {
     const statusFilter = (
         <select value={activeFilter ?? 'all'} onChange={e => setFilter('active', e.target.value)} className={shared.filterSelect}>
             <option value="all">{t('common.all')} {t('common.status')}</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
+            <option value="true">{t('common.active')}</option>
+            <option value="false">{t('common.inactive')}</option>
         </select>
     );
 
@@ -325,13 +325,13 @@ export default function CategoriesPage() {
 
     const NameFields = ({ defaultAr = '', defaultEn = '' }) => (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <FormField label="Name (English)" required>
+            <FormField label={t('content.categories.nameEn')} required>
                 <input name="name_en" type="text" required defaultValue={defaultEn}
-                    placeholder="e.g. Hair Care" style={fieldStyle} onFocus={focusField} onBlur={blurField} />
+                    placeholder={t('content.categories.namePlaceholderEn')} style={fieldStyle} onFocus={focusField} onBlur={blurField} />
             </FormField>
-            <FormField label="Name (Arabic)" required>
+            <FormField label={t('content.categories.nameAr')} required>
                 <input name="name_ar" type="text" required defaultValue={defaultAr}
-                    placeholder="مثال: العناية" dir="rtl" style={fieldStyle} onFocus={focusField} onBlur={blurField} />
+                    placeholder={t('content.categories.namePlaceholderAr')} dir="rtl" style={fieldStyle} onFocus={focusField} onBlur={blurField} />
             </FormField>
         </div>
     );
@@ -339,21 +339,21 @@ export default function CategoriesPage() {
     const CommonFields = ({ defaultOrder = '', defaultActive = 'true' }) => (
         <>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <FormField label="Sort Order">
+                <FormField label={t('content.categories.sortOrder')}>
                     <input name="sort_order" type="number" min={0} defaultValue={defaultOrder}
                         placeholder="0" style={fieldStyle} onFocus={focusField} onBlur={blurField} />
                 </FormField>
-                <FormField label="Status">
+                <FormField label={t('common.status')}>
                     <select name="active" defaultValue={defaultActive}
                         style={{ ...fieldStyle, cursor: 'pointer' }}
                         onFocus={focusField} onBlur={blurField}>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
+                        <option value="true">{t('common.active')}</option>
+                        <option value="false">{t('common.inactive')}</option>
                     </select>
                 </FormField>
             </div>
 
-            <FormField label="Category Image">
+            <FormField label={t('content.categories.image')}>
                 <label style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                     gap: 10, padding: imagePreview ? 8 : '22px 16px',
@@ -366,7 +366,7 @@ export default function CategoriesPage() {
                             <img src={imagePreview} alt="preview"
                                 style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 8 }} />
                             <span style={{ fontSize: '0.75rem', color: 'var(--color-primary-500)', fontWeight: 500 }}>
-                                Click to replace image
+                                {t('content.categories.clickToReplace')}
                             </span>
                         </>
                     ) : (
@@ -381,10 +381,10 @@ export default function CategoriesPage() {
                             </div>
                             <div style={{ textAlign: 'center' }}>
                                 <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-                                    Click to upload image
+                                    {t('content.categories.clickToUpload')}
                                 </div>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 2 }}>
-                                    JPEG, PNG or WebP · max 2 MB
+                                    {t('content.categories.imageHint')}
                                 </div>
                             </div>
                         </>
@@ -402,11 +402,11 @@ export default function CategoriesPage() {
             <div className={shared.pageHeader}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     {tab === 'categories' ? <Tag size={24} /> : <Layers size={24} />}
-                    <h1 className={shared.pageTitle}>{tab === 'categories' ? t('content.categories.title') : 'Subcategories'}</h1>
+                    <h1 className={shared.pageTitle}>{tab === 'categories' ? t('content.categories.title') : t('content.categories.subcategoriesTitle')}</h1>
                 </div>
                 <PermissionGate module="content" action="create">
                     <button onClick={() => setShowCreate(true)} className={shared.addBtn}>
-                        <Plus size={16} /> {tab === 'categories' ? t('content.categories.add') : 'Add Subcategory'}
+                        <Plus size={16} /> {tab === 'categories' ? t('content.categories.add') : t('content.categories.addSubcategory')}
                     </button>
                 </PermissionGate>
             </div>
@@ -415,7 +415,7 @@ export default function CategoriesPage() {
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '1px solid var(--border-color)' }}>
                 {(['categories', 'subcategories'] as Tab[]).map(tabKey => (
                     <button key={tabKey} onClick={() => handleTabChange(tabKey)} style={{ padding: '8px 20px', border: 'none', borderBottom: tab === tabKey ? '2px solid var(--color-primary-500)' : '2px solid transparent', background: 'transparent', color: tab === tabKey ? 'var(--color-primary-500)' : 'var(--text-secondary)', fontWeight: tab === tabKey ? 600 : 400, cursor: 'pointer', fontSize: '0.875rem', marginBottom: -1, transition: 'color 0.15s' }}>
-                        {tabKey.charAt(0).toUpperCase() + tabKey.slice(1)}
+                        {tabKey === 'categories' ? t('content.categories.tabCategories') : t('content.categories.tabSubcategories')}
                     </button>
                 ))}
             </div>
@@ -432,7 +432,7 @@ export default function CategoriesPage() {
             {tab === 'subcategories' && (
                 <DataTable<AdminSubcategoryObject>
                     columns={subColumns} data={subcategories ?? []} loading={currentLoading}
-                    searchKeys={['name']} searchPlaceholder="Search subcategories…"
+                    searchKeys={['name']} searchPlaceholder={t('content.categories.searchSubPlaceholder')}
                     getRowKey={r => r.uuid} filters={statusFilter}
                     serverPagination currentPage={page} totalPages={activeMeta?.pagination?.last_page ?? 1}
                     totalCount={activeMeta?.pagination?.total} onPageChange={setPage}
@@ -443,18 +443,18 @@ export default function CategoriesPage() {
             <FormModal
                 open={showCreate}
                 onClose={resetForm}
-                title={tab === 'categories' ? 'Add Category' : 'Add Subcategory'}
-                submitLabel={isSaving ? t('common.saving') : 'Create'}
+                title={tab === 'categories' ? t('content.categories.addCategory') : t('content.categories.addSubcategory')}
+                submitLabel={isSaving ? t('common.saving') : t('common.create')}
                 onSubmit={handleCreate}
             >
                 {formError && <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>}
                 <NameFields />
                 {tab === 'subcategories' && (
-                    <FormField label="Category" required>
+                    <FormField label={t('content.categories.category')} required>
                         <select name="category_uuid" required
                             style={{ ...fieldStyle, cursor: 'pointer' }}
                             onFocus={focusField} onBlur={blurField}>
-                            <option value="">Select category…</option>
+                            <option value="">{t('content.categories.selectCategory')}</option>
                             {(allCategories ?? []).map(c => <option key={c.uuid} value={c.uuid}>{c.name.en}</option>)}
                         </select>
                     </FormField>
@@ -467,14 +467,14 @@ export default function CategoriesPage() {
                 <FormModal
                     open={!!editTarget}
                     onClose={resetForm}
-                    title={tab === 'categories' ? 'Edit Category' : 'Edit Subcategory'}
-                    submitLabel={isSaving ? t('common.saving') : 'Save Changes'}
+                    title={tab === 'categories' ? t('content.categories.editCategory') : t('content.categories.editSubcategory')}
+                    submitLabel={isSaving ? t('common.saving') : t('common.saveChanges')}
                     onSubmit={handleEdit}
                 >
                     {formError && <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>}
                     <NameFields defaultEn={editTarget.name.en} defaultAr={editTarget.name.ar} />
                     {isEditSub && (
-                        <FormField label="Category" required>
+                        <FormField label={t('content.categories.category')} required>
                             <select name="category_uuid" defaultValue={(editTarget as AdminSubcategoryObject).category_uuid}
                                 style={{ ...fieldStyle, cursor: 'pointer' }}
                                 onFocus={focusField} onBlur={blurField}>
@@ -488,7 +488,7 @@ export default function CategoriesPage() {
                     />
                     {isEditCat && (editTarget as AdminCategoryObject).image_url && !imagePreview && (
                         <div style={{ marginTop: -4 }}>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Current image:</span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>{t('content.categories.currentImage')}</span>
                             <div style={{ position: 'relative', display: 'inline-block' }}>
                                 <img src={(editTarget as AdminCategoryObject).image_url!} alt="current"
                                     style={{ height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }} />

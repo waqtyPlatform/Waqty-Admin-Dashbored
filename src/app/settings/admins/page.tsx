@@ -77,7 +77,7 @@ export default function AdminsPage() {
             setShowCreate(false);
             refetch();
         } else {
-            setFormError('Failed to create admin. Please check the details and try again.');
+            setFormError(t('settings.admins.failedCreate'));
         }
     };
 
@@ -96,7 +96,7 @@ export default function AdminsPage() {
             setEditTarget(null);
             refetch();
         } else {
-            setFormError('Failed to update admin. Please check the details and try again.');
+            setFormError(t('settings.admins.failedUpdate'));
         }
     };
 
@@ -135,8 +135,8 @@ export default function AdminsPage() {
                         <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, minWidth: 170, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)', padding: '4px' }}>
                             <ActionItem icon={<Pencil size={14} />} label={t('common.edit')} onClick={() => { setActionMenuId(null); setEditTarget(row); }} />
                             {row.active
-                                ? <ActionItem icon={<ShieldOff size={14} />} label="Deactivate" onClick={() => handleToggleActive(row)} danger />
-                                : <ActionItem icon={<ShieldCheck size={14} />} label="Activate" onClick={() => handleToggleActive(row)} />
+                                ? <ActionItem icon={<ShieldOff size={14} />} label={t('common.deactivate')} onClick={() => handleToggleActive(row)} danger />
+                                : <ActionItem icon={<ShieldCheck size={14} />} label={t('common.activate')} onClick={() => handleToggleActive(row)} />
                             }
                         </div>
                     )}
@@ -169,8 +169,8 @@ export default function AdminsPage() {
                 filters={
                     <select value={activeFilter ?? 'all'} onChange={e => setFilter('active', e.target.value)} className={shared.filterSelect}>
                         <option value="all">{t('common.all')} {t('common.status')}</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
+                        <option value="true">{t('common.active')}</option>
+                        <option value="false">{t('common.inactive')}</option>
                     </select>
                 }
             />
@@ -214,8 +214,8 @@ export default function AdminsPage() {
                         <input name="email" type="email" required defaultValue={editTarget?.email} className={shared.formInput} />
                     </FormField>
                 </div>
-                <FormField label="New Password">
-                    <input name="password" type="password" minLength={8} className={shared.formInput} placeholder="Leave blank to keep current" />
+                <FormField label={t('settings.admins.newPassword')}>
+                    <input name="password" type="password" minLength={8} className={shared.formInput} placeholder={t('settings.admins.leaveBlank')} />
                 </FormField>
             </FormModal>
         </div>

@@ -106,7 +106,7 @@ export default function ProvidersPage() {
     const columns: Column<AdminProviderObject>[] = [
         {
             key: 'name',
-            label: 'Provider',
+            label: t('providers.colProvider'),
             render: r => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--color-primary-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary-600)', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0 }}>
@@ -121,24 +121,24 @@ export default function ProvidersPage() {
         },
         {
             key: 'phone',
-            label: 'Phone',
+            label: t('common.phone'),
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{r.phone}</span>,
         },
         {
             key: 'category',
-            label: 'Category',
+            label: t('providers.category'),
             render: r => r.category
                 ? <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>{r.category.name}</span>
                 : <span style={{ color: 'var(--text-tertiary)' }}>—</span>,
         },
         {
             key: 'status',
-            label: 'Status',
+            label: t('common.status'),
             render: r => <StatusBadge status={getProviderStatus(r)} />,
         },
         {
             key: 'created_at',
-            label: 'Joined',
+            label: t('providers.detail.joined'),
             render: r => <span style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>{new Date(r.created_at).toLocaleDateString()}</span>,
         },
         {
@@ -156,26 +156,26 @@ export default function ProvidersPage() {
                                 <>
                                     <PermissionGate module="providers" action="edit">
                                         {r.active
-                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'deactivate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldOff size={14} /> Deactivate</button>
-                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'activate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> Activate</button>
+                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'deactivate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldOff size={14} /> {t('common.deactivate')}</button>
+                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'activate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> {t('providers.activate')}</button>
                                         }
                                         {r.blocked
-                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unblock', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> Unblock</button>
-                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'block', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> Block</button>
+                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unblock', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> {t('providers.unblock')}</button>
+                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'block', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> {t('providers.block')}</button>
                                         }
                                         {r.banned
-                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> Unban</button>
-                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'ban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Ban size={14} /> Ban</button>
+                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> {t('common.unban')}</button>
+                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'ban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Ban size={14} /> {t('common.ban')}</button>
                                         }
                                     </PermissionGate>
                                     <PermissionGate module="providers" action="delete">
-                                        <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'delete', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> Delete</button>
+                                        <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'delete', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> {t('providers.softDelete')}</button>
                                     </PermissionGate>
                                 </>
                             )}
                             {r.deleted_at && (
                                 <PermissionGate module="providers" action="edit">
-                                    <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'restore', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> Restore</button>
+                                    <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'restore', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> {t('providers.restore')}</button>
                                 </PermissionGate>
                             )}
                         </div>
@@ -188,22 +188,34 @@ export default function ProvidersPage() {
     const filterControls = (
         <div style={{ display: 'flex', gap: 8 }}>
             <select value={activeFilter ?? 'all'} onChange={e => setFilter('active', e.target.value)} className={shared.filterSelect}>
-                <option value="all">All Status</option>
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
+                <option value="all">{t('common.allStatus')}</option>
+                <option value="true">{t('common.active')}</option>
+                <option value="false">{t('common.inactive')}</option>
             </select>
             <select value={blockedFilter ?? 'all'} onChange={e => setFilter('blocked', e.target.value)} className={shared.filterSelect}>
-                <option value="all">All Blocked</option>
-                <option value="true">Blocked</option>
-                <option value="false">Not Blocked</option>
+                <option value="all">{t('providers.allBlocked')}</option>
+                <option value="true">{t('common.blocked')}</option>
+                <option value="false">{t('providers.notBlocked')}</option>
             </select>
             <select value={bannedFilter ?? 'all'} onChange={e => setFilter('banned', e.target.value)} className={shared.filterSelect}>
-                <option value="all">All Banned</option>
-                <option value="true">Banned</option>
-                <option value="false">Not Banned</option>
+                <option value="all">{t('providers.allBanned')}</option>
+                <option value="true">{t('common.banned')}</option>
+                <option value="false">{t('providers.notBanned')}</option>
             </select>
         </div>
     );
+
+    const actionVerb: Record<string, string> = {
+        activate: t('providers.activate'),
+        deactivate: t('common.deactivate'),
+        block: t('providers.block'),
+        unblock: t('providers.unblock'),
+        ban: t('common.ban'),
+        unban: t('common.unban'),
+        delete: t('providers.softDelete'),
+        restore: t('providers.restore'),
+    };
+    const confirmVerb = confirmAction ? (actionVerb[confirmAction.action] ?? confirmAction.action) : '';
 
     const isDanger = confirmAction?.action === 'delete' || confirmAction?.action === 'ban' || confirmAction?.action === 'block';
 
@@ -237,16 +249,18 @@ export default function ProvidersPage() {
                 <FormModal
                     open={!!confirmAction}
                     onClose={() => setConfirmAction(null)}
-                    title={`${confirmAction.action.charAt(0).toUpperCase() + confirmAction.action.slice(1)} Provider`}
-                    submitLabel={actionLoading ? 'Processing…' : confirmAction.action.charAt(0).toUpperCase() + confirmAction.action.slice(1)}
+                    title={`${confirmVerb} ${t('providers.providerWord')}`}
+                    submitLabel={actionLoading ? t('common.processing') : confirmVerb}
                     onSubmit={async e => { e.preventDefault(); await handleConfirm(); }}
                     submitVariant={isDanger ? 'danger' : 'primary'}
                 >
                     <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
-                        Are you sure you want to <strong>{confirmAction.action}</strong> provider <strong>&ldquo;{confirmAction.name}&rdquo;</strong>?
-                        {confirmAction.action === 'delete' && ' The provider data will be preserved but hidden from the platform.'}
-                        {confirmAction.action === 'block' && ' The provider will not be able to log in.'}
-                        {confirmAction.action === 'ban' && ' The provider will be permanently banned from the platform.'}
+                        {t('providers.confirmBody')
+                            .replace('{action}', confirmVerb.toLowerCase())
+                            .replace('{name}', confirmAction.name)}
+                        {confirmAction.action === 'delete' && t('providers.confirmDeleteNote')}
+                        {confirmAction.action === 'block' && t('providers.confirmBlockNote')}
+                        {confirmAction.action === 'ban' && t('providers.confirmBanNote')}
                     </p>
                 </FormModal>
             )}

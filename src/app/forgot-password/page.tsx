@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
 
                 {sent ? (
                     <div style={{ textAlign: 'center', padding: 20, background: 'var(--color-success-light)', borderRadius: 8, fontSize: '0.875rem', color: '#065f46' }}>
-                        Reset code sent to <strong>{email}</strong>. Check your inbox.
+                        {t('auth.resetCodeSentPrefix')} <strong>{email}</strong>{t('auth.resetCodeSentSuffix')}
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -45,7 +45,7 @@ export default function ForgotPasswordPage() {
                             <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="admin@hagzy.com" style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: 8, fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' }} />
                         </div>
                         <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
-                            {loading ? 'Sending...' : t('auth.sendCode')}
+                            {loading ? t('auth.sending') : t('auth.sendCode')}
                         </button>
                     </form>
                 )}

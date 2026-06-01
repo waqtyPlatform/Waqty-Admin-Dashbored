@@ -77,7 +77,7 @@ export default function FeaturedPage() {
             }}>
                 <FormField label={t('marketing.featured.providerName')} required><input name="provider" type="text" required className={shared.formInput} placeholder="e.g. Glamour Studio" /></FormField>
                 <div className={shared.formGrid2}>
-                    <FormField label={t('marketing.featured.category')}><select name="category" className={shared.formInput}><option value="Salon">Salon</option><option value="Barber">Barber</option><option value="Clinic">Clinic</option><option value="Spa">Spa</option></select></FormField>
+                    <FormField label={t('marketing.featured.category')}><select name="category" className={shared.formInput}><option value="Salon">{t('marketing.featured.catSalon')}</option><option value="Barber">{t('marketing.featured.catBarber')}</option><option value="Clinic">{t('marketing.featured.catClinic')}</option><option value="Spa">{t('marketing.featured.catSpa')}</option></select></FormField>
                     <FormField label={t('marketing.featured.city')} required><input name="city" type="text" required className={shared.formInput} placeholder="Cairo" /></FormField>
                 </div>
                 <div className={shared.formGrid2}>

@@ -14,7 +14,7 @@ export default function ReviewAnalyticsPage() {
     const { data, loading } = useApiQuery(() => adminRatingsApi.analytics(), []);
 
     const summary     = data?.summary;
-    const ratingDist  = (data?.rating_distribution ?? []).map(d => ({ rating: `${d.stars} Star`, count: d.count }));
+    const ratingDist  = (data?.rating_distribution ?? []).map(d => ({ rating: `${d.stars} ${t('reviews.analytics.starSuffix')}`, count: d.count }));
     const byProvider  = data?.by_provider ?? [];
 
     const statusDist = [
@@ -26,7 +26,7 @@ export default function ReviewAnalyticsPage() {
         return (
             <div className={shared.page}>
                 <h1 className={shared.pageTitle}>{t('reviews.analytics.title')}</h1>
-                <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>Loading...</div>
+                <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-tertiary)' }}>{t('common.loading')}</div>
             </div>
         );
     }
@@ -104,7 +104,7 @@ export default function ReviewAnalyticsPage() {
                     </thead>
                     <tbody>
                         {byProvider.length === 0 ? (
-                            <tr><td colSpan={3} style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-tertiary)' }}>No data</td></tr>
+                            <tr><td colSpan={3} style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-tertiary)' }}>{t('common.noData')}</td></tr>
                         ) : byProvider.map(p => (
                             <tr key={p.provider_uuid} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                 <td style={{ padding: '10px 16px', fontWeight: 500 }}>{p.provider_name}</td>
