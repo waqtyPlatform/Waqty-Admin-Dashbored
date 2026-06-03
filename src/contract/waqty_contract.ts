@@ -43,6 +43,41 @@ export const BOOKING_STATUSES: readonly BookingStatus[] = [
   "pending", "confirmed", "in_progress", "completed", "cancelled", "no_show",
 ];
 
+// Canonical lifecycle — the ONLY legal status transitions. Every app validates a
+// status write against this map instead of inventing its own guards. Terminal
+// states have no outgoing transitions. Display-only states (e.g. "arrived",
+// "inService") are DERIVED from this + check-in/time and are never stored here.
+export const BOOKING_TRANSITIONS: Record<BookingStatus, readonly BookingStatus[]> = {
+  pending:     ["confirmed", "cancelled"],
+  confirmed:   ["in_progress", "cancelled", "no_show"],
+  in_progress: ["completed", "cancelled"],
+  completed:   [],
+  cancelled:   [],
+  no_show:     [],
+};
+
+// True if `from -> to` is a legal transition (or a no-op). Use at every write.
+export function canTransition(from: BookingStatus, to: BookingStatus): boolean {
+  return from === to || BOOKING_TRANSITIONS[from].includes(to);
+}
+
+// Roll a multi-line visit's per-line statuses up to ONE visit status. Shared by
+// the Employee app (which mutates per-line) and the Provider Dashboard / User app
+// (which read a visit-level status) so they never disagree about a partly-done
+// visit. Mirrors the original Employee-app derivation: any line underway => the
+// whole visit is in_progress; all-terminal collapses to that terminal; a mix of
+// done + still-scheduled lines reads as in_progress.
+export function deriveVisitStatus(lineStatuses: readonly BookingStatus[]): BookingStatus {
+  if (lineStatuses.length === 0) return "confirmed";
+  if (lineStatuses.some((s) => s === "in_progress")) return "in_progress";
+  if (lineStatuses.every((s) => s === "completed")) return "completed";
+  if (lineStatuses.every((s) => s === "no_show")) return "no_show";
+  if (lineStatuses.every((s) => s === "cancelled")) return "cancelled";
+  if (lineStatuses.some((s) => s === "completed")) return "in_progress";
+  if (lineStatuses.some((s) => s === "confirmed")) return "confirmed";
+  return "pending";
+}
+
 export type BusinessCategory = "salon" | "barber" | "clinic" | "spa" | "nails" | "other";
 
 export const BUSINESS_CATEGORIES: readonly BusinessCategory[] = [
@@ -114,6 +149,40 @@ export interface MarketConfig {
   dialing_code: string;            // default "+20"
   minor_units_per_major: number;   // 100
   vat_rate: number;                // e.g. 0.14 (configurable per market)
+}
+
+// Egypt is the launch default; GCC markets drop in here (config, never code).
+// This is the ONE canonical market registry — apps consume these instead of each
+// re-declaring EGYPT_MARKET. The active market per deployment stays app-level.
+export const EGYPT_MARKET: MarketConfig = {
+  country: "EG",
+  currency: "EGP",
+  default_locale: "ar",
+  dialing_code: "+20",
+  minor_units_per_major: 100,
+  vat_rate: 0.14,
+};
+
+export const MARKETS: Record<CountryCode, MarketConfig> = {
+  EG: EGYPT_MARKET,
+  // SA: { country: "SA", currency: "SAR", default_locale: "ar", dialing_code: "+966", minor_units_per_major: 100, vat_rate: 0.15 },
+  // AE: { country: "AE", currency: "AED", default_locale: "ar", dialing_code: "+971", minor_units_per_major: 100, vat_rate: 0.05 },
+};
+
+// Money scale/parse primitives. Only the integer SCALE is shared so every app
+// agrees that 100 minor units == 1 major unit; how money RENDERS (symbol
+// position, decimals, locale) stays per-app and is intentionally NOT unified.
+export function toMinorUnits(major: number, m: MarketConfig = EGYPT_MARKET): Money {
+  return Math.round(major * m.minor_units_per_major);
+}
+export function toMajorUnits(minor: Money, m: MarketConfig = EGYPT_MARKET): number {
+  return minor / m.minor_units_per_major;
+}
+export function vatAmount(baseMinor: Money, m: MarketConfig = EGYPT_MARKET): Money {
+  return Math.round(baseMinor * m.vat_rate);
+}
+export function minorFractionDigits(m: MarketConfig): number {
+  return Math.max(0, Math.round(Math.log10(m.minor_units_per_major)));
 }
 
 /* =================================================================== PEOPLE */
@@ -188,7 +257,7 @@ export interface Provider {
   status: ProviderStatus;
   country: CountryCode;
   city: string;
-  commission_rate: number;         // platform commission %, 0..1 (see PlatformCommission)
+  commission_rate: number;         // platform commission as a 0..1 FRACTION (0.10 = 10%), never a percent int. Any percent form input must /100 at the boundary.
   subscription_plan_uuid?: Uuid | null;
   subscription_status: SubscriptionStatus;
   branches_count: number;
@@ -309,6 +378,10 @@ export interface Visit {
   updated_at: IsoDateTime;
   started_at?: IsoDateTime | null;
   completed_at?: IsoDateTime | null;
+  // Set when reception matches the customer's checkInCode. Drives the DERIVED
+  // "arrived" display state and is cross-app visible (staff/User see the same
+  // signal) — distinct from started_at (service actually begun).
+  checked_in_at?: IsoDateTime | null;
 }
 
 export interface VisitLineItem {
@@ -342,6 +415,30 @@ export interface Payment {
   paid_at?: IsoDateTime | null;
   created_at: IsoDateTime;
   updated_at: IsoDateTime;
+}
+
+// Settlement invariant — the ONE place paid_amount / balance_amount / status move
+// together. Reception (Provider Dashboard) calls this when collecting a deposit
+// balance or cash; the Employee app never settles. A visit only becomes billable
+// (isBilled, see platform_finance) once its payment reaches paid/partial here.
+export function settlePayment(payment: Payment, amount: Money, paidAt?: IsoDateTime): Payment {
+  const paid = Math.min(payment.total, payment.paid_amount + Math.max(0, amount));
+  const balance = Math.max(0, payment.total - paid);
+  const status: PaymentStatus =
+    balance === 0 ? "paid" : paid > 0 ? "partial" : payment.status;
+  return {
+    ...payment,
+    paid_amount: paid,
+    balance_amount: balance,
+    status,
+    paid_at: balance === 0 ? (paidAt ?? payment.paid_at ?? null) : (payment.paid_at ?? null),
+    updated_at: paidAt ?? payment.updated_at,
+  };
+}
+
+// A payment is fully collected (its visit is safe to mark completed).
+export function isFullyPaid(payment: Payment): boolean {
+  return payment.status === "paid" || payment.balance_amount === 0;
 }
 
 /* ====================================================== REVIEWS (MVP entity) */

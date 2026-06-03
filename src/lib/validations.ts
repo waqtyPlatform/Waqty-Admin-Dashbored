@@ -46,7 +46,10 @@ export const providerCreateSchema = z.object({
     business_category: requiredString('Category'),
     country: requiredString('Country'),
     city: requiredString('City'),
-    commission_rate: commissionRateSchema.default(15),
+    // Form input is a PERCENT (0..50, default 15) for UX, but the parsed value is
+    // the canonical 0..1 FRACTION the rest of the system stores (G7) — see
+    // Provider.commission_rate in the contract and platform_finance.ratesByProvider.
+    commission_rate: commissionRateSchema.default(15).transform((v) => v / 100),
 });
 export type ProviderCreateInput = z.infer<typeof providerCreateSchema>;
 

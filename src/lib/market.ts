@@ -1,28 +1,24 @@
 /**
- * Market configuration + money formatting (SA-6).
+ * Market configuration + money formatting (SA-6 / G5).
  *
- * All money in the canonical contract is integer MINOR UNITS (piastres);
- * 100 = EGP 1.00. The active market drives currency, VAT and minor-unit scale,
- * so amounts render correctly when GCC markets drop in later — nothing is
- * hardcoded at the call site beyond `formatMoney(minorUnits)`.
+ * The market REGISTRY (EGYPT_MARKET / MARKETS) and the money SCALE primitives now
+ * live in the canonical contract — ONE source of truth, shared by every app. This
+ * module re-exports them and owns only SuperAdmin's RENDER style (prefix
+ * "EGP 299.00", compact "EGP 340K", ar-EG/en-EG). All money in the contract is
+ * integer MINOR UNITS (piastres); 100 = EGP 1.00.
  */
+import {
+    EGYPT_MARKET,
+    MARKETS,
+    toMinorUnits,
+    toMajorUnits,
+    vatAmount as vatAmountContract,
+    minorFractionDigits,
+} from '@/contract/waqty_contract';
 import type { MarketConfig, Money, CurrencyCode, LocaleCode } from '@/contract/waqty_contract';
 
-/** Egypt is the launch default. Add more markets here; GCC drops in via config. */
-export const EGYPT_MARKET: MarketConfig = {
-    country: 'EG',
-    currency: 'EGP',
-    default_locale: 'ar',
-    dialing_code: '+20',
-    minor_units_per_major: 100,
-    vat_rate: 0.14,
-};
-
-export const MARKETS: Record<string, MarketConfig> = {
-    EG: EGYPT_MARKET,
-    // SA: { country: 'SA', currency: 'SAR', default_locale: 'ar', dialing_code: '+966', minor_units_per_major: 100, vat_rate: 0.15 },
-    // AE: { country: 'AE', currency: 'AED', default_locale: 'ar', dialing_code: '+971', minor_units_per_major: 100, vat_rate: 0.05 },
-};
+// Re-export the canonical registry so existing `@/lib/market` imports keep working.
+export { EGYPT_MARKET, MARKETS };
 
 /**
  * The active market. Single switch point — read from env so non-EG deployments
@@ -30,9 +26,6 @@ export const MARKETS: Record<string, MarketConfig> = {
  */
 export const activeMarket: MarketConfig =
     MARKETS[process.env.NEXT_PUBLIC_MARKET ?? 'EG'] ?? EGYPT_MARKET;
-
-const minorDigits = (m: MarketConfig): number =>
-    Math.max(0, Math.round(Math.log10(m.minor_units_per_major)));
 
 /**
  * Render an integer MINOR-UNIT amount as a localized currency string.
@@ -43,8 +36,8 @@ export function formatMoney(
     opts?: { market?: MarketConfig; locale?: LocaleCode; withCurrency?: boolean },
 ): string {
     const market = opts?.market ?? activeMarket;
-    const digits = minorDigits(market);
-    const major = minorUnits / market.minor_units_per_major;
+    const digits = minorFractionDigits(market);
+    const major = toMajorUnits(minorUnits, market);
     const number = new Intl.NumberFormat(opts?.locale === 'ar' ? 'ar-EG' : 'en-EG', {
         minimumFractionDigits: digits,
         maximumFractionDigits: digits,
@@ -64,7 +57,7 @@ export function formatCompactMoney(
     opts?: { market?: MarketConfig; withCurrency?: boolean },
 ): string {
     const market = opts?.market ?? activeMarket;
-    const major = minorUnits / market.minor_units_per_major;
+    const major = toMajorUnits(minorUnits, market);
     const abs = Math.abs(major);
     const n =
         abs >= 1_000_000 ? `${(major / 1_000_000).toFixed(1)}M`
@@ -75,17 +68,17 @@ export function formatCompactMoney(
 
 /** Convert major units (e.g. EGP 299) to canonical minor units (29900). */
 export function toMinor(major: number, market: MarketConfig = activeMarket): Money {
-    return Math.round(major * market.minor_units_per_major);
+    return toMinorUnits(major, market);
 }
 
 /** Convert canonical minor units (29900) back to major units (299) for form inputs. */
 export function toMajor(minor: Money, market: MarketConfig = activeMarket): number {
-    return minor / market.minor_units_per_major;
+    return toMajorUnits(minor, market);
 }
 
 /** VAT for the active market, on a minor-unit base. */
 export function vatAmount(baseMinor: Money, market: MarketConfig = activeMarket): Money {
-    return Math.round(baseMinor * market.vat_rate);
+    return vatAmountContract(baseMinor, market);
 }
 
 /** Helper for the active currency code (config-driven). */

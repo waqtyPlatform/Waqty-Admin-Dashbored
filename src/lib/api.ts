@@ -497,6 +497,33 @@ export interface UpdatePaymentBody {
     notes?: string;
 }
 
+// ── Wire <-> canonical payment-status bridge (G4) ──────────
+// The gateway speaks ApiPaymentStatus ('completed'); the ecosystem ledger speaks
+// the canonical PaymentStatus ('paid', plus a 'partial' the wire has no word for).
+// These two functions are the ONLY sanctioned crossing between the vocabularies —
+// hydrate wire payments into the ledger through toPaymentStatus().
+export function toPaymentStatus(wire: ApiPaymentStatus): PaymentStatus {
+    switch (wire) {
+        case 'completed': return 'paid';
+        case 'pending':   return 'pending';
+        case 'failed':    return 'failed';
+        case 'refunded':  return 'refunded';
+    }
+}
+
+// Reverse map for writes back to the gateway. LOSSY: canonical 'partial' (deposit
+// paid, balance still due) has no wire equivalent, so it collapses to 'pending'
+// (still owed) — never assume round-trip fidelity through the wire.
+export function toApiPaymentStatus(status: PaymentStatus): ApiPaymentStatus {
+    switch (status) {
+        case 'paid':     return 'completed';
+        case 'partial':  return 'pending';
+        case 'pending':  return 'pending';
+        case 'refunded': return 'refunded';
+        case 'failed':   return 'failed';
+    }
+}
+
 export const paymentsApi = {
     /** GET /admin/payments */
     list: (filters?: PaymentListFilters) =>
@@ -977,7 +1004,7 @@ export const adminPricingGroupsApi = {
 // re-exported from the shared contract so admin booking views can represent and
 // filter an in-progress visit. See src/contract/waqty_contract.ts.
 export type { BookingStatus } from '@/contract/waqty_contract';
-import type { BookingStatus } from '@/contract/waqty_contract';
+import type { BookingStatus, PaymentStatus } from '@/contract/waqty_contract';
 
 export interface BookingObject {
     uuid: string;
@@ -2307,7 +2334,7 @@ export interface DashboardSummary {
     top_services: Array<{ name: string; revenue: number; count: number }>;
     top_employees: Array<{ name: string; revenue: number; bookings: number }>;
     top_clients: Array<{ name: string; visits: number; spent: number }>;
-    booking_status_distribution: Array<{ status: string; count: number }>;
+    booking_status_distribution: Array<{ status: BookingStatus; count: number }>;
     revenue_by_day: Array<{ date: string; revenue: number }>;
     occupancy_rate: number;
 }

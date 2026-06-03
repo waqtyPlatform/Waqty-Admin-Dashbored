@@ -1,33 +1,30 @@
-export type ProviderStatus = 'active' | 'suspended' | 'blocked' | 'soft_deleted' | 'pending_review' | 'rejected' | 'deactivated';
-export type BusinessCategory = 'salon' | 'barber' | 'clinic' | 'spa' | 'nails' | 'other';
+import type {
+    Provider as CanonicalProvider,
+    ProviderStatus,
+    BusinessCategory,
+} from '@/contract/waqty_contract';
 
-export interface Provider {
-    id: string;
-    uuid: string;
-    name: string;
+// Canonical enums are the source of truth; re-exported so existing
+// `@/types/provider` imports keep resolving (the unions are identical).
+export type { ProviderStatus, BusinessCategory } from '@/contract/waqty_contract';
+
+// The admin's Provider is the CANONICAL Provider plus admin-only aggregates and
+// audit fields (G3). It no longer re-declares the ecosystem entity — it extends
+// it — so the cross-app shape can't drift. `id` is a legacy admin row id (CSV
+// filenames / table keys); `uuid` is the ecosystem key. `name_ar` is widened to
+// allow null for admin rows. Money fields (total_revenue) are canonical MINOR
+// units. `commission_rate`, `subscription_status`, etc. come from the canonical.
+export type Provider = Omit<CanonicalProvider, 'name_ar'> & {
     name_ar: string | null;
-    email: string;
-    phone: string;
+    id: string;
     business_name: string;
-    business_category: BusinessCategory;
-    status: ProviderStatus;
-    // Join key onto a subscription plan — the plan's `uuid` (X12), not a legacy id.
-    subscription_plan_uuid: string | null;
-    subscription_status: 'active' | 'trial' | 'expired' | 'cancelled' | 'past_due';
-    country: string;
-    city: string;
-    branches_count: number;
-    employees_count: number;
     total_bookings: number;
     total_revenue: number;
-    commission_rate: number;
     registered_at: string;
     verified_at: string | null;
     last_active_at: string;
-    created_at: string;
-    updated_at: string;
     deleted_at: string | null;
-}
+};
 
 export interface ProviderRegistration {
     id: string;

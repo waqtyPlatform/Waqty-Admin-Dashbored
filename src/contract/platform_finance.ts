@@ -20,12 +20,21 @@ import {
   Money,
   Uuid,
   CurrencyCode,
+  IsoDate,
+  EGYPT_MARKET,
 } from "./waqty_contract";
 
 let _seq = 0;
 const _uid = (p: string): Uuid => `${p}_${Date.now()}_${_seq++}`;
 const _period = (iso: string): string => iso.slice(0, 7); // "YYYY-MM"
 const _round = (n: number): Money => Math.round(n);
+
+// Last calendar day of a "YYYY-MM" period as an IsoDate ("2026-02" -> "2026-02-28").
+const _monthEnd = (period: string): IsoDate => {
+  const [y, m] = period.split("-").map(Number);
+  const day = new Date(Date.UTC(y, m, 0)).getUTCDate(); // day 0 of next month = last of this
+  return `${period}-${String(day).padStart(2, "0")}`;
+};
 
 /** A visit contributes to platform revenue once its payment is paid or partial. */
 export function isBilled(visit: Visit): boolean {
@@ -37,6 +46,8 @@ export function commissionForVisit(
   visit: Visit,
   commissionRate: number,
 ): PlatformCommission {
+  // gross intentionally includes tips (visit.total = subtotal - discount + tip):
+  // platform commission applies to the full transaction by product decision.
   const gross: Money = visit.total;
   const commission: Money = _round(gross * commissionRate);
   const fee: Money = visit.payment.platform_fee;
@@ -77,6 +88,7 @@ export function buildPayouts(
     gross: Money;
     commission: Money;
     fees: Money;
+    currency: CurrencyCode;
   }
   const groups = new Map<string, Bucket>();
   for (const v of visits) {
@@ -86,7 +98,7 @@ export function buildPayouts(
     const key = `${v.provider_uuid}|${period}`;
     const g: Bucket =
       groups.get(key) ??
-      { provider: v.provider_uuid, period, gross: 0, commission: 0, fees: 0 };
+      { provider: v.provider_uuid, period, gross: 0, commission: 0, fees: 0, currency: v.currency };
     g.gross += v.total;
     g.commission += _round(v.total * rate);
     g.fees += v.payment.platform_fee;
@@ -98,12 +110,12 @@ export function buildPayouts(
       uuid: _uid("payout"),
       provider_uuid: g.provider,
       period_start: `${g.period}-01`,
-      period_end: `${g.period}-28`,
+      period_end: _monthEnd(g.period),
       gross: g.gross,
       commission_total: g.commission,
       fees_total: g.fees,
       net_payable: g.gross - g.commission - g.fees,
-      currency: "EGP",
+      currency: g.currency,
       status: "pending",
       created_at: new Date().toISOString(),
     });
@@ -130,9 +142,11 @@ export function platformRevenueSummary(
   let gross = 0;
   let commission = 0;
   let fees = 0;
+  let currency: CurrencyCode = EGYPT_MARKET.currency;
   for (const v of visits) {
     if (!isBilled(v)) continue;
     billed += 1;
+    currency = v.currency; // billed visits share the active market's currency
     const rate = commissionRateByProvider[v.provider_uuid] ?? 0;
     gross += v.total;
     commission += _round(v.total * rate);
@@ -145,7 +159,7 @@ export function platformRevenueSummary(
     transaction_fees_total: fees,
     platform_revenue: commission + fees,
     provider_net_total: gross - commission - fees,
-    currency: "EGP",
+    currency,
   };
 }
 
