@@ -2,28 +2,30 @@
 
 import { useMemo } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import translations from '../i18n/translations';
 
 export function useTranslation() {
-    const { language: lang } = useLanguage();
+    const { language: lang, messages } = useLanguage();
 
+    // `messages` is the ACTIVE locale's map (loaded as its own chunk by
+    // LanguageContext), so lookups are a single key access.
     const t = useMemo(
         () =>
             (key: string): string => {
-                if (!translations[key]) {
+                const value = messages[key];
+                if (value === undefined) {
                     if (process.env.NODE_ENV === 'development') {
                         console.warn(`Translation key not found: ${key}`);
                     }
                     return key;
                 }
-                return translations[key][lang] || translations[key].en;
+                return value;
             },
-        [lang]
+        [messages]
     );
 
     // Localize a piece of dynamic, data-driven bilingual text (e.g. a provider's
     // name). Returns the Arabic variant under the AR locale when present, else the
-    // base/English value — so Arabic content actually renders under `ar` (X9).
+    // base/English value.
     const tn = useMemo(
         () =>
             (base: string, ar?: string | null): string =>
