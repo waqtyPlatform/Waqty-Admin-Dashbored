@@ -58,6 +58,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         document.documentElement.lang = language === 'ar' ? 'ar-EG' : 'en';
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+        // Mirror the locale into a cookie so the server (root layout) renders the
+        // correct lang/dir on the next request's first paint.
+        document.cookie = `waqty_lang=${language};path=/;max-age=31536000;SameSite=Lax`;
     }, [language]);
 
     const setLanguage = useCallback((lang: Language) => {
