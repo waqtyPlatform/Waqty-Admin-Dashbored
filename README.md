@@ -406,7 +406,7 @@ Every page and action is gated by the `PermissionGate` component based on the lo
 | **Command palette** | cmdk |
 | **Animation** | Framer Motion |
 | **Dates** | date-fns |
-| **Auth (mock)** | Custom AuthContext + localStorage (demo mode) |
+| **Auth** | AuthContext + real API (Bearer/JWT) with a mock-login fallback for demo roles; session in `localStorage` |
 | **Deployment** | Vercel |
 
 ---
@@ -451,29 +451,28 @@ npm start
 Create a `.env.local` file in the project root:
 
 ```bash
-# API base URL (backend when ready; ignored in mock mode)
-NEXT_PUBLIC_API_BASE_URL=https://waqty.alemtayaz.shop/public
-
-# Mock mode — uses local mock data instead of live API
-NEXT_PUBLIC_USE_MOCKS=true
+# API base URL — IMPORTANT: the SA admin client calls paths WITHOUT a leading
+# /api (e.g. /admin/providers), so this base MUST end in /api, otherwise every
+# admin request 500s and silently falls back to mock data.
+NEXT_PUBLIC_API_BASE_URL=https://waqty.alemtayaz.shop/public/api
 ```
+
+> `NEXT_PUBLIC_USE_MOCKS` is **dead config** (nothing in the code reads it) — pages fall back to mock data automatically when an endpoint is missing or unreachable. Browser requests are routed through an `/api-proxy/:path*` rewrite (see `next.config`) to avoid CORS.
 
 For Vercel deployment, set these via the Vercel dashboard under Project Settings -> Environment Variables.
 
 ---
 
-## Mock Mode (Current State)
+## Data Layer (Current State)
 
-> **This dashboard is currently running in MOCK MODE.** No real backend is connected. Every page renders pre-seeded data and every action updates in-memory React state only.
+> **Hybrid: real API with mock fallback.** Admin endpoints are wired to the live Laravel backend through `ApiClient` + `useApiQuery`; any page whose endpoint is missing or unreachable renders seeded mock data instead, so the full UI is always navigable.
 
 **What this means:**
 
-- All 49 pages render with realistic sample data
-- All flows are clickable and show the correct UX
-- Changes persist within a session (until page refresh)
-- Changes do **not** persist to any database
-- Authentication is insecure (any email + 6+ char password works)
-- Permission checks run client-side only (bypassable for demo purposes)
+- **Live today** (real data): providers, users, ratings/reviews, payments, governorates, promo-codes, banners, announcements, pages.
+- **Mock-only** (no backend route yet): subscriptions, finance, support, audit-logs, system-health.
+- Every page renders realistic data and every flow is clickable; writes persist for real-API-backed modules and update in-session state for mock ones.
+- **Auth:** the demo emails below resolve to mock roles for offline demos; any other email goes through the real API login (Bearer/JWT). Permission checks run client-side via `PermissionGate` — **the backend must still enforce them**.
 
 ### Switching to Real API
 
@@ -622,6 +621,14 @@ All 5 items shipped with deterministic heuristics in [src/lib/analytics.ts](src/
 - **Responsive RTL hardening** — audited at 320 / 375 / 768 / 1280 px across EN + AR, 49 routes. Sidebar slides from the correct trailing edge in RTL, sub-nav indent mirrors direction, mobile X close button restored, notification dropdown fits narrow viewports, Dashboard `.chartCard` constrains its scrollable table-wrap, experiments variant grid stacks on narrow widths.
 - **Logical CSS properties** — `text-align: left/right` → `start/end`, `padding-left` → `padding-inline-start`, etc. across DataTable, UI dropdown, sidebar sub-nav, TopBar user info, dashboard, globals.
 - **MobileBottomNav i18n** — labels and aria-label now go through `useTranslation()`.
+
+### Phase 6 — Refined design system + full RTL/token migration (Complete, 2026-06)
+
+- **Design Language v2** — IBM Plex Sans / Plex Arabic / Plex Mono (self-hosted via `next/font`), cool-slate neutral tokens with a sparing `#00B166` green accent, a 4px spacing scale + radius/shadow tokens in `src/app/globals.css`.
+- **Full RTL logical-property migration** — every physical `left`/`right`, `margin-left`, `padding-left`, `text-align: left/right`, `border-left/right` (CSS Modules **and** inline `style={}` objects) converted to logical properties (`inset-inline-*`, `margin`/`padding-inline-*`, `text-align: start/end`, `border-inline-*`); redundant `[dir='rtl']` overrides removed. Layout mirrors automatically under `dir="rtl"` with no horizontal overflow.
+- **Design-token purity** — raw-px spacing/radius → `--space-*`/`--radius-*`; hardcoded hovers → color tokens.
+- **Real-API integration** — admin endpoints wired to the live backend with mock fallback (see [Data Layer](#data-layer-current-state)).
+- **Robustness** — `hasPermission` hardened against an undefined permission set (no white-screen when a session has a stale cookie but no user). `tsc` + `npm run build` clean across all 55 routes.
 
 ---
 
