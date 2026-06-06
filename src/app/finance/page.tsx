@@ -1,14 +1,20 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { useTranslation } from '@/hooks/useTranslation';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { monthlyRevenueData, platformPayouts, revenueSummary } from '@/mocks/finance';
 import { formatMoney, formatCompactMoney } from '@/lib/market';
 import { forecastRevenue } from '@/lib/analytics';
 import { DollarSign, TrendingUp, CreditCard, Wallet, FileText, Percent, Send, Receipt, LineChart as LineChartIcon } from 'lucide-react';
 import Link from 'next/link';
 import shared from '@/components/admin/shared.module.css';
+
+// recharts is heavy — load the chart client-side only so it stays out of the initial bundle.
+const RevenueTrendChart = dynamic(() => import('./_components/RevenueTrendChart'), {
+    ssr: false,
+    loading: () => <div style={{ height: 300, width: '100%' }} />,
+});
 
 export default function FinancePage() {
     const { t } = useTranslation();
@@ -72,16 +78,7 @@ export default function FinancePage() {
             </div>
             <div className={shared.infoCard}>
                 <h3 className={shared.infoCardHeader}>Revenue Trend (Subscriptions vs Commissions)</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <AreaChart data={monthlyRevenueData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                        <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
-                        <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => formatCompactMoney(Number(v), { withCurrency: false })} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} formatter={(v) => [formatCompactMoney(Number(v)), '']} />
-                        <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="var(--color-primary-500)" fill="color-mix(in srgb, var(--color-primary-500) 25%, transparent)" name="Subscriptions" />
-                        <Area type="monotone" dataKey="commissions" stackId="1" stroke="var(--color-info)" fill="color-mix(in srgb, var(--color-info) 25%, transparent)" name="Commissions" />
-                    </AreaChart>
-                </ResponsiveContainer>
+                <RevenueTrendChart />
             </div>
         </div>
     );

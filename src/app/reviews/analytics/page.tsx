@@ -1,12 +1,22 @@
 'use client';
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import dynamic from 'next/dynamic';
 import { Star, TrendingUp, MessageSquare, EyeOff } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useApiQuery } from '@/hooks/useApiQuery';
 import { adminRatingsApi } from '@/lib/api';
 import shared from '@/components/admin/shared.module.css';
+
+// recharts is heavy — load the charts client-side only so they stay out of the initial bundle.
+const RatingDistributionChart = dynamic(() => import('./_components/ReviewAnalyticsCharts').then(m => m.RatingDistributionChart), {
+    ssr: false,
+    loading: () => <div style={{ height: 250, width: '100%' }} />,
+});
+const StatusBreakdownChart = dynamic(() => import('./_components/ReviewAnalyticsCharts').then(m => m.StatusBreakdownChart), {
+    ssr: false,
+    loading: () => <div style={{ height: 200, width: '100%' }} />,
+});
 
 export default function ReviewAnalyticsPage() {
     const { t } = useTranslation();
@@ -58,28 +68,13 @@ export default function ReviewAnalyticsPage() {
                 {/* Rating distribution bar chart */}
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('reviews.analytics.ratingDistribution')}</h3>
-                    <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={ratingDist}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                            <XAxis dataKey="rating" stroke="var(--text-tertiary)" fontSize={12} />
-                            <YAxis stroke="var(--text-tertiary)" fontSize={12} allowDecimals={false} />
-                            <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                            <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} name={t('reviews.analytics.reviews')} />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <RatingDistributionChart ratingDist={ratingDist} />
                 </div>
 
                 {/* Status breakdown pie chart */}
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                     <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('reviews.analytics.statusBreakdown')}</h3>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <PieChart>
-                            <Pie data={statusDist} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={3} dataKey="count" nameKey="name">
-                                {statusDist.map((e, i) => <Cell key={i} fill={e.color} />)}
-                            </Pie>
-                            <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                        </PieChart>
-                    </ResponsiveContainer>
+                    <StatusBreakdownChart statusDist={statusDist} />
                     <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginTop: 8 }}>
                         {statusDist.map(s => (
                             <div key={s.name} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>

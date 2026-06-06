@@ -1,10 +1,16 @@
 'use client';
 
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import dynamic from 'next/dynamic';
 import { Building2, TrendingUp, Star, AlertTriangle } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
+
+// recharts is heavy — load the chart client-side only so it stays out of the initial bundle.
+const ProviderGrowthChart = dynamic(() => import('./_components/ProviderGrowthChart'), {
+    ssr: false,
+    loading: () => <div style={{ height: 350, width: '100%' }} />,
+});
 
 const providerStats = [
     { month: 'Oct', newProviders: 45, churned: 8, active: 1050 },
@@ -35,17 +41,7 @@ export default function ProviderReportsPage() {
             </div>
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('reports.providers.growthVsChurn')}</h3>
-                <ResponsiveContainer width="100%" height={350}>
-                    <BarChart data={providerStats}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                        <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
-                        <YAxis stroke="var(--text-tertiary)" fontSize={12} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                        <Legend />
-                        <Bar dataKey="newProviders" fill="var(--color-primary-500)" name={t('reports.providers.newProviders')} radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="churned" fill="var(--color-error)" name={t('reports.providers.churned')} radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
+                <ProviderGrowthChart providerStats={providerStats} />
             </div>
         </div>
     );

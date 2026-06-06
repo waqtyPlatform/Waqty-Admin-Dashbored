@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import type { SuperAdminUser, SuperAdminRole } from '@/types/admin';
 import { getPermissionsForRole } from '@/lib/permissions';
@@ -212,8 +212,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setImpersonating(null);
     };
 
+    // Stabilise the context value so consumers don't re-render on every provider
+    // render. The handler functions (login/logout/forgotPassword/…/startImpersonating)
+    // are redefined each render but only close over STABLE references — state setters
+    // (setUser/setImpersonating/setLoading), `router`, and module-level helpers — and
+    // never read changing component state (user/loading/impersonating) directly, so
+    // capturing them by closure here is behaviourally identical. Deps are therefore
+    // limited to the state the value actually exposes.
+    const value = useMemo(
+        () => ({ user, login, forgotPassword, verifyOtpCode, resetPassword, logout, loading, impersonating, startImpersonating, stopImpersonating }),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [user, loading, impersonating],
+    );
+
     return (
-        <AuthContext.Provider value={{ user, login, forgotPassword, verifyOtpCode, resetPassword, logout, loading, impersonating, startImpersonating, stopImpersonating }}>
+        <AuthContext.Provider value={value}>
             {!loading && children}
         </AuthContext.Provider>
     );

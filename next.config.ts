@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
         imageSizes: [16, 32, 48, 64, 96, 128, 256],
         minimumCacheTTL: 60 * 60 * 24 * 30,
     },
+    // Tree-shake named imports from heavy libraries so each route ships only the
+    // icons / chart pieces / motion APIs it uses, not the whole package.
+    experimental: {
+        optimizePackageImports: ['lucide-react', 'recharts', 'framer-motion', 'date-fns', 'cmdk'],
+    },
     async rewrites() {
         return [
             {

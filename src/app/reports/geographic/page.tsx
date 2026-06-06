@@ -1,12 +1,18 @@
 'use client';
 
 import React from 'react';
+import dynamic from 'next/dynamic';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { geographicData } from '@/mocks/finance';
 import { formatCompactMoney } from '@/lib/market';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
+
+// recharts is heavy — load the chart client-side only so it stays out of the initial bundle.
+const GeographicChart = dynamic(() => import('./_components/GeographicChart'), {
+    ssr: false,
+    loading: () => <div style={{ height: 300, width: '100%' }} />,
+});
 
 type GeoRow = typeof geographicData[0];
 
@@ -25,15 +31,7 @@ export default function GeographicReportPage() {
             <h1 className={shared.pageTitle}>{t('reports.geographic.title')}</h1>
             <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20 }}>
                 <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 16px' }}>{t('reports.geographic.providersByCity')}</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={geographicData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                        <XAxis type="number" stroke="var(--text-tertiary)" fontSize={12} />
-                        <YAxis dataKey="city" type="category" stroke="var(--text-tertiary)" fontSize={12} width={80} />
-                        <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                        <Bar dataKey="providers" fill="var(--color-primary-500)" name={t('reports.geographic.providers')} radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
+                <GeographicChart />
             </div>
             <DataTable<GeoRow> columns={columns} data={geographicData} searchKeys={['city']} searchPlaceholder={t('reports.geographic.searchPlaceholder')} getRowKey={r => r.city} />
         </div>
