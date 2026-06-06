@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useCallback, useEffect, createContext, useContext, ReactNode } from 'react';
+import React, { useState, useCallback, useEffect, useId, createContext, useContext, ReactNode } from 'react';
 import { X, Search, ChevronRight, Check, Plus } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import styles from './ui.module.css';
 
 // ─── Button ──────────────────────────────────────────────────────────
@@ -76,13 +77,23 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     error?: string;
 }
 
-export function Input({ label, hint, error, className, ...props }: InputProps) {
+export function Input({ label, hint, error, className, id, ...props }: InputProps) {
+    const reactId = useId();
+    const inputId = id ?? reactId;
+    const hintId = hint && !error ? `${inputId}-hint` : undefined;
+    const errorId = error ? `${inputId}-error` : undefined;
     return (
         <div className={styles.inputWrapper}>
-            {label && <label className={styles.inputLabel}>{label}</label>}
-            <input className={`${styles.input} ${error ? styles.inputHasError : ''} ${className || ''}`} {...props} />
-            {hint && !error && <span className={styles.inputHint}>{hint}</span>}
-            {error && <span className={styles.inputError}>{error}</span>}
+            {label && <label className={styles.inputLabel} htmlFor={inputId}>{label}</label>}
+            <input
+                id={inputId}
+                aria-describedby={errorId ?? hintId}
+                aria-invalid={error ? true : undefined}
+                className={`${styles.input} ${error ? styles.inputHasError : ''} ${className || ''}`}
+                {...props}
+            />
+            {hint && !error && <span id={hintId} className={styles.inputHint}>{hint}</span>}
+            {error && <span id={errorId} className={styles.inputError}>{error}</span>}
         </div>
     );
 }
@@ -93,11 +104,13 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
     options: Array<{ value: string; label: string }>;
 }
 
-export function Select({ label, options, className, ...props }: SelectProps) {
+export function Select({ label, options, className, id, ...props }: SelectProps) {
+    const reactId = useId();
+    const selectId = id ?? reactId;
     return (
         <div className={styles.inputWrapper}>
-            {label && <label className={styles.inputLabel}>{label}</label>}
-            <select className={`${styles.selectField} ${className || ''}`} {...props}>
+            {label && <label className={styles.inputLabel} htmlFor={selectId}>{label}</label>}
+            <select id={selectId} className={`${styles.selectField} ${className || ''}`} {...props}>
                 {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
         </div>
@@ -109,11 +122,13 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
     label?: string;
 }
 
-export function Textarea({ label, className, ...props }: TextareaProps) {
+export function Textarea({ label, className, id, ...props }: TextareaProps) {
+    const reactId = useId();
+    const textareaId = id ?? reactId;
     return (
         <div className={styles.inputWrapper}>
-            {label && <label className={styles.inputLabel}>{label}</label>}
-            <textarea className={`${styles.textareaField} ${className || ''}`} {...props} />
+            {label && <label className={styles.inputLabel} htmlFor={textareaId}>{label}</label>}
+            <textarea id={textareaId} className={`${styles.textareaField} ${className || ''}`} {...props} />
         </div>
     );
 }
@@ -139,18 +154,19 @@ interface ModalProps { open: boolean; onClose: () => void; title: string; childr
 
 export function Modal({ open, onClose, title, children, footer }: ModalProps) {
     const { t } = useTranslation();
+    // Traps Tab focus inside the dialog, closes on Escape, and restores focus on
+    // close (the hook ships in src/hooks but was previously unused).
+    const trapRef = useFocusTrap({ isActive: open, onEscape: onClose });
     useEffect(() => {
         if (!open) return;
-        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-        window.addEventListener('keydown', onKey);
         const prev = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
-        return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
-    }, [open, onClose]);
+        return () => { document.body.style.overflow = prev; };
+    }, [open]);
     if (!open) return null;
     return (
         <div className={styles.modalOverlay} onClick={onClose}>
-            <div className={styles.modal} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+            <div ref={trapRef} className={styles.modal} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
                     <div className={styles.modalTitle}>{title}</div>
                     <button className={styles.modalClose} onClick={onClose} aria-label={t('common.close')}><X size={18} /></button>
@@ -166,14 +182,18 @@ export function Modal({ open, onClose, title, children, footer }: ModalProps) {
 interface SlideOverProps { open: boolean; onClose: () => void; title: string; children: ReactNode; footer?: ReactNode; }
 
 export function SlideOver({ open, onClose, title, children, footer }: SlideOverProps) {
+    const { t } = useTranslation();
+    // Was missing dialog semantics entirely — add role/aria-modal/aria-label,
+    // a labelled close button, and Tab/Escape focus management via the shared hook.
+    const trapRef = useFocusTrap({ isActive: open, onEscape: onClose });
     if (!open) return null;
     return (
         <>
             <div className={styles.slideOverOverlay} onClick={onClose} />
-            <div className={styles.slideOver}>
+            <div ref={trapRef} className={styles.slideOver} role="dialog" aria-modal="true" aria-label={title}>
                 <div className={styles.slideOverHeader}>
                     <div className={styles.modalTitle}>{title}</div>
-                    <button className={styles.modalClose} onClick={onClose}><X size={18} /></button>
+                    <button className={styles.modalClose} onClick={onClose} aria-label={t('common.close')}><X size={18} /></button>
                 </div>
                 <div className={styles.slideOverBody}>{children}</div>
                 {footer && <div className={styles.slideOverFooter}>{footer}</div>}

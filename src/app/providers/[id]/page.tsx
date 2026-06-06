@@ -82,7 +82,9 @@ export default function ProviderDetailPage() {
     const { data: apiBookings } = useApiQuery(
         () => adminBookingsApi.list({ provider_uuid: providerUuid, per_page: 50 }),
         [providerUuid],
-        { enabled: !!providerUuid }
+        // Don't fetch 50 rows on every provider open — only when the Bookings tab is
+        // active or the export menu (which exports these rows) is open.
+        { enabled: !!providerUuid && (activeTab === 'bookings' || exportOpen) }
     );
     const bookingRows = apiBookings && apiBookings.length ? apiBookings.map(bookingToRow) : mockBookings;
 

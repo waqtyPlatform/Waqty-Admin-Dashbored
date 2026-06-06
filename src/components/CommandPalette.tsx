@@ -34,26 +34,12 @@ interface CmdItem {
     groupKey: string;
 }
 
-export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
-    const router = useRouter();
-    const { t } = useTranslation();
-    const [open, setOpen] = useState(false);
-
-    useEffect(() => {
-        const onKey = (e: KeyboardEvent) => {
-            if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
-                e.preventDefault();
-                setOpen(prev => !prev);
-            }
-            if (e.key === 'Escape') setOpen(false);
-        };
-        document.addEventListener('keydown', onKey);
-        return () => document.removeEventListener('keydown', onKey);
-    }, []);
-
-    const NAV = 'cmd.group.navigation';
-    const QA = 'cmd.group.quickActions';
-    const items: CmdItem[] = [
+// Hoisted to module scope: the item shape (groupKey/labelKey/href/icon) is static —
+// only the t() label resolution is dynamic (done in render). This avoids re-allocating
+// 44 objects + 44 icon elements + the group Set on every provider render.
+const NAV = 'cmd.group.navigation';
+const QA = 'cmd.group.quickActions';
+const CMD_ITEMS: CmdItem[] = [
         { groupKey: NAV, labelKey: 'cmd.nav.dashboard', href: '/', icon: <LayoutDashboard size={16} /> },
         { groupKey: NAV, labelKey: 'cmd.nav.allProviders', href: '/providers', icon: <Building2 size={16} /> },
         { groupKey: NAV, labelKey: 'cmd.nav.providerRegistrations', href: '/providers/registrations', icon: <Building2 size={16} /> },
@@ -103,14 +89,30 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
         { groupKey: QA, labelKey: 'cmd.qa.sendPush', href: '/marketing/push-notifications', icon: <Send size={16} /> },
         { groupKey: QA, labelKey: 'cmd.qa.createPromoCode', href: '/marketing/promo-codes', icon: <Plus size={16} /> },
     ];
+const CMD_GROUPS = Array.from(new Set(CMD_ITEMS.map(i => i.groupKey)));
+
+export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
+    const { t } = useTranslation();
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        const onKey = (e: KeyboardEvent) => {
+            if ((e.key === 'k' || e.key === 'K') && (e.metaKey || e.ctrlKey)) {
+                e.preventDefault();
+                setOpen(prev => !prev);
+            }
+            if (e.key === 'Escape') setOpen(false);
+        };
+        document.addEventListener('keydown', onKey);
+        return () => document.removeEventListener('keydown', onKey);
+    }, []);
 
     const onSelect = (item: CmdItem) => {
         setOpen(false);
         if (item.action) item.action();
         else if (item.href) router.push(item.href);
     };
-
-    const groups = Array.from(new Set(items.map(i => i.groupKey)));
 
     return (
         <PaletteContext.Provider value={{ open, setOpen }}>
@@ -122,9 +124,9 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
                             <Command.Input placeholder={t('cmd.placeholder')} className={styles.input} autoFocus />
                             <Command.List className={styles.list}>
                                 <Command.Empty className={styles.empty}>{t('cmd.noResults')}</Command.Empty>
-                                {groups.map(group => (
+                                {CMD_GROUPS.map(group => (
                                     <Command.Group key={group} heading={t(group)} className={styles.group}>
-                                        {items.filter(i => i.groupKey === group).map(item => (
+                                        {CMD_ITEMS.filter(i => i.groupKey === group).map(item => (
                                             <Command.Item
                                                 key={`${group}-${item.labelKey}`}
                                                 value={`${t(item.labelKey)} ${item.keywords || ''}`}

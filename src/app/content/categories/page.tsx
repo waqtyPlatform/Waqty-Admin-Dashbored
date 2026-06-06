@@ -11,6 +11,7 @@ import {
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
+import { ConfirmModal } from '@/components/admin/FormModal';
 import { Plus, MoreHorizontal, Pencil, Trash2, RotateCcw, ToggleLeft, ToggleRight, Tag, Layers } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
 import { CategoryFormModal } from './_components/CategoryFormModal';
@@ -84,6 +85,7 @@ export default function CategoriesPage() {
 
     // ── Local UI state ────────────────────────────────────
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
     const [showCreate, setShowCreate]     = useState(false);
     const [editTarget, setEditTarget]     = useState<AdminCategoryObject | AdminSubcategoryObject | null>(null);
     const [formError,  setFormError]      = useState<string | null>(null);
@@ -194,7 +196,7 @@ export default function CategoriesPage() {
                             </button>
                           </PermissionGate>
                         : <PermissionGate module="content" action="delete">
-                            <button onClick={() => handleDelete(row.uuid)}
+                            <button onClick={() => { setActionMenuId(null); setConfirmDelete(row.uuid); }}
                                 style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}>
                                 <Trash2 size={14} /> {t('common.delete')}
                             </button>
@@ -369,6 +371,16 @@ export default function CategoriesPage() {
                     onSubmit={handleEdit}
                 />
             )}
+
+            <ConfirmModal
+                open={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={() => { const uuid = confirmDelete; setConfirmDelete(null); if (uuid) handleDelete(uuid); }}
+                title={t('common.delete')}
+                message={t('common.confirmDeleteItem')}
+                confirmLabel={t('common.delete')}
+                variant="danger"
+            />
         </div>
     );
 }

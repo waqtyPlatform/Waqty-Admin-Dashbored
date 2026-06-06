@@ -47,13 +47,6 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Format currency
- */
-export function formatCurrency(amount: number, currency = 'EGP'): string {
-    return `${currency} ${amount.toLocaleString()}`;
-}
-
-/**
  * Format date. Returns `—` for missing or invalid input.
  */
 export function formatDate(dateStr: string | null | undefined): string {

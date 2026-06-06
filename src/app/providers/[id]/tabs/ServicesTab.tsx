@@ -76,6 +76,13 @@ export function ServicesTab({ providerUuid }: { providerUuid?: string }) {
         })
         : mockServices;
 
+    // Bound the rendered rows (the join can return up to 100) with simple client paging.
+    const PAGE_SIZE = 15;
+    const [page, setPage] = React.useState(1);
+    const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+    const safePage = Math.min(page, totalPages);
+    const pageRows = rows.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
     return (
         <div className={styles.infoCard}>
             <h3>{t('providers.tabServices')} ({rows.length})</h3>
@@ -83,7 +90,7 @@ export function ServicesTab({ providerUuid }: { providerUuid?: string }) {
                 <thead><tr style={{ background: 'var(--bg-secondary)' }}>
                     {[t('common.service'), t('providers.category'), t('common.price'), t('common.duration'), t('providers.bookings'), t('common.status')].map(h => <th key={h} style={{ textAlign: 'start', padding: 'var(--space-3) var(--space-3)', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
                 </tr></thead>
-                <tbody>{rows.map(s => (
+                <tbody>{pageRows.map(s => (
                     <tr key={s.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: 'var(--space-3) var(--space-3)', fontWeight: 500 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--space-2)' }}><Scissors size={14} /> {s.name}</span></td>
                         <td style={{ padding: 'var(--space-3) var(--space-3)' }}>{s.category}</td>
@@ -94,6 +101,25 @@ export function ServicesTab({ providerUuid }: { providerUuid?: string }) {
                     </tr>
                 ))}</tbody>
             </table>
+            {totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 'var(--space-3)', marginTop: 'var(--space-4)' }}>
+                    <button
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        disabled={safePage === 1}
+                        style={{ padding: 'var(--space-1) var(--space-3)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', background: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: safePage === 1 ? 'not-allowed' : 'pointer', opacity: safePage === 1 ? 0.5 : 1, fontFamily: 'var(--font-sans)', fontSize: 'var(--text-sm)' }}
+                    >
+                        {t('common.previous')}
+                    </button>
+                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{safePage} / {totalPages}</span>
+                    <button
+                        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                        disabled={safePage === totalPages}
+                        style={{ padding: 'var(--space-1) var(--space-3)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', background: 'var(--bg-primary)', color: 'var(--text-primary)', cursor: safePage === totalPages ? 'not-allowed' : 'pointer', opacity: safePage === totalPages ? 0.5 : 1, fontFamily: 'var(--font-sans)', fontSize: 'var(--text-sm)' }}
+                    >
+                        {t('common.next')}
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, ConfirmModal, FormField } from '@/components/admin/FormModal';
@@ -8,8 +9,14 @@ import { Modal } from '@/components/ui';
 import { mockExperiments, type AdExperiment } from '@/mocks/experiments';
 import { compareVariants } from '@/lib/analytics';
 import { Plus, Pause, Play, Square, Eye, FlaskConical, TrendingUp } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import shared from '@/components/admin/shared.module.css';
+
+// Heavy charting lib loads only when a result-detail modal opens, not in the
+// route's initial chunk (mirrors the app-wide lazy-chart pattern).
+const ExperimentResultChart = dynamic(() => import('./_components/ExperimentResultChart'), {
+    ssr: false,
+    loading: () => <div style={{ height: 240 }} />,
+});
 
 export default function ExperimentsPage() {
     const { t } = useTranslation();
@@ -200,21 +207,15 @@ export default function ExperimentsPage() {
                         <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
                             <strong>{t('marketing.experiments.hypothesis')}:</strong> {detail.exp.hypothesis}
                         </div>
-                        <ResponsiveContainer width="100%" height={240}>
-                            <BarChart data={[
+                        <ExperimentResultChart
+                            data={[
                                 { metric: t('marketing.experiments.impressions'), A: detail.exp.variants.A.impressions, B: detail.exp.variants.B.impressions },
                                 { metric: t('marketing.experiments.clicks'), A: detail.exp.variants.A.clicks, B: detail.exp.variants.B.clicks },
                                 { metric: t('marketing.experiments.conversions'), A: detail.exp.variants.A.conversions, B: detail.exp.variants.B.conversions },
-                            ]}>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                                <XAxis dataKey="metric" stroke="var(--text-tertiary)" fontSize={12} />
-                                <YAxis stroke="var(--text-tertiary)" fontSize={12} />
-                                <Tooltip contentStyle={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8 }} />
-                                <Legend />
-                                <Bar dataKey="A" fill="var(--color-primary-500)" name={detail.exp.variants.A.label} />
-                                <Bar dataKey="B" fill="var(--color-info)" name={detail.exp.variants.B.label} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                            ]}
+                            nameA={detail.exp.variants.A.label}
+                            nameB={detail.exp.variants.B.label}
+                        />
                         <div className={shared.formGrid2}>
                             <div className={shared.summaryCard}>
                                 <span className={shared.summaryLabel}>{t('marketing.experiments.ctrA')}</span>

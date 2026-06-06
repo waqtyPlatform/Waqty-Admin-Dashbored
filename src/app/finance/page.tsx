@@ -27,10 +27,10 @@ export default function FinancePage() {
     const nextMonthForecast = forecast[0];
 
     const kpis = [
-        { label: 'Platform Revenue', value: formatMoney(platformRevenue), icon: <DollarSign size={20} />, color: 'var(--color-primary-500)' },
-        { label: 'Commissions Earned', value: formatMoney(totalCommissions), icon: <TrendingUp size={20} />, color: 'var(--color-success)' },
-        { label: 'Pending Payouts', value: formatMoney(pendingPayouts), icon: <CreditCard size={20} />, color: 'var(--color-warning)' },
-        { label: 'Completed Payouts', value: formatMoney(completedPayouts), icon: <Wallet size={20} />, color: 'var(--color-info)' },
+        { label: t('finance.platformRevenue'), value: formatMoney(platformRevenue), icon: <DollarSign size={20} />, color: 'var(--color-primary-500)' },
+        { label: t('finance.commissionsEarned'), value: formatMoney(totalCommissions), icon: <TrendingUp size={20} />, color: 'var(--color-success)' },
+        { label: t('finance.pendingPayouts'), value: formatMoney(pendingPayouts), icon: <CreditCard size={20} />, color: 'var(--color-warning)' },
+        { label: t('finance.completedPayouts'), value: formatMoney(completedPayouts), icon: <Wallet size={20} />, color: 'var(--color-info)' },
         ...(nextMonthForecast ? [{
             label: `${t('reports.revenue.forecast.nextMonth')} (${nextMonthForecast.month})`,
             value: formatCompactMoney(nextMonthForecast.total),
@@ -40,10 +40,10 @@ export default function FinancePage() {
     ];
 
     const subNav = [
-        { label: t('finance.commissions'), href: '/finance/commissions', icon: <Percent size={18} />, description: 'Bookings commission ledger' },
-        { label: t('finance.payouts'), href: '/finance/payouts', icon: <Send size={18} />, description: 'Provider payout batches' },
-        { label: t('finance.invoices'), href: '/finance/invoices', icon: <Receipt size={18} />, description: 'Subscription invoices' },
-        { label: t('finance.taxReports'), href: '/finance/tax-reports', icon: <FileText size={18} />, description: 'VAT & withholding' },
+        { label: t('finance.commissions'), href: '/finance/commissions', icon: <Percent size={18} />, description: t('finance.commissionsDesc') },
+        { label: t('finance.payouts'), href: '/finance/payouts', icon: <Send size={18} />, description: t('finance.payoutsDesc') },
+        { label: t('finance.invoices'), href: '/finance/invoices', icon: <Receipt size={18} />, description: t('finance.invoicesDesc') },
+        { label: t('finance.taxReports'), href: '/finance/tax-reports', icon: <FileText size={18} />, description: t('finance.taxReportsDesc') },
     ];
 
     return (
@@ -77,7 +77,7 @@ export default function FinancePage() {
                 ))}
             </div>
             <div className={shared.infoCard}>
-                <h3 className={shared.infoCardHeader}>Revenue Trend (Subscriptions vs Commissions)</h3>
+                <h3 className={shared.infoCardHeader}>{t('finance.revenueTrendTitle')}</h3>
                 <RevenueTrendChart />
             </div>
         </div>

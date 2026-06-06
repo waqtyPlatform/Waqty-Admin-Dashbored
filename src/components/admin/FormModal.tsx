@@ -3,6 +3,7 @@
 import React from 'react';
 import { Modal } from '@/components/ui';
 import { X, Loader2 } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from './FormModal.module.css';
 
 interface FormModalProps {
@@ -27,6 +28,7 @@ export function FormModal({
     loading = false,
     children,
 }: FormModalProps) {
+    const { t } = useTranslation();
     if (!open) return null;
 
     return (
@@ -37,7 +39,7 @@ export function FormModal({
             footer={
                 <div className={styles.footer}>
                     <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={loading}>
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button
                         type="submit"
@@ -79,6 +81,7 @@ export function ConfirmModal({
     variant = 'danger',
     loading = false,
 }: ConfirmModalProps) {
+    const { t } = useTranslation();
     if (!open) return null;
 
     return (
@@ -89,7 +92,7 @@ export function ConfirmModal({
             footer={
                 <div className={styles.footer}>
                     <button type="button" className={styles.cancelBtn} onClick={onClose} disabled={loading}>
-                        Cancel
+                        {t('common.cancel')}
                     </button>
                     <button
                         type="button"

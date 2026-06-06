@@ -44,10 +44,12 @@ export default function ReviewsPage() {
     const { addToast } = useToast();
 
     const statusFilter = searchParams.get('status') || 'all';
+    const [page, setPage] = useState(1);
     const setStatusFilter = useCallback((value: string) => {
         const params = new URLSearchParams(searchParams.toString());
         if (value === 'all') params.delete('status');
         else params.set('status', value);
+        setPage(1);
         router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
     }, [searchParams, pathname, router]);
 
@@ -59,9 +61,11 @@ export default function ReviewsPage() {
         ? { trashed: 'only' as const }
         : {};
 
-    const { data: ratings, loading, error, refetch } = useApiQuery(
-        () => adminRatingsApi.list({ per_page: 100, ...apiFilters }),
-        [statusFilter]
+    // Server-paginated (per_page 15 + page) — was fetching 100 rows then slicing
+    // client-side, which silently dropped every row past 100.
+    const { data: ratings, loading, error, meta, refetch } = useApiQuery(
+        () => adminRatingsApi.list({ per_page: 15, page, ...apiFilters }),
+        [statusFilter, page]
     );
     const { data: stats, refetch: refetchStats } = useApiQuery(() => adminRatingsApi.stats(), []);
 
@@ -236,6 +240,10 @@ export default function ReviewsPage() {
                 searchKeys={['comment']}
                 searchPlaceholder={t('reviews.searchPlaceholder')}
                 getRowKey={r => r.uuid}
+                serverPagination
+                currentPage={page}
+                totalPages={meta?.pagination?.last_page ?? 1}
+                onPageChange={setPage}
                 onRowClick={r => setDetail(r)}
                 emptyMessage={t('reviews.noneFound')}
                 selectable

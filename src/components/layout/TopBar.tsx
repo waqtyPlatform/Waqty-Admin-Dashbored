@@ -116,10 +116,10 @@ export default function TopBar() {
             </button>
 
             <div className={styles.actions}>
-                <button className={styles.iconBtn} onClick={toggleLanguage} title={language === 'en' ? 'العربية' : 'English'}>
+                <button className={styles.iconBtn} onClick={toggleLanguage} aria-label={t('topbar.toggleLanguage')} title={language === 'en' ? 'العربية' : 'English'}>
                     <Languages size={20} />
                 </button>
-                <button className={styles.iconBtn} onClick={toggleTheme} title={t('topbar.toggleTheme')}>
+                <button className={styles.iconBtn} onClick={toggleTheme} aria-label={t('topbar.toggleTheme')} title={t('topbar.toggleTheme')}>
                     {resolvedTheme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
                 </button>
 

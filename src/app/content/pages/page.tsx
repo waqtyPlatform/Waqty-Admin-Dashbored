@@ -102,7 +102,7 @@ export default function ContentPagesPage() {
                             </div>
                             <p style={{ fontSize: '0.8125rem', color: 'var(--text-tertiary)', margin: '0 0 4px' }}>{page.title_ar}</p>
                             <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', margin: '0 0 12px' }}>
-                                {t('content.pages.lastUpdated')}{page.updated_by ? ` ${t('content.pages.by')} ${page.updated_by.name}` : ''} {t('content.pages.on')} {page.updated_at.slice(0, 10)}
+                                {t('content.pages.lastUpdated')}{page.updated_by ? ` ${t('content.pages.by')} ${page.updated_by.name}` : ''} {t('content.pages.on')} {page.updated_at ? page.updated_at.slice(0, 10) : '—'}
                             </p>
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <PermissionGate module="content" action="edit">

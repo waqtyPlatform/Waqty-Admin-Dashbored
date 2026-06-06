@@ -17,6 +17,10 @@ export function useServiceWorker() {
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
+        // Holds the periodic-update timer so it can be cleared on unmount (set
+        // inside the async register().then below).
+        let updateInterval: ReturnType<typeof setInterval> | undefined;
+
         // Register service worker
         if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
             navigator.serviceWorker
@@ -26,7 +30,7 @@ export function useServiceWorker() {
                     setIsReady(true);
 
                     // Check for updates every 60 seconds
-                    setInterval(() => {
+                    updateInterval = setInterval(() => {
                         registration.update();
                     }, 60 * 1000);
                 })
@@ -38,6 +42,7 @@ export function useServiceWorker() {
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
+            if (updateInterval) clearInterval(updateInterval);
         };
     }, []);
 

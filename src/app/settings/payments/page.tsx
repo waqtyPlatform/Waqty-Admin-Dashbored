@@ -215,16 +215,16 @@ export default function PaymentsPage() {
                         <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>
                     )}
                     <FormField label={t('settings.payments.paymentMethod')} required>
-                        <select name="payment_method" defaultValue={editTarget.payment_method} className={shared.filterSelect} style={{ width: '100%' }}>
+                        <select name="payment_method" defaultValue={editTarget.payment_method} className={shared.formInput} style={{ width: '100%' }}>
                             <option value="cash">{t('settings.payments.cash')}</option>
                             <option value="paymob">Paymob</option>
                         </select>
                     </FormField>
                     <FormField label={t('settings.payments.amountEgp')} required>
-                        <input name="amount" type="number" defaultValue={String(editTarget.amount)} required className={shared.filterSelect} style={{ width: '100%' }} />
+                        <input name="amount" type="number" defaultValue={String(editTarget.amount)} required className={shared.formInput} style={{ width: '100%' }} />
                     </FormField>
                     <FormField label={t('common.status')} required>
-                        <select name="status" defaultValue={editTarget.status} className={shared.filterSelect} style={{ width: '100%' }}>
+                        <select name="status" defaultValue={editTarget.status} className={shared.formInput} style={{ width: '100%' }}>
                             <option value="pending">{t('settings.payments.pending')}</option>
                             <option value="completed">{t('settings.payments.completed')}</option>
                             <option value="failed">{t('settings.payments.failed')}</option>
@@ -232,10 +232,10 @@ export default function PaymentsPage() {
                         </select>
                     </FormField>
                     <FormField label={t('settings.payments.transactionId')}>
-                        <input name="transaction_id" defaultValue={editTarget.transaction_id ?? ''} className={shared.filterSelect} style={{ width: '100%' }} />
+                        <input name="transaction_id" defaultValue={editTarget.transaction_id ?? ''} className={shared.formInput} style={{ width: '100%' }} />
                     </FormField>
                     <FormField label={t('settings.payments.notes')}>
-                        <input name="notes" defaultValue={editTarget.notes ?? ''} className={shared.filterSelect} style={{ width: '100%' }} />
+                        <input name="notes" defaultValue={editTarget.notes ?? ''} className={shared.formInput} style={{ width: '100%' }} />
                     </FormField>
                 </FormModal>
             )}

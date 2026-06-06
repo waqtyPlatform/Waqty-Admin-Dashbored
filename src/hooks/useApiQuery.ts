@@ -37,20 +37,26 @@ export function useApiQuery<T = any>(
     const mountedRef = useRef(true);
     const fetcherRef = useRef(fetcher);
     fetcherRef.current = fetcher;
+    // Monotonic request id: when `deps` change a new request starts; only the
+    // newest one is allowed to apply state, so a slower earlier response can't
+    // clobber a newer one (out-of-order setState race).
+    const requestIdRef = useRef(0);
 
     const fetchData = useCallback(async () => {
         if (!enabled) return;
+        const myId = ++requestIdRef.current;
+        const isCurrent = () => mountedRef.current && myId === requestIdRef.current;
         setLoading(true);
         setError(null);
         setApiError(null);
         try {
             const response = await fetcherRef.current();
-            if (mountedRef.current) {
+            if (isCurrent()) {
                 setData(response.data ?? null);
                 setMeta(response.meta ?? null);
             }
         } catch (err: unknown) {
-            if (mountedRef.current) {
+            if (isCurrent()) {
                 if (fallbackData !== undefined) {
                     setData(fallbackData as T);
                 } else {
@@ -67,7 +73,7 @@ export function useApiQuery<T = any>(
                 }
             }
         } finally {
-            if (mountedRef.current) {
+            if (isCurrent()) {
                 setLoading(false);
             }
         }

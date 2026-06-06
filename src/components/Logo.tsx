@@ -43,4 +43,42 @@ export function Logo({
     );
 }
 
+/**
+ * Compact Waqty mark — just the "Q" glyph. For square/icon contexts (collapsed
+ * sidebar, favicon). Defaults to the brand green; pass `color` to recolor (e.g.
+ * white inside a green tile).
+ */
+export function LogoMark({
+    size = 28,
+    color = '#00E083',
+    className,
+    style,
+    title = 'Waqty',
+}: {
+    size?: number;
+    color?: string;
+    className?: string;
+    style?: React.CSSProperties;
+    title?: string;
+}) {
+    return (
+        <svg
+            width={size}
+            height={size}
+            viewBox="70 -3 42 42"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            role="img"
+            aria-label={title}
+            className={className}
+            style={{ color, display: 'block', ...style }}
+        >
+            <path
+                d="M99.5439 17.5091C99.5439 12.1063 95.1417 7.704 89.8389 7.704C84.4361 7.704 80.1339 12.1063 80.1339 17.5091C80.1339 22.8618 84.4361 27.2141 89.8389 27.2141C95.1417 27.2141 99.5439 22.8618 99.5439 17.5091ZM72.2799 17.5091C72.2799 7.75402 80.1839 1.55595e-05 89.8389 1.55595e-05C99.5439 1.55595e-05 107.398 7.75402 107.398 17.5091C107.398 20.8608 106.347 24.1125 104.647 26.8139L107.948 30.2156C109.549 31.7164 109.549 34.1176 107.948 35.6684C107.198 36.4689 106.247 36.819 105.247 36.819C104.196 36.819 103.296 36.4689 102.495 35.6684L99.1437 32.3667C96.4423 34.0676 93.2907 35.0181 89.8389 35.0181C80.1839 35.0181 72.2799 27.2141 72.2799 17.5091Z"
+                fill="currentColor"
+            />
+        </svg>
+    );
+}
+
 export default Logo;

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@/hooks/useTranslation';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
+import { ConfirmModal } from '@/components/admin/FormModal';
 import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
 import { adminUsersApi, adminBookingsApi, type UserObject, type BookingObject } from '@/lib/api';
 import {
@@ -31,6 +32,8 @@ export default function UserDetailPage() {
     const router = useRouter();
     const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('overview');
+    // Gate destructive actions (delete/ban/block) behind a confirmation.
+    const [confirmAction, setConfirmAction] = useState<'delete' | 'ban' | 'block' | null>(null);
 
     const userUuid = Array.isArray(id) ? id[0] : id as string;
 
@@ -120,11 +123,11 @@ export default function UserDetailPage() {
                                     : <ActionBtn icon={<UserX size={14} />} label={t('common.deactivate')} onClick={() => handleAction('deactivate')} />
                                 }
                                 {!user.blocked
-                                    ? <ActionBtn icon={<Ban size={14} />} label={t('common.block')} onClick={() => handleAction('block')} danger />
+                                    ? <ActionBtn icon={<Ban size={14} />} label={t('common.block')} onClick={() => setConfirmAction('block')} danger />
                                     : <ActionBtn icon={<ShieldCheck size={14} />} label={t('common.unblock')} onClick={() => handleAction('unblock')} />
                                 }
                                 {!user.banned
-                                    ? <ActionBtn icon={<AlertTriangle size={14} />} label={t('common.ban')} onClick={() => handleAction('ban')} danger />
+                                    ? <ActionBtn icon={<AlertTriangle size={14} />} label={t('common.ban')} onClick={() => setConfirmAction('ban')} danger />
                                     : <ActionBtn icon={<ShieldCheck size={14} />} label={t('common.unban')} onClick={() => handleAction('unban')} />
                                 }
                             </>
@@ -132,7 +135,7 @@ export default function UserDetailPage() {
                     </PermissionGate>
                     <PermissionGate module="users" action="delete">
                         {status !== 'deleted' && (
-                            <ActionBtn icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => handleAction('delete')} danger />
+                            <ActionBtn icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => setConfirmAction('delete')} danger />
                         )}
                     </PermissionGate>
                 </div>
@@ -232,6 +235,17 @@ export default function UserDetailPage() {
                         </div>
                     )}
                 </div>
+            )}
+            {confirmAction && (
+                <ConfirmModal
+                    open={!!confirmAction}
+                    onClose={() => setConfirmAction(null)}
+                    onConfirm={() => { const a = confirmAction; setConfirmAction(null); handleAction(a); }}
+                    title={confirmAction === 'delete' ? t('common.delete') : confirmAction === 'ban' ? t('common.ban') : t('common.block')}
+                    message={(confirmAction === 'delete' ? t('users.confirmDelete') : confirmAction === 'ban' ? t('users.confirmBan') : t('users.confirmBlock')).replace('{name}', user.name)}
+                    confirmLabel={confirmAction === 'delete' ? t('common.delete') : confirmAction === 'ban' ? t('common.ban') : t('common.block')}
+                    variant="danger"
+                />
             )}
         </div>
     );

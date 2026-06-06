@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
-import { FormModal, FormField } from '@/components/admin/FormModal';
+import { FormModal, FormField, ConfirmModal } from '@/components/admin/FormModal';
 import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
 import { adminPromoCodesApi, type PromoCodeObject, type PromoCodePayload, type PromoCodeType } from '@/lib/api';
 import { copyToClipboard } from '@/lib/utils';
+import { formatMoney, toMinor } from '@/lib/market';
 import { Plus, Copy, Loader2, Trash2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import shared from '@/components/admin/shared.module.css';
@@ -23,10 +24,14 @@ export default function PromoCodesPage() {
     const { t } = useTranslation();
     const [showCreate, setShowCreate] = useState(false);
     const [editItem, setEditItem] = useState<PromoCodeObject | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+    const [page, setPage] = useState(1);
 
-    const { data, loading, refetch } = useApiQuery(
-        () => adminPromoCodesApi.list({ per_page: 100 }),
-        []
+    // Server-paginated (per_page 15 + page) — was fetching 100 rows then slicing
+    // client-side, which silently dropped every row past 100.
+    const { data, loading, meta, refetch } = useApiQuery(
+        () => adminPromoCodesApi.list({ per_page: 15, page }),
+        [page]
     );
 
     const { mutate: createCode, loading: creating } = useApiMutation(
@@ -100,11 +105,11 @@ export default function PromoCodesPage() {
         },
         {
             key: 'type', label: t('marketing.promoCodes.type'), sortable: true,
-            render: r => r.type === 'percentage' ? `${r.value}%` : `EGP ${r.value}`,
+            render: r => r.type === 'percentage' ? `${r.value}%` : formatMoney(toMinor(r.value)),
         },
         {
             key: 'min_order', label: t('marketing.promoCodes.minOrder'),
-            render: r => r.min_order && r.min_order > 0 ? `EGP ${r.min_order}` : '-',
+            render: r => r.min_order && r.min_order > 0 ? formatMoney(toMinor(r.min_order)) : '-',
         },
         {
             key: 'usage_count', label: t('marketing.promoCodes.usage'), sortable: true,
@@ -137,7 +142,7 @@ export default function PromoCodesPage() {
                         </button>
                         <PermissionGate module="marketing" action="delete">
                             <button
-                                onClick={async () => { await deleteCode(r.uuid); refetch(); }}
+                                onClick={() => setConfirmDelete(r.uuid)}
                                 style={{ padding: '3px 8px', fontSize: '0.75rem', border: '1px solid var(--color-error)', borderRadius: 5, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 3 }}
                             >
                                 <Trash2 size={11} /> {t('common.delete')}
@@ -177,6 +182,20 @@ export default function PromoCodesPage() {
                 searchKeys={['code']}
                 searchPlaceholder={t('marketing.promoCodes.searchPlaceholder')}
                 getRowKey={r => r.uuid}
+                serverPagination
+                currentPage={page}
+                totalPages={meta?.pagination?.last_page ?? 1}
+                onPageChange={setPage}
+            />
+
+            <ConfirmModal
+                open={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={async () => { const uuid = confirmDelete; setConfirmDelete(null); if (uuid) { await deleteCode(uuid); refetch(); } }}
+                title={t('common.delete')}
+                message={t('common.confirmDeleteItem')}
+                confirmLabel={t('common.delete')}
+                variant="danger"
             />
 
             {/* Create Modal */}

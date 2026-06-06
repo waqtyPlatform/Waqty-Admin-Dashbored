@@ -7,6 +7,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
+import { ConfirmModal } from '@/components/admin/FormModal';
 import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
 import { adminUsersApi, type UserObject } from '@/lib/api';
 import { exportToCSV } from '@/lib/utils';
@@ -43,19 +44,26 @@ export default function UsersPage() {
     const { can } = usePermission();
 
     const statusFilter = (searchParams.get('status') || 'all') as StatusFilter;
+    const [page, setPage] = useState(1);
     const setStatusFilter = useCallback((value: string) => {
         const params = new URLSearchParams(searchParams.toString());
         if (value === 'all') params.delete('status');
         else params.set('status', value);
+        setPage(1);
         router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
     }, [searchParams, pathname, router]);
 
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+    // Destructive actions (delete/ban/block) are gated behind a confirmation;
+    // reversible toggles (activate/deactivate/unblock/unban/restore) stay instant.
+    const [confirmAction, setConfirmAction] = useState<{ user: UserObject; action: 'delete' | 'ban' | 'block' } | null>(null);
 
     const apiFilters = buildFilters(statusFilter);
-    const { data: users, loading, error, refetch } = useApiQuery(
-        () => adminUsersApi.list({ per_page: 100, ...apiFilters }),
-        [statusFilter],
+    // Server-paginated (per_page 15 + page) — was fetching 100 rows then slicing
+    // client-side, which silently dropped every row past 100.
+    const { data: users, loading, error, meta, refetch } = useApiQuery(
+        () => adminUsersApi.list({ per_page: 15, page, ...apiFilters }),
+        [statusFilter, page],
         { fallbackData: [] as UserObject[] }
     );
 
@@ -129,19 +137,19 @@ export default function UsersPage() {
                                             <ActionItem icon={<UserX size={14} />} label={t('common.deactivate')} onClick={() => handleAction(row, 'deactivate')} />
                                         )}
                                         {!row.blocked && can('users', 'edit') && (
-                                            <ActionItem icon={<Ban size={14} />} label={t('common.block')} onClick={() => handleAction(row, 'block')} />
+                                            <ActionItem icon={<Ban size={14} />} label={t('common.block')} onClick={() => { setActionMenuId(null); setConfirmAction({ user: row, action: 'block' }); }} />
                                         )}
                                         {row.blocked && can('users', 'edit') && (
                                             <ActionItem icon={<ShieldCheck size={14} />} label={t('common.unblock')} onClick={() => handleAction(row, 'unblock')} />
                                         )}
                                         {!row.banned && can('users', 'edit') && (
-                                            <ActionItem icon={<AlertTriangle size={14} />} label={t('common.ban')} onClick={() => handleAction(row, 'ban')} />
+                                            <ActionItem icon={<AlertTriangle size={14} />} label={t('common.ban')} onClick={() => { setActionMenuId(null); setConfirmAction({ user: row, action: 'ban' }); }} />
                                         )}
                                         {row.banned && can('users', 'edit') && (
                                             <ActionItem icon={<ShieldCheck size={14} />} label={t('common.unban')} onClick={() => handleAction(row, 'unban')} />
                                         )}
                                         {can('users', 'delete') && (
-                                            <ActionItem icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => handleAction(row, 'delete')} danger />
+                                            <ActionItem icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => { setActionMenuId(null); setConfirmAction({ user: row, action: 'delete' }); }} danger />
                                         )}
                                     </>
                                 )}
@@ -170,6 +178,10 @@ export default function UsersPage() {
                 searchKeys={['name', 'email', 'phone']}
                 searchPlaceholder={t('users.searchPlaceholder')}
                 getRowKey={row => row.uuid}
+                serverPagination
+                currentPage={page}
+                totalPages={meta?.pagination?.last_page ?? 1}
+                onPageChange={setPage}
                 onRowClick={row => router.push(`/users/${row.uuid}`)}
                 filters={
                     <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={shared.filterSelect}>
@@ -197,6 +209,17 @@ export default function UsersPage() {
                     </PermissionGate>
                 }
             />
+            {confirmAction && (
+                <ConfirmModal
+                    open={!!confirmAction}
+                    onClose={() => setConfirmAction(null)}
+                    onConfirm={() => { const c = confirmAction; setConfirmAction(null); handleAction(c.user, c.action); }}
+                    title={confirmAction.action === 'delete' ? t('common.delete') : confirmAction.action === 'ban' ? t('common.ban') : t('common.block')}
+                    message={(confirmAction.action === 'delete' ? t('users.confirmDelete') : confirmAction.action === 'ban' ? t('users.confirmBan') : t('users.confirmBlock')).replace('{name}', confirmAction.user.name)}
+                    confirmLabel={confirmAction.action === 'delete' ? t('common.delete') : confirmAction.action === 'ban' ? t('common.ban') : t('common.block')}
+                    variant="danger"
+                />
+            )}
         </div>
     );
 }

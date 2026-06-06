@@ -32,6 +32,7 @@ import { mockTickets } from '@/mocks/support';
 import { assessChurnRisk } from '@/lib/analytics';
 import { formatMoney } from '@/lib/market';
 import { useApiQuery } from '@/hooks/useApiQuery';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { adminProvidersApi, adminUsersApi, adminBookingsApi } from '@/lib/api';
 import Link from 'next/link';
 import { AlertTriangle } from 'lucide-react';
@@ -74,14 +75,17 @@ export default function DashboardPage() {
     // Real platform counts for the first three KPI tiles (providers / users / bookings)
     // from each list endpoint's pagination total. The other tiles (revenue, subscriptions,
     // registrations, tickets, monthly) have no backend endpoint and stay mock.
-    const { meta: providersMeta } = useApiQuery(() => adminProvidersApi.list({ per_page: 1 }), []);
-    const { meta: usersMeta } = useApiQuery(() => adminUsersApi.list({ per_page: 1 }), []);
-    const { meta: bookingsMeta } = useApiQuery(() => adminBookingsApi.list({ per_page: 1 }), []);
+    const { meta: providersMeta, loading: providersLoading } = useApiQuery(() => adminProvidersApi.list({ per_page: 1 }), []);
+    const { meta: usersMeta, loading: usersLoading } = useApiQuery(() => adminUsersApi.list({ per_page: 1 }), []);
+    const { meta: bookingsMeta, loading: bookingsLoading } = useApiQuery(() => adminBookingsApi.list({ per_page: 1 }), []);
     const realKpiCounts: Record<number, number | undefined> = {
         0: providersMeta?.pagination?.total,
         1: usersMeta?.pagination?.total,
         2: bookingsMeta?.pagination?.total,
     };
+    // Show a skeleton (not the mock seed) for the 3 live tiles while their count loads,
+    // so the headline metrics don't visibly snap from a fake number to the real one.
+    const realKpiLoading: Record<number, boolean> = { 0: providersLoading, 1: usersLoading, 2: bookingsLoading };
     const kpis = mockKPIs.map((kpi, i) =>
         realKpiCounts[i] != null ? { ...kpi, value: realKpiCounts[i]!.toLocaleString() } : kpi
     );
@@ -148,7 +152,7 @@ export default function DashboardPage() {
                     {t('dashboard.needsAttention')}
                 </h2>
                 {attention.length === 0 ? (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'var(--space-4)', background: 'var(--color-success-light)', color: 'var(--color-success)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', padding: 'var(--space-4)', background: 'var(--color-success-light)', color: 'var(--color-success)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
                         <CheckCircle2 size={18} /> {t('dashboard.allClear')}
                     </div>
                 ) : (
@@ -191,7 +195,9 @@ export default function DashboardPage() {
                         <div className={styles.kpiIcon}>{KPI_ICONS[i]}</div>
                         <div className={styles.kpiContent}>
                             <span className={styles.kpiLabel}>{t(kpi.label)}</span>
-                            <span className={styles.kpiValue}>{kpi.value}</span>
+                            <span className={styles.kpiValue}>
+                                {realKpiLoading[i] ? <Skeleton width={72} height={28} /> : kpi.value}
+                            </span>
                             <span className={`${styles.kpiChange} ${kpi.trend === 'up' ? styles.up : styles.down}`}>
                                 {kpi.trend === 'up' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                                 {Math.abs(kpi.change)}% {t('dashboard.vsLastMonth')}
@@ -262,9 +268,9 @@ export default function DashboardPage() {
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: 12,
-                                            padding: '8px 10px',
-                                            borderRadius: 8,
+                                            gap: 'var(--space-3)',
+                                            padding: 'var(--space-2) var(--space-3)',
+                                            borderRadius: 'var(--radius-md)',
                                             border: '1px solid var(--border-color)',
                                             textDecoration: 'none',
                                             color: 'var(--text-primary)',
@@ -272,14 +278,14 @@ export default function DashboardPage() {
                                         }}
                                     >
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontWeight: 500, fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{provider.business_name}</div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            <div style={{ fontWeight: 500, fontSize: 'var(--text-sm)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{provider.business_name}</div>
+                                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                 {risk.reasons[0] || '—'}
                                             </div>
                                         </div>
                                         <span style={{
                                             padding: '2px 8px',
-                                            borderRadius: 999,
+                                            borderRadius: 'var(--radius-full)',
                                             fontSize: '0.6875rem',
                                             fontWeight: 600,
                                             textTransform: 'uppercase',

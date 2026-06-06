@@ -85,11 +85,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const storedUser = localStorage.getItem('waqty_superadmin_user');
         const storedToken = localStorage.getItem('waqty_superadmin_token');
         if (storedUser && storedToken) {
-            const parsed = JSON.parse(storedUser) as SuperAdminUser;
-            // The API client reads `waqty_superadmin_token` directly (X11) — no
-            // mirror into the shared `waqty_token` key, which other apps also use.
-            setUser(parsed);
-            setAuthCookie(true, parsed.role);
+            try {
+                const parsed = JSON.parse(storedUser) as SuperAdminUser;
+                // The API client reads `waqty_superadmin_token` directly (X11) — no
+                // mirror into the shared `waqty_token` key, which other apps also use.
+                setUser(parsed);
+                setAuthCookie(true, parsed.role);
+            } catch {
+                // Corrupt stored user (truncated/tampered/partial write) — clear it and
+                // fall through to the unauthenticated state. Without this, the throw
+                // escapes the root effect ABOVE the ErrorBoundary (which lives inside
+                // AppShell) → permanent white screen with no route back to /login.
+                localStorage.removeItem('waqty_superadmin_user');
+                localStorage.removeItem('waqty_superadmin_token');
+                setAuthCookie(false);
+            }
         } else {
             localStorage.removeItem('waqty_superadmin_user');
             localStorage.removeItem('waqty_superadmin_token');

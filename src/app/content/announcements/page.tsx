@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
-import { FormModal, FormField } from '@/components/admin/FormModal';
+import { FormModal, FormField, ConfirmModal } from '@/components/admin/FormModal';
 import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
 import {
     adminAnnouncementsApi,
@@ -33,6 +33,7 @@ export default function AnnouncementsPage() {
     const { t } = useTranslation();
     const [showCreate, setShowCreate] = useState(false);
     const [editItem, setEditItem] = useState<AnnouncementObject | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const { data, loading, refetch } = useApiQuery(
         () => adminAnnouncementsApi.list({ per_page: 50 }),
@@ -163,7 +164,7 @@ export default function AnnouncementsPage() {
                                     </button>
                                     <PermissionGate module="content" action="delete">
                                         <button
-                                            onClick={async () => { await deleteItem(a.uuid); refetch(); }}
+                                            onClick={() => setConfirmDelete(a.uuid)}
                                             style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--color-error)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
                                         >
                                             <Trash2 size={13} /> {t('common.delete')}
@@ -275,6 +276,16 @@ export default function AnnouncementsPage() {
                     </>
                 )}
             </FormModal>
+
+            <ConfirmModal
+                open={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={async () => { const uuid = confirmDelete; setConfirmDelete(null); if (uuid) { await deleteItem(uuid); refetch(); } }}
+                title={t('common.delete')}
+                message={t('common.confirmDeleteItem')}
+                confirmLabel={t('common.delete')}
+                variant="danger"
+            />
         </div>
     );
 }

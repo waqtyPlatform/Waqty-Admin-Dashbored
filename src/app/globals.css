@@ -77,6 +77,61 @@
     --border-strong: #cbd5e1;
     --border-focus: #00b166;
 
+    /* ── Compatibility aliases ──
+       Map token names referenced by call-sites that aren't in the core scale
+       (`var(--border)`, `var(--bg-surface)`, numeric semantic steps like
+       `--color-success-600`, and `--color-destructive-*`). Without these, `var()`
+       falls back to currentColor / transparent / inherited — dropping borders,
+       surfaces, and paid-vs-owed financial colors. var() resolves lazily, so these
+       follow dark-mode overrides of the base tokens automatically. */
+    --border: var(--border-color);
+    --bg-surface: var(--bg-primary);
+    --color-success-50: var(--color-success-light);
+    --color-success-100: var(--color-success-light);
+    --color-success-200: var(--color-success-light);
+    --color-success-300: var(--color-success);
+    --color-success-400: var(--color-success);
+    --color-success-500: var(--color-success);
+    --color-success-600: var(--color-success-hover);
+    --color-success-700: var(--color-success-hover);
+    --color-success-800: var(--color-success-hover);
+    --color-success-900: var(--color-success-hover);
+    --color-error-50: var(--color-error-light);
+    --color-error-100: var(--color-error-light);
+    --color-error-200: var(--color-error-light);
+    --color-error-300: var(--color-error);
+    --color-error-400: var(--color-error);
+    --color-error-500: var(--color-error);
+    --color-error-600: var(--color-error-hover);
+    --color-error-700: var(--color-error-hover);
+    --color-error-800: var(--color-error-hover);
+    --color-error-900: var(--color-error-hover);
+    --color-destructive: var(--color-error);
+    --color-destructive-light: var(--color-error-light);
+    --color-destructive-500: var(--color-error);
+    --color-destructive-600: var(--color-error-hover);
+    --color-destructive-700: var(--color-error-hover);
+    --color-warning-50: var(--color-warning-light);
+    --color-warning-100: var(--color-warning-light);
+    --color-warning-200: var(--color-warning-light);
+    --color-warning-300: var(--color-warning);
+    --color-warning-400: var(--color-warning);
+    --color-warning-500: var(--color-warning);
+    --color-warning-600: var(--color-warning-hover);
+    --color-warning-700: var(--color-warning-hover);
+    --color-warning-800: var(--color-warning-hover);
+    --color-warning-900: var(--color-warning-hover);
+    --color-info-50: var(--color-info-light);
+    --color-info-100: var(--color-info-light);
+    --color-info-200: var(--color-info-light);
+    --color-info-300: var(--color-info);
+    --color-info-400: var(--color-info);
+    --color-info-500: var(--color-info);
+    --color-info-600: var(--color-info-hover);
+    --color-info-700: var(--color-info-hover);
+    --color-info-800: var(--color-info-hover);
+    --color-info-900: var(--color-info-hover);
+
     /* ── Text ── */
     --text-primary: #0f172a;
     --text-secondary: #475569;
