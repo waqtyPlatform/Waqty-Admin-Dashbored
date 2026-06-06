@@ -7,6 +7,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Eye, EyeOff, Languages, Moon, Sun } from 'lucide-react';
 import styles from './page.module.css';
+import { Logo } from '@/components/Logo';
 
 export default function LoginPage() {
     const { login } = useAuth();
@@ -44,7 +45,7 @@ export default function LoginPage() {
 
             <div className={styles.card}>
                 <div className={styles.logoSection}>
-                    <div className={styles.logo}>H</div>
+                    <Logo height={40} style={{ margin: '0 auto' }} />
                     <h1 className={styles.title}>{t('auth.loginTitle')}</h1>
                     <p className={styles.subtitle}>{t('auth.loginSubtitle')}</p>
                     <span style={{ display: 'inline-block', marginTop: 'var(--space-2)', padding: '2px var(--space-3)', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', background: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)', border: '1px solid color-mix(in srgb, var(--color-warning) 40%, transparent)', borderRadius: 'var(--radius-full)' }}>
@@ -61,7 +62,7 @@ export default function LoginPage() {
                             type="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
-                            placeholder="superadmin@hagzy.com"
+                            placeholder="superadmin@waqty.com"
                             className={styles.input}
                             required
                             autoComplete="email"

@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                         <div>
                             <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: 6 }}>{t('auth.email')}</label>
-                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="admin@hagzy.com" style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: 8, fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' }} />
+                            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required placeholder="admin@waqty.com" style={{ width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)', borderRadius: 8, fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' }} />
                         </div>
                         <button type="submit" disabled={loading} style={{ width: '100%', padding: '10px', background: 'var(--color-primary-500)', color: 'white', border: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-sans)' }}>
                             {loading ? t('auth.sending') : t('auth.sendCode')}

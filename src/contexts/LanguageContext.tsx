@@ -17,7 +17,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 function getInitialLanguage(): Language {
     if (typeof window === 'undefined') return 'en';
     try {
-        const stored = localStorage.getItem('hagzy_settings');
+        const stored = localStorage.getItem('waqty_settings');
         if (stored) {
             const parsed = JSON.parse(stored);
             if (parsed.language === 'ar' || parsed.language === 'en') {
@@ -48,9 +48,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
         setLanguageState(lang);
         // Also persist in settings
         try {
-            const stored = localStorage.getItem('hagzy_settings');
+            const stored = localStorage.getItem('waqty_settings');
             const current = stored ? JSON.parse(stored) : {};
-            localStorage.setItem('hagzy_settings', JSON.stringify({ ...current, language: lang }));
+            localStorage.setItem('waqty_settings', JSON.stringify({ ...current, language: lang }));
         } catch {
             // ignore
         }

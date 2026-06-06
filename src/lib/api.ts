@@ -52,9 +52,9 @@ class ApiClient {
 
     private getToken(): string | null {
         if (typeof window === 'undefined') return null;
-        // App-scoped token key (X11) — never the shared `hagzy_token`, so logging
-        // into another Hagzy web app can't clobber the super-admin session.
-        return localStorage.getItem('hagzy_superadmin_token');
+        // App-scoped token key (X11) — never the shared `waqty_token`, so logging
+        // into another Waqty web app can't clobber the super-admin session.
+        return localStorage.getItem('waqty_superadmin_token');
     }
 
     async request<T>(endpoint: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
@@ -62,7 +62,7 @@ class ApiClient {
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             Accept: 'application/json',
-            'Accept-Language': typeof window !== 'undefined' ? localStorage.getItem('hagzy_language') || 'en' : 'en',
+            'Accept-Language': typeof window !== 'undefined' ? localStorage.getItem('waqty_language') || 'en' : 'en',
             ...(options.headers as Record<string, string>),
         };
 
@@ -80,9 +80,9 @@ class ApiClient {
         if (!response.ok) {
             // 401 — clear stored credentials so the proxy redirects to login
             if (response.status === 401 && typeof window !== 'undefined') {
-                localStorage.removeItem('hagzy_superadmin_token');
-                document.cookie = 'hagzy_superadmin_logged_in=; Max-Age=0; path=/';
-                document.cookie = 'hagzy_superadmin_auth=; Max-Age=0; path=/';
+                localStorage.removeItem('waqty_superadmin_token');
+                document.cookie = 'waqty_superadmin_logged_in=; Max-Age=0; path=/';
+                document.cookie = 'waqty_superadmin_auth=; Max-Age=0; path=/';
             }
 
             // 422 — extract field-level validation errors
@@ -143,7 +143,7 @@ class ApiClient {
         const token = this.getToken();
         const headers: Record<string, string> = {
             Accept: 'application/json',
-            'Accept-Language': typeof window !== 'undefined' ? localStorage.getItem('hagzy_language') || 'en' : 'en',
+            'Accept-Language': typeof window !== 'undefined' ? localStorage.getItem('waqty_language') || 'en' : 'en',
         };
         if (token) headers['Authorization'] = `Bearer ${token}`;
 

@@ -1,6 +1,6 @@
 # Waqty Admin Dashboard
 
-> Super-admin platform for managing the entire **Waqty / Hagzy** beauty & wellness booking ecosystem — service providers, end-users, subscriptions, marketing, finance, and system operations.
+> Super-admin platform for managing the entire **Waqty / Waqty** beauty & wellness booking ecosystem — service providers, end-users, subscriptions, marketing, finance, and system operations.
 
 ---
 
@@ -398,7 +398,7 @@ Every page and action is gated by the `PermissionGate` component based on the lo
 | **Framework** | Next.js 16.2.3 (App Router, Turbopack) |
 | **Language** | TypeScript (strict mode) |
 | **UI** | React 19 + CSS Modules (no Tailwind) |
-| **Styling tokens** | Hagzy design system (spacing, typography, color scales, dark mode) |
+| **Styling tokens** | Waqty design system (spacing, typography, color scales, dark mode) |
 | **Charts** | Recharts 3 |
 | **Forms** | React Hook Form + Zod (planned migration in progress) |
 | **Icons** | Lucide React |
@@ -527,12 +527,12 @@ In mock mode, log in with any of these emails (any password with 6+ characters):
 
 | Email | Role | Access |
 |-------|------|--------|
-| `superadmin@hagzy.com` | Super Admin | Everything + impersonate |
-| `admin@hagzy.com` | Admin | Full CRUD, no impersonate |
-| `moderator@hagzy.com` | Moderator | Reviews, content, support |
-| `support@hagzy.com` | Support | Tickets + view-only |
-| `finance@hagzy.com` | Finance | Subscriptions, finance, reports |
-| `viewer@hagzy.com` | Viewer | Read-only everything |
+| `superadmin@waqty.com` | Super Admin | Everything + impersonate |
+| `admin@waqty.com` | Admin | Full CRUD, no impersonate |
+| `moderator@waqty.com` | Moderator | Reviews, content, support |
+| `support@waqty.com` | Support | Tickets + view-only |
+| `finance@waqty.com` | Finance | Subscriptions, finance, reports |
+| `viewer@waqty.com` | Viewer | Read-only everything |
 
 ---
 

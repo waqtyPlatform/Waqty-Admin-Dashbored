@@ -32,8 +32,8 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'Hagzy Admin - Platform Management',
-    description: 'Super Admin Dashboard for managing the Hagzy platform',
+    title: 'Waqty Admin - Platform Management',
+    description: 'Super Admin Dashboard for managing the Waqty platform',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -7,7 +7,7 @@ export type Translations = {
 
 const translations: Translations = {
     // ── Common ──
-    'common.appName': { en: 'Hagzy Admin', ar: 'هاقزي أدمن' },
+    'common.appName': { en: 'Waqty Admin', ar: 'وقتي أدمن' },
     'common.search': { en: 'Search...', ar: 'بحث...' },
     'common.selected': { en: 'selected', ar: 'محدد' },
     'common.clear': { en: 'Clear', ar: 'مسح' },
@@ -57,7 +57,7 @@ const translations: Translations = {
 
     // ── Auth ──
     'auth.login': { en: 'Sign In', ar: 'تسجيل الدخول' },
-    'auth.loginTitle': { en: 'Welcome to Hagzy Admin', ar: 'مرحباً في هاقزي أدمن' },
+    'auth.loginTitle': { en: 'Welcome to Waqty Admin', ar: 'مرحباً في وقتي أدمن' },
     'auth.loginSubtitle': { en: 'Platform management dashboard', ar: 'لوحة إدارة المنصة' },
     'auth.email': { en: 'Email address', ar: 'البريد الإلكتروني' },
     'auth.password': { en: 'Password', ar: 'كلمة المرور' },
@@ -74,7 +74,7 @@ const translations: Translations = {
     'auth.sending': { en: 'Sending...', ar: 'جارٍ الإرسال...' },
     'auth.resetCodeSentPrefix': { en: 'Reset code sent to', ar: 'تم إرسال رمز الاسترجاع إلى' },
     'auth.resetCodeSentSuffix': { en: '. Check your inbox.', ar: '. تحقق من بريدك الوارد.' },
-    'auth.demoAccounts': { en: 'Demo accounts (varied roles): superadmin@, admin@, moderator@, support@, finance@, viewer@hagzy.com', ar: 'حسابات تجريبية (أدوار متنوعة): superadmin@, admin@, moderator@, support@, finance@, viewer@hagzy.com' },
+    'auth.demoAccounts': { en: 'Demo accounts (varied roles): superadmin@, admin@, moderator@, support@, finance@, viewer@waqty.com', ar: 'حسابات تجريبية (أدوار متنوعة): superadmin@, admin@, moderator@, support@, finance@, viewer@waqty.com' },
     'auth.demoHint': { en: 'Non-super-admin roles are restricted in the sidebar & guarded routes. Any password with 6+ characters works', ar: 'الأدوار غير المشرف العام مقيّدة في القائمة الجانبية والمسارات المحمية. تعمل أي كلمة مرور من 6 أحرف أو أكثر' },
 
     // ── TopBar ──
@@ -700,7 +700,7 @@ const translations: Translations = {
     'reviews.respondToReview': { en: 'Respond to Review', ar: 'الرد على التقييم' },
     'reviews.platformResponseLabel': { en: 'Platform response', ar: 'رد المنصة' },
     'reviews.saveResponse': { en: 'Save response', ar: 'حفظ الرد' },
-    'reviews.responsePlaceholder': { en: 'Respond on behalf of Hagzy...', ar: 'الرد نيابة عن هاقزي...' },
+    'reviews.responsePlaceholder': { en: 'Respond on behalf of Waqty...', ar: 'الرد نيابة عن وقتي...' },
     'reviews.reports': { en: 'reports', ar: 'بلاغات' },
     'reviews.admin': { en: 'Admin', ar: 'المشرف' },
     'reviews.deleted': { en: 'Deleted', ar: 'محذوف' },
@@ -1378,7 +1378,7 @@ const translations: Translations = {
     'settings.appearance.system': { en: 'System', ar: 'النظام' },
     'settings.appearance.systemDesc': { en: 'Follow system preference', ar: 'اتباع إعدادات النظام' },
     'settings.appearance.brandColor': { en: 'Brand Color', ar: 'لون العلامة التجارية' },
-    'settings.appearance.brandDesc': { en: 'Hagzy brand green - used across all apps', ar: 'أخضر علامة هاقزي - مستخدم في كل التطبيقات' },
+    'settings.appearance.brandDesc': { en: 'Waqty brand green - used across all apps', ar: 'أخضر علامة وقتي - مستخدم في كل التطبيقات' },
 
     // ── Settings: Countries ──
     'settings.countries.title': { en: 'Countries & Cities', ar: 'الدول والمدن' },

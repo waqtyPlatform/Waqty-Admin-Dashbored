@@ -29,12 +29,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock admin users for demo
 const MOCK_ADMINS: Record<string, { name: string; role: SuperAdminRole }> = {
-    'superadmin@hagzy.com': { name: 'Super Admin', role: 'super_admin' },
-    'admin@hagzy.com': { name: 'Platform Admin', role: 'admin' },
-    'moderator@hagzy.com': { name: 'Content Moderator', role: 'moderator' },
-    'support@hagzy.com': { name: 'Support Agent', role: 'support' },
-    'finance@hagzy.com': { name: 'Finance Manager', role: 'finance' },
-    'viewer@hagzy.com': { name: 'Report Viewer', role: 'viewer' },
+    'superadmin@waqty.com': { name: 'Super Admin', role: 'super_admin' },
+    'admin@waqty.com': { name: 'Platform Admin', role: 'admin' },
+    'moderator@waqty.com': { name: 'Content Moderator', role: 'moderator' },
+    'support@waqty.com': { name: 'Support Agent', role: 'support' },
+    'finance@waqty.com': { name: 'Finance Manager', role: 'finance' },
+    'viewer@waqty.com': { name: 'Report Viewer', role: 'viewer' },
 };
 
 const VALID_ROLES: readonly SuperAdminRole[] = ['super_admin', 'admin', 'moderator', 'support', 'finance', 'viewer'];
@@ -71,36 +71,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const setAuthCookie = (loggedIn: boolean, role?: string) => {
         if (loggedIn) {
-            document.cookie = `hagzy_superadmin_logged_in=true;path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`;
+            document.cookie = `waqty_superadmin_logged_in=true;path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`;
             if (role) {
-                document.cookie = `hagzy_superadmin_auth=${JSON.stringify({ token: true, role })};path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`;
+                document.cookie = `waqty_superadmin_auth=${JSON.stringify({ token: true, role })};path=/;max-age=${60 * 60 * 24 * 30};SameSite=Lax`;
             }
         } else {
-            document.cookie = 'hagzy_superadmin_logged_in=;path=/;max-age=0';
-            document.cookie = 'hagzy_superadmin_auth=;path=/;max-age=0';
+            document.cookie = 'waqty_superadmin_logged_in=;path=/;max-age=0';
+            document.cookie = 'waqty_superadmin_auth=;path=/;max-age=0';
         }
     };
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('hagzy_superadmin_user');
-        const storedToken = localStorage.getItem('hagzy_superadmin_token');
+        const storedUser = localStorage.getItem('waqty_superadmin_user');
+        const storedToken = localStorage.getItem('waqty_superadmin_token');
         if (storedUser && storedToken) {
             const parsed = JSON.parse(storedUser) as SuperAdminUser;
-            // The API client reads `hagzy_superadmin_token` directly (X11) — no
-            // mirror into the shared `hagzy_token` key, which other apps also use.
+            // The API client reads `waqty_superadmin_token` directly (X11) — no
+            // mirror into the shared `waqty_token` key, which other apps also use.
             setUser(parsed);
             setAuthCookie(true, parsed.role);
         } else {
-            localStorage.removeItem('hagzy_superadmin_user');
-            localStorage.removeItem('hagzy_superadmin_token');
+            localStorage.removeItem('waqty_superadmin_user');
+            localStorage.removeItem('waqty_superadmin_token');
             setAuthCookie(false);
         }
-        const storedImpersonation = localStorage.getItem('hagzy_superadmin_impersonating');
+        const storedImpersonation = localStorage.getItem('waqty_superadmin_impersonating');
         if (storedImpersonation) {
             try {
                 setImpersonating(JSON.parse(storedImpersonation) as ImpersonationState);
             } catch {
-                localStorage.removeItem('hagzy_superadmin_impersonating');
+                localStorage.removeItem('waqty_superadmin_impersonating');
             }
         }
         setLoading(false);
@@ -120,15 +120,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const login = async (email: string, password: string) => {
         // Mock role demo (SA-5): the known demo accounts resolve to VARIED roles so
         // the 6-role × 17-module matrix is actually exercised in the UI — a
-        // non-super-admin (e.g. moderator@hagzy.com) is restricted by the sidebar
+        // non-super-admin (e.g. moderator@waqty.com) is restricted by the sidebar
         // (can()), PermissionGate, and the proxy.ts route guard. Real backend RBAC
         // is deferred; unknown emails still go through the live API below.
         const mock = MOCK_ADMINS[email.trim().toLowerCase()];
         if (mock) {
             const mockUser = buildMockUser(email.trim().toLowerCase(), mock);
             const mockToken = `mock-${mock.role}`;
-            localStorage.setItem('hagzy_superadmin_token', mockToken);
-            localStorage.setItem('hagzy_superadmin_user', JSON.stringify(mockUser));
+            localStorage.setItem('waqty_superadmin_token', mockToken);
+            localStorage.setItem('waqty_superadmin_user', JSON.stringify(mockUser));
             setUser(mockUser);
             setAuthCookie(true, mockUser.role);
             router.push('/');
@@ -156,8 +156,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 updated_at: new Date().toISOString(),
             };
 
-            localStorage.setItem('hagzy_superadmin_token', token);
-            localStorage.setItem('hagzy_superadmin_user', JSON.stringify(apiUser));
+            localStorage.setItem('waqty_superadmin_token', token);
+            localStorage.setItem('waqty_superadmin_user', JSON.stringify(apiUser));
             setUser(apiUser);
             setAuthCookie(true, apiUser.role);
             router.push('/');
@@ -192,9 +192,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const logout = () => {
         // Fire-and-forget — invalidate token on server
         adminAuthApi.logout().catch(() => { /* ignore */ });
-        localStorage.removeItem('hagzy_superadmin_token');
-        localStorage.removeItem('hagzy_superadmin_user');
-        localStorage.removeItem('hagzy_superadmin_impersonating');
+        localStorage.removeItem('waqty_superadmin_token');
+        localStorage.removeItem('waqty_superadmin_user');
+        localStorage.removeItem('waqty_superadmin_impersonating');
         setUser(null);
         setImpersonating(null);
         setAuthCookie(false);
@@ -203,12 +203,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const startImpersonating = (providerId: string, providerName: string) => {
         const state: ImpersonationState = { providerId, providerName, startedAt: new Date().toISOString() };
-        localStorage.setItem('hagzy_superadmin_impersonating', JSON.stringify(state));
+        localStorage.setItem('waqty_superadmin_impersonating', JSON.stringify(state));
         setImpersonating(state);
     };
 
     const stopImpersonating = () => {
-        localStorage.removeItem('hagzy_superadmin_impersonating');
+        localStorage.removeItem('waqty_superadmin_impersonating');
         setImpersonating(null);
     };
 

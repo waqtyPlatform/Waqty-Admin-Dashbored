@@ -31,7 +31,7 @@ export function proxy(request: NextRequest) {
     }
 
     // Check auth cookie
-    const loggedIn = request.cookies.get('hagzy_superadmin_logged_in')?.value;
+    const loggedIn = request.cookies.get('waqty_superadmin_logged_in')?.value;
     if (!loggedIn) {
         const loginUrl = new URL('/login', request.url);
         loginUrl.searchParams.set('redirect', pathname);
@@ -39,7 +39,7 @@ export function proxy(request: NextRequest) {
     }
 
     // Check role-based access
-    const authCookie = request.cookies.get('hagzy_superadmin_auth')?.value;
+    const authCookie = request.cookies.get('waqty_superadmin_auth')?.value;
     if (authCookie) {
         try {
             const auth = JSON.parse(authCookie);

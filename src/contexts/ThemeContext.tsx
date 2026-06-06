@@ -25,7 +25,7 @@ function resolveTheme(theme: Theme): 'light' | 'dark' {
 
 function getInitialTheme(): Theme {
     if (typeof window === 'undefined') return 'light';
-    return (localStorage.getItem('hagzy_theme') as Theme | null) || 'light';
+    return (localStorage.getItem('waqty_theme') as Theme | null) || 'light';
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
@@ -52,7 +52,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const setTheme = useCallback((newTheme: Theme) => {
         setThemeState(newTheme);
-        localStorage.setItem('hagzy_theme', newTheme);
+        localStorage.setItem('waqty_theme', newTheme);
         const resolved = resolveTheme(newTheme);
         setResolvedTheme(resolved);
         document.documentElement.setAttribute('data-theme', resolved);

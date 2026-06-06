@@ -10,6 +10,7 @@ import { ChevronLeft, ChevronDown, X } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { useTranslation } from '@/hooks/useTranslation';
 import { buildNavigation, type NavGroup, type NavChild } from '@/config/navigation';
+import { Logo } from '@/components/Logo';
 
 export default function Sidebar() {
     const { collapsed, toggleSidebar, mobileOpen, setMobileOpen } = useSidebar();
@@ -126,13 +127,13 @@ export default function Sidebar() {
                 <div className={styles.header}>
                     {!collapsed && (
                         <Link href="/" className={styles.logo} onClick={closeMobile}>
-                            <span className={styles.logoIcon}>H</span>
-                            <span className={styles.logoText}>Hagzy Admin</span>
+                            <Logo height={22} />
+                            <span className={styles.logoText}>Admin</span>
                         </Link>
                     )}
                     {collapsed && (
                         <button className={styles.logoIconBtn} onClick={toggleSidebar}>
-                            <span className={styles.logoIcon}>H</span>
+                            <span className={styles.logoIcon}>W</span>
                         </button>
                     )}
                     {!collapsed && (

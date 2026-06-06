@@ -8,7 +8,7 @@ import shared from '@/components/admin/shared.module.css';
 export default function PlatformSettingsPage() {
     const { t } = useTranslation();
     const [settings, setSettings] = useState({
-        platformName: 'Hagzy', defaultCommissionRate: 10, trialDays: 14,
+        platformName: 'Waqty', defaultCommissionRate: 10, trialDays: 14,
         defaultCurrency: 'EGP', minBookingAmount: 50, maxRefundPercent: 80,
         maintenanceMode: false, registrationOpen: true, requireDocuments: true,
     });
