@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Shield, Key, Smartphone, Clock, AlertTriangle, Save } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
+
+const STORAGE_KEY = 'waqty_superadmin_security_settings';
 
 const inputStyle = { width: '100%', padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '0.875rem', color: 'var(--text-primary)', background: 'var(--bg-primary)', fontFamily: 'var(--font-sans)', outline: 'none' };
 
@@ -24,8 +26,28 @@ export default function SecurityPage() {
     });
     const [saved, setSaved] = useState(false);
 
+    // Hydrate from localStorage so saved settings actually persist across reloads
+    // (this is the persistence model for the no-backend admin settings pages).
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) setSettings(prev => ({ ...prev, ...JSON.parse(raw) }));
+        } catch {
+            // ignore corrupt/missing value
+        }
+    }, []);
+
     const update = (key: string, value: unknown) => setSettings(prev => ({ ...prev, [key]: value }));
-    const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+    // Real write (was a fake "Saved" with no persistence) — only then show success.
+    const handleSave = () => {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        } catch {
+            // ignore quota/availability errors
+        }
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+    };
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 800 }}>
@@ -131,7 +153,7 @@ function Row({ label, description, children }: { label: string; description?: st
 function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label?: string }) {
     return (
         <button onClick={() => onChange(!value)} role="switch" aria-checked={value} aria-label={label} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: value ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
-            <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, left: value ? 23 : 3, transition: 'left 0.2s' }} />
+            <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, insetInlineStart: value ? 23 : 3, transition: 'inset-inline-start 0.2s' }} />
         </button>
     );
 }

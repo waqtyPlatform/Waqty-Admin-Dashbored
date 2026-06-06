@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Save } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
+
+const STORAGE_KEY = 'waqty_superadmin_platform_settings';
 
 export default function PlatformSettingsPage() {
     const { t } = useTranslation();
@@ -14,9 +16,26 @@ export default function PlatformSettingsPage() {
     });
 
     const [saved, setSaved] = useState(false);
+
+    // Hydrate from localStorage so saved settings persist across reloads.
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) setSettings(prev => ({ ...prev, ...JSON.parse(raw) }));
+        } catch {
+            // ignore corrupt/missing value
+        }
+    }, []);
+
     const update = (key: string, value: unknown) => setSettings(prev => ({ ...prev, [key]: value }));
 
+    // Real write (was a fake "Saved" with no persistence) — only then show success.
     const handleSave = () => {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        } catch {
+            // ignore quota/availability errors
+        }
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     };
@@ -55,7 +74,7 @@ export default function PlatformSettingsPage() {
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-primary)', fontWeight: 500 }}>{f.label}</label>
                                 {f.type === 'toggle' ? (
                                     <button onClick={() => update(f.key, !(settings as Record<string, unknown>)[f.key])} role="switch" aria-checked={Boolean((settings as Record<string, unknown>)[f.key])} aria-label={f.label} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: (settings as Record<string, unknown>)[f.key] ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
-                                        <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, left: (settings as Record<string, unknown>)[f.key] ? 23 : 3, transition: 'left 0.2s' }} />
+                                        <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, insetInlineStart: (settings as Record<string, unknown>)[f.key] ? 23 : 3, transition: 'inset-inline-start 0.2s' }} />
                                     </button>
                                 ) : (
                                     <input type={f.type} value={String((settings as Record<string, unknown>)[f.key])} onChange={e => update(f.key, f.type === 'number' ? Number(e.target.value) : e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', width: 200, fontFamily: 'var(--font-sans)' }} />

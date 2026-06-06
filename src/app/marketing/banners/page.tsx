@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { PermissionGate } from '@/components/admin/PermissionGate';
-import { FormModal, FormField } from '@/components/admin/FormModal';
+import { FormModal, FormField, ConfirmModal } from '@/components/admin/FormModal';
 import { useApiQuery, useApiMutation } from '@/hooks/useApiQuery';
 import { adminBannersApi, type BannerObject, type BannerPlacement } from '@/lib/api';
 import { Plus, Image as ImageIcon, Eye, Loader2, Trash2 } from 'lucide-react';
@@ -34,6 +34,7 @@ export default function BannersPage() {
     const [editItem, setEditItem] = useState<BannerObject | null>(null);
     // Per-row busy flag: `${uuid}:toggle` | `${uuid}:delete` while its mutation runs.
     const [rowBusy, setRowBusy] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
     const placementLabel = (p: string) => {
         const found = PLACEMENT_KEYS.find(x => x.value === p);
@@ -152,11 +153,7 @@ export default function BannersPage() {
                                             <PermissionGate module="marketing" action="delete">
                                                 <button
                                                     disabled={rowBusy === `${b.uuid}:delete`}
-                                                    onClick={async () => {
-                                                        setRowBusy(`${b.uuid}:delete`);
-                                                        try { await deleteBanner(b.uuid); refetch(); }
-                                                        finally { setRowBusy(null); }
-                                                    }}
+                                                    onClick={() => setConfirmDelete(b.uuid)}
                                                     style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--color-error)', borderRadius: 6, background: 'var(--bg-primary)', cursor: rowBusy === `${b.uuid}:delete` ? 'not-allowed' : 'pointer', opacity: rowBusy === `${b.uuid}:delete` ? 0.6 : 1, color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
                                                 >
                                                     {rowBusy === `${b.uuid}:delete`
@@ -248,6 +245,23 @@ export default function BannersPage() {
                     </>
                 )}
             </FormModal>
+
+            <ConfirmModal
+                open={!!confirmDelete}
+                onClose={() => setConfirmDelete(null)}
+                onConfirm={async () => {
+                    const uuid = confirmDelete;
+                    setConfirmDelete(null);
+                    if (!uuid) return;
+                    setRowBusy(`${uuid}:delete`);
+                    try { await deleteBanner(uuid); refetch(); }
+                    finally { setRowBusy(null); }
+                }}
+                title={t('common.delete')}
+                message={t('common.confirmDeleteItem')}
+                confirmLabel={t('common.delete')}
+                variant="danger"
+            />
         </div>
     );
 }

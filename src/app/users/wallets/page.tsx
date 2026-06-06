@@ -6,7 +6,7 @@ import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { mockWallets } from '@/mocks/users';
-import type { Wallet } from '@/types/wallet';
+import type { Wallet, WalletTransaction } from '@/types/wallet';
 import { formatMoney, toMinor, toMajor } from '@/lib/market';
 import { Wallet as WalletIcon, Lock, Unlock, Plus, Minus } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
@@ -89,14 +89,35 @@ export default function WalletsPage() {
                 submitVariant={walletAction?.type === 'deduct' ? 'danger' : 'primary'}
                 onSubmit={e => {
                     e.preventDefault();
-                    if (walletAction && actionAmount) {
+                    if (walletAction && actionAmount && actionReason.trim()) {
                         const amt = toMinor(Number(actionAmount)); // input is major units; store minor
-                        setWallets(prev => prev.map(w => w.id === walletAction.wallet.id ? {
-                            ...w,
-                            balance: walletAction.type === 'add' ? w.balance + amt : Math.max(0, w.balance - amt),
-                            total_credits: walletAction.type === 'add' ? w.total_credits + amt : w.total_credits,
-                            total_debits: walletAction.type === 'deduct' ? w.total_debits + amt : w.total_debits,
-                        } : w));
+                        const isAdd = walletAction.type === 'add';
+                        const now = new Date().toISOString();
+                        setWallets(prev => prev.map(w => {
+                            if (w.id !== walletAction.wallet.id) return w;
+                            const balance = isAdd ? w.balance + amt : Math.max(0, w.balance - amt);
+                            // Record the (required) reason on the wallet's local ledger so it is
+                            // no longer collected-and-discarded; this is the persistence model
+                            // for the no-backend admin pages.
+                            const tx: WalletTransaction = {
+                                id: `${w.id}-tx-${(w.transactions?.length ?? 0) + 1}`,
+                                wallet_id: w.id,
+                                type: isAdd ? 'credit' : 'debit',
+                                action: walletAction.type,
+                                amount: amt,
+                                balance_after: balance,
+                                description: actionReason.trim(),
+                                created_at: now,
+                            };
+                            return {
+                                ...w,
+                                balance,
+                                total_credits: isAdd ? w.total_credits + amt : w.total_credits,
+                                total_debits: !isAdd ? w.total_debits + amt : w.total_debits,
+                                last_transaction_at: now,
+                                transactions: [tx, ...(w.transactions ?? [])],
+                            };
+                        }));
                     }
                     setWalletAction(null);
                 }}

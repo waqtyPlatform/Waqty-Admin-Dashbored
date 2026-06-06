@@ -71,6 +71,14 @@ export default function SupportPage() {
         [tickets, view, me]
     );
 
+    // Flatten the nested submitter name so DataTable's flat-key search can match it
+    // ('submitted_by' is an object — it stringifies to "[object Object]", so searching
+    // by submitter name never matched).
+    const searchableRows = useMemo(
+        () => filtered.map(tk => ({ ...tk, submitted_by_name: tk.submitted_by.name })),
+        [filtered]
+    );
+
     const VIEWS: { key: View; label: string }[] = [
         { key: 'all', label: t('common.all') },
         { key: 'open', label: t('support.open') },
@@ -207,8 +215,8 @@ export default function SupportPage() {
 
             <DataTable<SupportTicket>
                 columns={columns}
-                data={filtered}
-                searchKeys={['subject', 'id', 'submitted_by']}
+                data={searchableRows}
+                searchKeys={['subject', 'id', 'submitted_by_name']}
                 searchPlaceholder={t('support.searchPlaceholder')}
                 getRowKey={r => r.id}
                 onRowClick={r => router.push(`/support/${r.id}`)}

@@ -13,12 +13,14 @@ import { CommandPaletteProvider } from '@/components/CommandPalette';
 import { NotificationsProvider } from '@/contexts/NotificationsContext';
 import { Breadcrumbs } from './Breadcrumbs';
 import styles from './AppShell.module.css';
+import { useTranslation } from '@/hooks/useTranslation';
 import { usePathname } from 'next/navigation';
 
 function AppContent({ children }: { children: React.ReactNode }) {
     const { collapsed } = useSidebar();
     const { impersonating } = useAuth();
     const pathname = usePathname();
+    const { t } = useTranslation();
 
     const isPublicRoute = pathname === '/login' || pathname === '/forgot-password';
 
@@ -31,9 +33,10 @@ function AppContent({ children }: { children: React.ReactNode }) {
             className={`${styles.layout} ${collapsed ? styles.sidebarCollapsed : ''}`}
             style={impersonating ? { paddingTop: 36 } : undefined}
         >
+            <a href="#main-content" className={styles.skipLink}>{t('common.skipToContent')}</a>
             <Sidebar />
             <TopBar />
-            <main className={styles.main}>
+            <main id="main-content" className={styles.main}>
                 <div className={styles.content}>
                     <Breadcrumbs />
                     {children}

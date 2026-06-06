@@ -72,12 +72,16 @@ export function DataTable<T extends object>({
     const [page, setPage] = useState(1);
     const debouncedSearch = useDebounce(search, 300);
 
-    // Filter
+    // Filter. Depend on a STABLE primitive key for searchKeys (call-sites pass a
+    // fresh array literal each render, which would otherwise invalidate this memo
+    // every render and re-run the filter pass).
+    const searchKeysKey = searchKeys.join('|');
     const filtered = useMemo(() => {
         if (!debouncedSearch || searchKeys.length === 0) return data;
         const q = debouncedSearch.toLowerCase();
         return data.filter(row => searchKeys.some(key => String((row as Record<string, unknown>)[key] ?? '').toLowerCase().includes(q)));
-    }, [data, debouncedSearch, searchKeys]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- searchKeysKey is the stable form of searchKeys
+    }, [data, debouncedSearch, searchKeysKey]);
 
     // Sort
     const sorted = useMemo(() => {

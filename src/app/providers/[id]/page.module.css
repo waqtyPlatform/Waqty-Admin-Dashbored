@@ -135,6 +135,19 @@
     background: var(--color-info-light);
 }
 
+/* Filled primary — the header's single emphasized call-to-action. */
+.primaryBtn {
+    background: var(--color-primary-500);
+    border-color: var(--color-primary-500);
+    color: var(--text-inverse);
+    font-weight: var(--font-semibold);
+}
+
+.primaryBtn:hover {
+    background: var(--color-primary-600);
+    border-color: var(--color-primary-600);
+}
+
 /* Stats Grid */
 .statsGrid {
     display: grid;

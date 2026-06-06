@@ -19,6 +19,8 @@ export interface Wallet {
     last_transaction_at: string | null;
     created_at: string;
     updated_at: string;
+    /** Local ledger of manual admin adjustments (reason is recorded here). */
+    transactions?: WalletTransaction[];
 }
 
 export interface WalletTransaction {

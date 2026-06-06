@@ -10,7 +10,7 @@ import { ChevronLeft, ChevronDown, X } from 'lucide-react';
 import styles from './Sidebar.module.css';
 import { useTranslation } from '@/hooks/useTranslation';
 import { buildNavigation, type NavGroup, type NavChild } from '@/config/navigation';
-import { Logo } from '@/components/Logo';
+import { Logo, LogoMark } from '@/components/Logo';
 
 export default function Sidebar() {
     const { collapsed, toggleSidebar, mobileOpen, setMobileOpen } = useSidebar();
@@ -132,13 +132,15 @@ export default function Sidebar() {
                         </Link>
                     )}
                     {collapsed && (
-                        <button className={styles.logoIconBtn} onClick={toggleSidebar}>
-                            <span className={styles.logoIcon}>W</span>
+                        <button className={styles.logoIconBtn} onClick={toggleSidebar} aria-label={t('sidebar.expand')}>
+                            <span className={styles.logoIcon}>
+                                <LogoMark color="#fff" size={20} />
+                            </span>
                         </button>
                     )}
                     {!collapsed && (
                         <button className={styles.collapseBtn} onClick={mobileOpen ? closeMobile : toggleSidebar}
-                            aria-label={mobileOpen ? 'Close menu' : 'Collapse sidebar'}>
+                            aria-label={mobileOpen ? t('sidebar.closeMenu') : t('sidebar.collapse')}>
                             {mobileOpen ? <X size={20} /> : <ChevronLeft size={20} />}
                         </button>
                     )}

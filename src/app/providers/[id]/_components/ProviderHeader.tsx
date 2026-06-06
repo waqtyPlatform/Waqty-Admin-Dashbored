@@ -42,7 +42,7 @@ export function ProviderHeader({ apiProvider, onSetConfirmAction, onImpersonate 
                 <PermissionGate module="providers" action="edit">
                     {!apiProvider.deleted_at && (apiProvider.active
                         ? <button className={styles.actionBtn} onClick={() => onSetConfirmAction({ action: 'suspended', label: t('common.deactivate') })}><Pause size={14} /> {t('common.deactivate')}</button>
-                        : <button className={styles.actionBtn} onClick={() => onSetConfirmAction({ action: 'active', label: t('common.activate') })}><Play size={14} /> {t('common.activate')}</button>
+                        : <button className={`${styles.actionBtn} ${styles.primaryBtn}`} onClick={() => onSetConfirmAction({ action: 'active', label: t('common.activate') })}><Play size={14} /> {t('common.activate')}</button>
                     )}
                     {!apiProvider.deleted_at && (apiProvider.blocked
                         ? <button className={styles.actionBtn} onClick={() => onSetConfirmAction({ action: 'unblock', label: t('common.unblock') })}><ShieldCheck size={14} /> {t('common.unblock')}</button>
@@ -51,7 +51,7 @@ export function ProviderHeader({ apiProvider, onSetConfirmAction, onImpersonate 
                     {apiProvider.deleted_at && <button className={styles.actionBtn} onClick={() => onSetConfirmAction({ action: 'restore', label: t('common.restore') })}><RotateCcw size={14} /> {t('common.restore')}</button>}
                 </PermissionGate>
                 <PermissionGate module="providers" action="impersonate">
-                    {apiProvider.active && !apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.impersonateBtn}`} onClick={onImpersonate}><LogIn size={14} /> {t('providers.impersonate')}</button>}
+                    {apiProvider.active && !apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.primaryBtn}`} onClick={onImpersonate}><LogIn size={14} /> {t('providers.impersonate')}</button>}
                 </PermissionGate>
                 <PermissionGate module="providers" action="delete">
                     {!apiProvider.deleted_at && <button className={`${styles.actionBtn} ${styles.dangerBtn}`} onClick={() => onSetConfirmAction({ action: 'soft_deleted', label: t('common.delete') })}><Trash2 size={14} /> {t('common.delete')}</button>}
