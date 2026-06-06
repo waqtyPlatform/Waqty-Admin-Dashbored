@@ -28,21 +28,50 @@ export const activeMarket: MarketConfig =
     MARKETS[process.env.NEXT_PUBLIC_MARKET ?? 'EG'] ?? EGYPT_MARKET;
 
 /**
+ * Localized currency LABEL per locale. The contract's `currency` is the ISO code
+ * ("EGP"); under Arabic we show the native word "جنيه" instead. Falls back to the
+ * ISO code for any locale/currency without an explicit label.
+ */
+const CURRENCY_LABELS: Record<string, Record<LocaleCode, string>> = {
+    EGP: { en: 'EGP', ar: 'جنيه' },
+};
+
+/**
+ * Ambient locale used by `formatMoney`/`formatCompactMoney` when the caller doesn't
+ * pass an explicit `locale`. Synced from the UI language by `LanguageProvider` so
+ * money follows the active language (e.g. shows "جنيه" instead of "EGP" in Arabic)
+ * without threading a locale through every call site.
+ */
+let activeLocale: LocaleCode = 'en';
+
+export function setMoneyLocale(locale: LocaleCode): void {
+    activeLocale = locale;
+}
+
+function currencyLabel(market: MarketConfig, locale: LocaleCode): string {
+    return CURRENCY_LABELS[market.currency]?.[locale] ?? market.currency;
+}
+
+/**
  * Render an integer MINOR-UNIT amount as a localized currency string.
- * `formatMoney(29900)` -> "EGP 299.00" for the Egypt market.
+ * `formatMoney(29900)` -> "EGP 299.00" (en) or "299.00 جنيه" (ar). The currency word
+ * comes after the number in Arabic (natural order) and before it in English.
  */
 export function formatMoney(
     minorUnits: Money,
     opts?: { market?: MarketConfig; locale?: LocaleCode; withCurrency?: boolean },
 ): string {
     const market = opts?.market ?? activeMarket;
+    const locale = opts?.locale ?? activeLocale;
     const digits = minorFractionDigits(market);
     const major = toMajorUnits(minorUnits, market);
-    const number = new Intl.NumberFormat(opts?.locale === 'ar' ? 'ar-EG' : 'en-EG', {
+    const number = new Intl.NumberFormat('en-EG', {
         minimumFractionDigits: digits,
         maximumFractionDigits: digits,
     }).format(major);
-    return opts?.withCurrency === false ? number : `${market.currency} ${number}`;
+    if (opts?.withCurrency === false) return number;
+    const label = currencyLabel(market, locale);
+    return locale === 'ar' ? `${number} ${label}` : `${label} ${number}`;
 }
 
 /**
@@ -54,16 +83,19 @@ export function formatMoney(
  */
 export function formatCompactMoney(
     minorUnits: Money,
-    opts?: { market?: MarketConfig; withCurrency?: boolean },
+    opts?: { market?: MarketConfig; locale?: LocaleCode; withCurrency?: boolean },
 ): string {
     const market = opts?.market ?? activeMarket;
+    const locale = opts?.locale ?? activeLocale;
     const major = toMajorUnits(minorUnits, market);
     const abs = Math.abs(major);
     const n =
         abs >= 1_000_000 ? `${(major / 1_000_000).toFixed(1)}M`
         : abs >= 1_000 ? `${Math.round(major / 1_000)}K`
         : `${Math.round(major)}`;
-    return opts?.withCurrency === false ? n : `${market.currency} ${n}`;
+    if (opts?.withCurrency === false) return n;
+    const label = currencyLabel(market, locale);
+    return locale === 'ar' ? `${n} ${label}` : `${label} ${n}`;
 }
 
 /** Convert major units (e.g. EGP 299) to canonical minor units (29900). */

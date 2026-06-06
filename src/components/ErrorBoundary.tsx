@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                                 fontSize: 'var(--text-xs)',
                                 color: 'var(--text-tertiary)',
                                 maxWidth: 500,
-                                textAlign: 'left',
+                                textAlign: 'start',
                                 padding: 'var(--space-3)',
                                 background: 'var(--bg-tertiary)',
                                 borderRadius: 'var(--radius-md)',

@@ -54,7 +54,7 @@ export default function PlatformSettingsPage() {
                             <div key={f.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
                                 <label style={{ fontSize: '0.875rem', color: 'var(--text-primary)', fontWeight: 500 }}>{f.label}</label>
                                 {f.type === 'toggle' ? (
-                                    <button onClick={() => update(f.key, !(settings as Record<string, unknown>)[f.key])} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: (settings as Record<string, unknown>)[f.key] ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
+                                    <button onClick={() => update(f.key, !(settings as Record<string, unknown>)[f.key])} role="switch" aria-checked={Boolean((settings as Record<string, unknown>)[f.key])} aria-label={f.label} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: (settings as Record<string, unknown>)[f.key] ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
                                         <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, left: (settings as Record<string, unknown>)[f.key] ? 23 : 3, transition: 'left 0.2s' }} />
                                     </button>
                                 ) : (

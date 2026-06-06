@@ -79,7 +79,7 @@ export default function LocalizationSettingsPage() {
                 </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                     <thead><tr style={{ background: 'var(--bg-secondary)' }}>
-                        {[t('settings.localization.language'), t('settings.localization.native'), t('settings.localization.rtl'), t('settings.localization.completion'), t('common.status'), t('settings.localization.default'), ''].map(h => <th key={h} style={{ textAlign: 'left', padding: '10px 12px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
+                        {[t('settings.localization.language'), t('settings.localization.native'), t('settings.localization.rtl'), t('settings.localization.completion'), t('common.status'), t('settings.localization.default'), ''].map(h => <th key={h} style={{ textAlign: 'start', padding: 'var(--space-3) var(--space-3)', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>)}
                     </tr></thead>
                     <tbody>{languages.map(lang => (
                         <tr key={lang.code} style={{ borderBottom: '1px solid var(--border-color)' }}>

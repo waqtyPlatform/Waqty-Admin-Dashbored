@@ -146,7 +146,7 @@
 
 .actionMenu {
     position: absolute;
-    right: 0;
+    inset-inline-end: 0;
     top: 100%;
     z-index: 50;
     min-width: 180px;
@@ -155,11 +155,6 @@
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-lg);
     padding: var(--space-1);
-}
-
-[dir='rtl'] .actionMenu {
-    right: auto;
-    left: 0;
 }
 
 .actionMenu button {
@@ -175,11 +170,7 @@
     font-size: var(--text-sm);
     cursor: pointer;
     font-family: var(--font-sans);
-    text-align: left;
-}
-
-[dir='rtl'] .actionMenu button {
-    text-align: right;
+    text-align: start;
 }
 
 .actionMenu button:hover {

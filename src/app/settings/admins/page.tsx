@@ -126,13 +126,14 @@ export default function AdminsPage() {
                 <div style={{ position: 'relative' }}>
                     <button
                         disabled={toggling}
+                        aria-label={t('common.actions')}
                         onClick={e => { e.stopPropagation(); setActionMenuId(actionMenuId === row.id ? null : row.id); }}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, border: 'none', borderRadius: '6px', background: 'transparent', color: 'var(--text-tertiary)', cursor: 'pointer', opacity: toggling ? 0.5 : 1 }}
                     >
                         <MoreHorizontal size={16} />
                     </button>
                     {actionMenuId === row.id && (
-                        <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, minWidth: 170, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)', padding: '4px' }}>
+                        <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', insetInlineEnd: 0, top: '100%', zIndex: 50, minWidth: 170, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', padding: 'var(--space-1)' }}>
                             <ActionItem icon={<Pencil size={14} />} label={t('common.edit')} onClick={() => { setActionMenuId(null); setEditTarget(row); }} />
                             {row.active
                                 ? <ActionItem icon={<ShieldOff size={14} />} label={t('common.deactivate')} onClick={() => handleToggleActive(row)} danger />
@@ -224,7 +225,7 @@ export default function AdminsPage() {
 
 function ActionItem({ icon, label, onClick, danger }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
     return (
-        <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', border: 'none', borderRadius: '4px', background: 'transparent', color: danger ? 'var(--color-error)' : 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>
+        <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', border: 'none', borderRadius: 'var(--radius-sm)', background: 'transparent', color: danger ? 'var(--color-error)' : 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
             {icon} {label}
         </button>
     );

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { setMoneyLocale } from '@/lib/market';
 
 type Language = 'en' | 'ar';
 
@@ -31,6 +32,11 @@ function getInitialLanguage(): Language {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
     const [language, setLanguageState] = useState<Language>(getInitialLanguage);
+
+    // Keep money formatting (formatMoney/formatCompactMoney) in sync with the UI
+    // language. Set during render — before children render — so the very first paint
+    // of any money value already uses the right currency word ("جنيه" vs "EGP").
+    setMoneyLocale(language);
 
     // Sync with HTML document
     useEffect(() => {

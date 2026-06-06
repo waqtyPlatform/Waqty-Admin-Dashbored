@@ -998,6 +998,73 @@ export const adminPricingGroupsApi = {
         api.get<PricingGroupObject>(`/admin/pricing-groups/${uuid}`),
 };
 
+// ── Admin Services ────────────────────────────────────────────────────────────
+
+export interface AdminServiceObject {
+    uuid: string;
+    /** Providers offering this service; `active` + duration are per-provider. */
+    providers?: Array<{
+        uuid: string;
+        name: string;
+        active: boolean;
+        estimated_duration_minutes?: number | null;
+        deleted_at?: string | null;
+    }>;
+    sub_category_uuid?: string | null;
+    sub_category_name?: string | null;
+    category?: string | null;
+    name: { ar?: string; en?: string } | string;
+    description?: { ar?: string; en?: string } | string | null;
+    image_url?: string | null;
+    created_at: string;
+    updated_at: string;
+    deleted_at?: string | null;
+}
+
+export interface AdminServiceListFilters {
+    provider_uuid?: string;
+    sub_category_uuid?: string;
+    active?: boolean;
+    search?: string;
+    trashed?: 'only' | 'with';
+    per_page?: number;
+    page?: number;
+}
+
+export interface UpdateServiceStatusBody {
+    active?: boolean;
+}
+
+export const adminServicesApi = {
+    /** GET /admin/services */
+    list: (filters?: AdminServiceListFilters) =>
+        api.get<AdminServiceObject[]>('/admin/services', {
+            ...(filters?.provider_uuid     !== undefined && { provider_uuid: filters.provider_uuid }),
+            ...(filters?.sub_category_uuid !== undefined && { sub_category_uuid: filters.sub_category_uuid }),
+            ...(filters?.active            !== undefined && { active: String(filters.active) }),
+            ...(filters?.search            !== undefined && { search: filters.search }),
+            ...(filters?.trashed           !== undefined && { trashed: filters.trashed }),
+            ...(filters?.per_page          !== undefined && { per_page: filters.per_page }),
+            ...(filters?.page              !== undefined && { page: filters.page }),
+        }),
+
+    /** GET /admin/services/{uuid} */
+    get: (uuid: string) =>
+        api.get<AdminServiceObject>(`/admin/services/${uuid}`),
+
+    /** PATCH /admin/services/{uuid}/status */
+    updateStatus: (uuid: string, body: UpdateServiceStatusBody) =>
+        api.patch<AdminServiceObject>(`/admin/services/${uuid}/status`, body as unknown as Record<string, unknown>),
+
+    /** DELETE /admin/services/{uuid} */
+    delete: (uuid: string) =>
+        api.delete<null>(`/admin/services/${uuid}`),
+
+    /** POST /admin/services/{uuid}/restore */
+    restore: (uuid: string) =>
+        api.post<AdminServiceObject>(`/admin/services/${uuid}/restore`, {}),
+};
+
 // ── Bookings ──────────────────────────────────────────────────────────────────
 
 // Canonical 6-state booking lifecycle (incl. `in_progress`). Single source:
@@ -1009,19 +1076,33 @@ import type { BookingStatus, PaymentStatus } from '@/contract/waqty_contract';
 export interface BookingObject {
     uuid: string;
     status: BookingStatus;
+    payment_status?: PaymentStatus | string | null;
     booking_date: string;
-    user_uuid: string;
+    start_time?: string | null;
+    end_time?: string | null;
+    price?: number | string | null;
+    currency?: string | null;
+    user_uuid?: string;
     user?: { uuid: string; name: string; phone?: string | null } | null;
-    provider_uuid: string;
+    user_name?: string | null;
+    user_phone?: string | null;
+    provider_uuid?: string;
     provider?: { uuid: string; name: string } | null;
     branch_uuid?: string | null;
     branch?: { uuid: string; name: string } | null;
     employee_uuid?: string | null;
     employee?: { uuid: string; name: string } | null;
+    // Snapshot objects returned by the live API (captured at booking time).
+    service?: { uuid: string; name: { ar?: string; en?: string } | string; estimated_duration_minutes?: number | null } | null;
+    service_snapshot?: { uuid: string; name: { ar?: string; en?: string } | string; estimated_duration_minutes?: number | null } | null;
+    employee_snapshot?: { uuid: string; name: string; email?: string | null } | null;
+    branch_snapshot?: { uuid: string; name: string } | null;
+    provider_snapshot?: { uuid: string; name: string } | null;
+    rating?: number | null;
     notes?: string | null;
     total_price?: number | null;
     created_at: string;
-    updated_at: string;
+    updated_at?: string;
     deleted_at?: string | null;
 }
 

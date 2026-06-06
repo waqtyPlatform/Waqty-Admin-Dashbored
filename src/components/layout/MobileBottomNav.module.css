@@ -5,11 +5,11 @@
     bottom: 0;
     background: var(--bg-primary);
     border-top: 1px solid var(--border-color);
-    padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    padding: var(--space-2) var(--space-1) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
     z-index: 45;
     justify-content: space-around;
     align-items: stretch;
-    gap: 4px;
+    gap: var(--space-1);
 }
 
 .item {
@@ -19,8 +19,8 @@
     align-items: center;
     justify-content: center;
     gap: 2px;
-    padding: 6px 4px;
-    border-radius: 8px;
+    padding: var(--space-2) var(--space-1);
+    border-radius: var(--radius-md);
     font-size: 0.6875rem;
     color: var(--text-secondary);
     text-decoration: none;

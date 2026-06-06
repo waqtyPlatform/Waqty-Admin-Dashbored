@@ -188,7 +188,13 @@ export default function AdsPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {ads.map(ad => (
                     <div key={ad.id} style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 20, display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <div style={{ width: 80, height: 60, borderRadius: 8, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '0.75rem', flexShrink: 0 }}>{t('marketing.ads.adImage')}</div>
+                        <div style={{ width: 80, height: 60, borderRadius: 8, background: 'var(--bg-tertiary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-tertiary)', fontSize: '0.75rem', flexShrink: 0, overflow: 'hidden' }}>
+                            {ad.image_url && ad.image_url !== '#' ? (
+                                <img src={ad.image_url} alt={ad.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                t('marketing.ads.adImage')
+                            )}
+                        </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                 <span style={{ fontWeight: 600, fontSize: '0.9375rem' }}>{ad.title}</span>

@@ -121,26 +121,26 @@ export default function FinanceInvoicesPage() {
                             <InvoiceField label={t('finance.paidAt')} value={viewInvoice.paid_at ? new Date(viewInvoice.paid_at).toLocaleDateString() : '—'} />
                             <InvoiceField label={t('finance.subscription')} value={viewInvoice.subscription_uuid ?? '—'} />
                         </div>
-                        <div style={{ border: '1px solid var(--border-color)', borderRadius: 8, overflow: 'hidden' }}>
+                        <div style={{ border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                                 <thead>
                                     <tr style={{ background: 'var(--bg-secondary)' }}>
-                                        <th style={{ textAlign: 'left', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>{t('finance.description')}</th>
-                                        <th style={{ textAlign: 'right', padding: '10px 12px', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>{t('common.amount')}</th>
+                                        <th style={{ textAlign: 'start', padding: 'var(--space-3) var(--space-3)', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>{t('finance.description')}</th>
+                                        <th style={{ textAlign: 'end', padding: 'var(--space-3) var(--space-3)', fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>{t('common.amount')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr style={{ borderTop: '1px solid var(--border-color)' }}>
-                                        <td style={{ padding: '10px 12px' }}>{t('finance.subscription')} ({viewInvoice.subscription_uuid ?? '—'})</td>
-                                        <td style={{ padding: '10px 12px', textAlign: 'right' }}>{formatMoney(viewInvoice.amount)}</td>
+                                        <td style={{ padding: 'var(--space-3) var(--space-3)' }}>{t('finance.subscription')} ({viewInvoice.subscription_uuid ?? '—'})</td>
+                                        <td style={{ padding: 'var(--space-3) var(--space-3)', textAlign: 'end' }}>{formatMoney(viewInvoice.amount)}</td>
                                     </tr>
                                     <tr style={{ borderTop: '1px solid var(--border-color)' }}>
-                                        <td style={{ padding: '10px 12px', color: 'var(--text-secondary)' }}>{t('finance.tax')} (14% {t('subscriptions.vat')})</td>
-                                        <td style={{ padding: '10px 12px', textAlign: 'right', color: 'var(--text-secondary)' }}>{formatMoney(viewInvoice.tax)}</td>
+                                        <td style={{ padding: 'var(--space-3) var(--space-3)', color: 'var(--text-secondary)' }}>{t('finance.tax')} (14% {t('subscriptions.vat')})</td>
+                                        <td style={{ padding: 'var(--space-3) var(--space-3)', textAlign: 'end', color: 'var(--text-secondary)' }}>{formatMoney(viewInvoice.tax)}</td>
                                     </tr>
                                     <tr style={{ borderTop: '1px solid var(--border-color)', background: 'var(--bg-secondary)' }}>
-                                        <td style={{ padding: '10px 12px', fontWeight: 700 }}>{t('common.total')}</td>
-                                        <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700 }}>{formatMoney(viewInvoice.total)}</td>
+                                        <td style={{ padding: 'var(--space-3) var(--space-3)', fontWeight: 700 }}>{t('common.total')}</td>
+                                        <td style={{ padding: 'var(--space-3) var(--space-3)', textAlign: 'end', fontWeight: 700 }}>{formatMoney(viewInvoice.total)}</td>
                                     </tr>
                                 </tbody>
                             </table>

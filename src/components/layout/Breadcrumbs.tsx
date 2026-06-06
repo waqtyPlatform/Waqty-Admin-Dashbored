@@ -29,10 +29,10 @@ export function Breadcrumbs() {
             style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 4,
+                gap: 'var(--space-1)',
                 fontSize: '0.8125rem',
                 color: 'var(--text-tertiary)',
-                marginBottom: 12,
+                marginBottom: 'var(--space-3)',
                 flexWrap: 'wrap',
             }}
         >

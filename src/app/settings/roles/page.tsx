@@ -35,31 +35,31 @@ export default function RolesPage() {
                             <h3 style={{ fontSize: '1rem', fontWeight: 600, margin: '0 0 4px', color: 'var(--text-primary)' }}>{info.name}</h3>
                             <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', margin: '0 0 12px' }}>{info.desc}</p>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                                {perms.length} module{perms.length !== 1 ? 's' : ''} accessible
+                                {t('settings.roles.modulesAccessible').replace('{n}', String(perms.length)).replace('{s}', perms.length !== 1 ? 's' : '')}
                             </div>
                         </div>
                     );
                 })}
             </div>
 
-            <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, overflow: 'auto' }}>
+            <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', overflow: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
                     <thead>
                         <tr style={{ background: 'var(--bg-secondary)' }}>
-                            <th style={{ textAlign: 'left', padding: '10px 16px', color: 'var(--text-secondary)', fontWeight: 500, borderBottom: '1px solid var(--border-color)', position: 'sticky', left: 0, background: 'var(--bg-secondary)' }}>{t('settings.roles.module')}</th>
+                            <th style={{ textAlign: 'start', padding: 'var(--space-3) var(--space-4)', color: 'var(--text-secondary)', fontWeight: 500, borderBottom: '1px solid var(--border-color)', position: 'sticky', insetInlineStart: 0, background: 'var(--bg-secondary)' }}>{t('settings.roles.module')}</th>
                             {roles.map(r => (
-                                <th key={r} style={{ textAlign: 'center', padding: '10px 8px', color: roleLabels[r].color, fontWeight: 600, borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap', fontSize: '0.75rem' }}>{roleLabels[r].name}</th>
+                                <th key={r} style={{ textAlign: 'center', padding: 'var(--space-3) var(--space-2)', color: roleLabels[r].color, fontWeight: 600, borderBottom: '1px solid var(--border-color)', whiteSpace: 'nowrap', fontSize: '0.75rem' }}>{roleLabels[r].name}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         {ALL_MODULES.map(mod => (
                             <tr key={mod} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                                <td style={{ padding: '8px 16px', fontWeight: 500, textTransform: 'capitalize', position: 'sticky', left: 0, background: 'var(--bg-primary)' }}>{mod.replace('_', ' ')}</td>
+                                <td style={{ padding: 'var(--space-2) var(--space-4)', fontWeight: 500, textTransform: 'capitalize', position: 'sticky', insetInlineStart: 0, background: 'var(--bg-primary)' }}>{mod.replace('_', ' ')}</td>
                                 {roles.map(role => {
                                     const perm = ROLE_PERMISSIONS[role].find(p => p.module === mod);
                                     return (
-                                        <td key={role} style={{ textAlign: 'center', padding: '8px' }}>
+                                        <td key={role} style={{ textAlign: 'center', padding: 'var(--space-2)' }}>
                                             {perm ? (
                                                 <span title={perm.actions.join(', ')} style={{ color: 'var(--color-success)', cursor: 'help' }}>
                                                     <Check size={16} />

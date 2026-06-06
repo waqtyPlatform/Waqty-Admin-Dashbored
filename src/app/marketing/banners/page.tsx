@@ -32,6 +32,8 @@ export default function BannersPage() {
     const { t } = useTranslation();
     const [showCreate, setShowCreate] = useState(false);
     const [editItem, setEditItem] = useState<BannerObject | null>(null);
+    // Per-row busy flag: `${uuid}:toggle` | `${uuid}:delete` while its mutation runs.
+    const [rowBusy, setRowBusy] = useState<string | null>(null);
 
     const placementLabel = (p: string) => {
         const found = PLACEMENT_KEYS.find(x => x.value === p);
@@ -136,17 +138,30 @@ export default function BannersPage() {
                                                 {t('common.edit')}
                                             </button>
                                             <button
-                                                onClick={async () => { await toggleActive({ uuid: b.uuid, active: !b.active }); refetch(); }}
-                                                style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: b.active ? 'var(--color-error)' : 'var(--color-success)', fontFamily: 'var(--font-sans)' }}
+                                                disabled={rowBusy === `${b.uuid}:toggle`}
+                                                onClick={async () => {
+                                                    setRowBusy(`${b.uuid}:toggle`);
+                                                    try { await toggleActive({ uuid: b.uuid, active: !b.active }); refetch(); }
+                                                    finally { setRowBusy(null); }
+                                                }}
+                                                style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--border-color)', borderRadius: 6, background: 'var(--bg-primary)', cursor: rowBusy === `${b.uuid}:toggle` ? 'not-allowed' : 'pointer', opacity: rowBusy === `${b.uuid}:toggle` ? 0.6 : 1, color: b.active ? 'var(--color-error)' : 'var(--color-success)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
                                             >
+                                                {rowBusy === `${b.uuid}:toggle` && <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />}
                                                 {b.active ? t('reviews.hide') : t('content.announcements.publish')}
                                             </button>
                                             <PermissionGate module="marketing" action="delete">
                                                 <button
-                                                    onClick={async () => { await deleteBanner(b.uuid); refetch(); }}
-                                                    style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--color-error)', borderRadius: 6, background: 'var(--bg-primary)', cursor: 'pointer', color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
+                                                    disabled={rowBusy === `${b.uuid}:delete`}
+                                                    onClick={async () => {
+                                                        setRowBusy(`${b.uuid}:delete`);
+                                                        try { await deleteBanner(b.uuid); refetch(); }
+                                                        finally { setRowBusy(null); }
+                                                    }}
+                                                    style={{ padding: '4px 10px', fontSize: '0.8rem', border: '1px solid var(--color-error)', borderRadius: 6, background: 'var(--bg-primary)', cursor: rowBusy === `${b.uuid}:delete` ? 'not-allowed' : 'pointer', opacity: rowBusy === `${b.uuid}:delete` ? 0.6 : 1, color: 'var(--color-error)', fontFamily: 'var(--font-sans)', display: 'flex', alignItems: 'center', gap: 4 }}
                                                 >
-                                                    <Trash2 size={13} /> {t('common.delete')}
+                                                    {rowBusy === `${b.uuid}:delete`
+                                                        ? <Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />
+                                                        : <Trash2 size={13} />} {t('common.delete')}
                                                 </button>
                                             </PermissionGate>
                                         </div>

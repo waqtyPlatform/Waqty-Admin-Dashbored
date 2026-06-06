@@ -81,7 +81,7 @@
 }
 
 .dangerBtn:hover:not(:disabled) {
-    background: #dc2626;
+    background: var(--color-error-hover);
 }
 
 .warningBtn {
@@ -89,7 +89,7 @@
 }
 
 .warningBtn:hover:not(:disabled) {
-    background: #d97706;
+    background: var(--color-warning-hover);
 }
 
 .spinner {

@@ -1,61 +1,164 @@
 'use client';
 
-import React, { useCallback } from 'react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import React, { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
-import type { SupportTicket } from '@/types/ticket';
-import { MessageSquare, AlertTriangle, Clock } from 'lucide-react';
+import { ConfirmModal } from '@/components/admin/FormModal';
+import { useToast } from '@/components/ui';
+import { useAuth } from '@/contexts/AuthContext';
+import type { SupportTicket, TicketPriority } from '@/types/ticket';
+import { mockTickets } from '@/mocks/support';
+import { MessageSquare, AlertTriangle, Clock, UserPlus, CheckCircle, Eye } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
-const mockTickets: SupportTicket[] = [
-    { id: 'TK-001', subject: 'Cannot process payment', description: 'My credit card keeps getting declined when trying to pay for subscription', category: 'billing', priority: 'high', status: 'open', submitted_by: { type: 'provider', id: '6', name: 'Fatima Hassan', email: 'fatima@nailart.com' }, assigned_to: null, assigned_to_name: null, sla_deadline: '2026-04-14T10:00:00Z', sla_breached: false, messages: [], tags: ['payment', 'subscription'], created_at: '2026-04-13T08:00:00Z', updated_at: '2026-04-13T08:00:00Z', resolved_at: null },
-    { id: 'TK-002', subject: 'Wrong booking time shown to customer', description: 'Customer booked at 3pm but system showed 2pm', category: 'technical', priority: 'urgent', status: 'in_progress', submitted_by: { type: 'provider', id: '1', name: 'Ahmed Khalil', email: 'ahmed@glamourstudio.com' }, assigned_to: 'SA-SUPPORT', assigned_to_name: 'Support Agent', sla_deadline: '2026-04-13T16:00:00Z', sla_breached: false, messages: [], tags: ['booking', 'time'], created_at: '2026-04-12T14:00:00Z', updated_at: '2026-04-13T09:00:00Z', resolved_at: null },
-    { id: 'TK-003', subject: 'Refund not received', description: 'I cancelled my booking 3 days ago but havent received my refund', category: 'billing', priority: 'medium', status: 'waiting_on_customer', submitted_by: { type: 'user', id: '3', name: 'Mohamed Ahmed', email: 'mohamed.a@gmail.com' }, assigned_to: 'SA-FINANCE', assigned_to_name: 'Finance Manager', sla_deadline: '2026-04-15T10:00:00Z', sla_breached: false, messages: [], tags: ['refund'], created_at: '2026-04-11T10:00:00Z', updated_at: '2026-04-12T15:00:00Z', resolved_at: null },
-    { id: 'TK-004', subject: 'Account suspended without reason', description: 'My provider account was suspended and I dont know why', category: 'account', priority: 'high', status: 'open', submitted_by: { type: 'provider', id: '7', name: 'Khaled Samir', email: 'khaled@gentlemanclub.com' }, assigned_to: null, assigned_to_name: null, sla_deadline: '2026-04-14T08:00:00Z', sla_breached: false, messages: [], tags: ['account', 'suspension'], created_at: '2026-04-13T06:00:00Z', updated_at: '2026-04-13T06:00:00Z', resolved_at: null },
-    { id: 'TK-005', subject: 'Feature request: Recurring bookings', description: 'Would love to have recurring booking option for regular clients', category: 'feature_request', priority: 'low', status: 'resolved', submitted_by: { type: 'provider', id: '5', name: 'Youssef Nabil', email: 'youssef@freshcuts.com' }, assigned_to: 'SA-ADMIN', assigned_to_name: 'Platform Admin', sla_deadline: null, sla_breached: false, messages: [], tags: ['feature'], created_at: '2026-04-05T10:00:00Z', updated_at: '2026-04-10T14:00:00Z', resolved_at: '2026-04-10T14:00:00Z' },
-    { id: 'TK-006', subject: 'App crashes on booking page', description: 'The user app crashes when I try to select a time slot', category: 'technical', priority: 'urgent', status: 'in_progress', submitted_by: { type: 'user', id: '7', name: 'Layla Mahmoud', email: 'layla.m@gmail.com' }, assigned_to: 'SA-SUPPORT', assigned_to_name: 'Support Agent', sla_deadline: '2026-04-13T12:00:00Z', sla_breached: true, messages: [], tags: ['bug', 'crash'], created_at: '2026-04-12T20:00:00Z', updated_at: '2026-04-13T10:00:00Z', resolved_at: null },
-];
-
 const priorityColors: Record<string, string> = { low: 'var(--text-tertiary)', medium: 'var(--color-info)', high: 'var(--color-warning)', urgent: 'var(--color-error)' };
+const priorityRank: Record<TicketPriority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+const ACTIVE: SupportTicket['status'][] = ['open', 'in_progress', 'waiting_on_customer', 'waiting_on_provider'];
+
+type View = 'all' | 'open' | 'unassigned' | 'mine' | 'breached';
+
+const iconBtn: React.CSSProperties = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 30,
+    height: 30,
+    borderRadius: 'var(--radius-md)',
+    border: '1px solid var(--border-color)',
+    background: 'var(--bg-primary)',
+    color: 'var(--text-secondary)',
+    cursor: 'pointer',
+};
 
 export default function SupportPage() {
     const { t } = useTranslation();
     const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
-    const statusFilter = searchParams.get('status') || 'all';
-    const setStatusFilter = useCallback((value: string) => {
-        const params = new URLSearchParams(searchParams.toString());
-        if (value === 'all') params.delete('status');
-        else params.set('status', value);
-        router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
-    }, [searchParams, pathname, router]);
-    const filtered = mockTickets.filter(t => statusFilter === 'all' || t.status === statusFilter);
+    const { user } = useAuth();
+    const { addToast } = useToast();
+
+    const [tickets, setTickets] = useState<SupportTicket[]>(mockTickets);
+    const [selected, setSelected] = useState<string[]>([]);
+    const [view, setView] = useState<View>('all');
+    const [confirmClose, setConfirmClose] = useState<string[] | null>(null);
+    const [working, setWorking] = useState(false);
+
+    const me = user?.uuid ?? 'me';
+
+    const matchesView = (ticket: SupportTicket, v: View) => {
+        switch (v) {
+            case 'open': return ACTIVE.includes(ticket.status);
+            case 'unassigned': return ticket.assigned_to == null && ACTIVE.includes(ticket.status);
+            case 'mine': return ticket.assigned_to === me;
+            case 'breached': return ticket.sla_breached;
+            default: return true;
+        }
+    };
+
+    // SLA-first ordering: breached pinned to top, then by priority, then soonest deadline.
+    const sortQueue = (a: SupportTicket, b: SupportTicket) => {
+        if (a.sla_breached !== b.sla_breached) return a.sla_breached ? -1 : 1;
+        if (priorityRank[a.priority] !== priorityRank[b.priority]) return priorityRank[a.priority] - priorityRank[b.priority];
+        const ad = a.sla_deadline ? new Date(a.sla_deadline).getTime() : Infinity;
+        const bd = b.sla_deadline ? new Date(b.sla_deadline).getTime() : Infinity;
+        if (ad !== bd) return ad - bd;
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    };
+
+    const filtered = useMemo(
+        () => tickets.filter(tk => matchesView(tk, view)).sort(sortQueue),
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [tickets, view, me]
+    );
+
+    const VIEWS: { key: View; label: string }[] = [
+        { key: 'all', label: t('common.all') },
+        { key: 'open', label: t('support.open') },
+        { key: 'unassigned', label: t('support.unassigned') },
+        { key: 'mine', label: t('support.mine') },
+        { key: 'breached', label: t('support.slaBreached') },
+    ];
+
+    const assignToMe = (ids: string[]) => {
+        if (ids.length === 0) return;
+        setTickets(prev =>
+            prev.map(tk =>
+                ids.includes(tk.id)
+                    ? { ...tk, assigned_to: me, assigned_to_name: user?.name ?? 'Me', status: tk.status === 'open' ? 'in_progress' : tk.status, updated_at: new Date().toISOString() }
+                    : tk
+            )
+        );
+        addToast('success', `${ids.length} ${ids.length > 1 ? t('support.ticketsLower') : t('support.ticketLower')} ${t('support.assignedToYou')}`);
+        setSelected([]);
+    };
+
+    const closeTickets = () => {
+        if (!confirmClose) return;
+        setWorking(true);
+        const now = new Date().toISOString();
+        setTickets(prev =>
+            prev.map(tk => (confirmClose.includes(tk.id) ? { ...tk, status: 'resolved', resolved_at: now, updated_at: now } : tk))
+        );
+        addToast('success', `${confirmClose.length} ${confirmClose.length > 1 ? t('support.ticketsLower') : t('support.ticketLower')} ${t('support.resolvedToast')}`);
+        setWorking(false);
+        setConfirmClose(null);
+        setSelected([]);
+    };
 
     const columns: Column<SupportTicket>[] = [
         { key: 'id', label: t('support.id'), width: '80px', render: r => <span style={{ fontWeight: 500, fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }}>{r.id}</span> },
-        { key: 'subject', label: t('support.subject'), sortable: true, render: r => (
-            <div>
-                <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {r.sla_breached && <AlertTriangle size={14} color="var(--color-error)" />}
-                    {r.subject}
+        {
+            key: 'subject',
+            label: t('support.subject'),
+            sortable: true,
+            render: r => (
+                <div>
+                    <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {r.sla_breached && <AlertTriangle size={14} color="var(--color-error)" />}
+                        {r.subject}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{r.submitted_by.name} ({r.submitted_by.type})</div>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 2 }}>{r.submitted_by.name} ({r.submitted_by.type})</div>
-            </div>
-        )},
+            ),
+        },
         { key: 'category', label: t('support.category'), sortable: true, render: r => <span style={{ textTransform: 'capitalize', fontSize: '0.8125rem' }}>{r.category.replace('_', ' ')}</span> },
         { key: 'priority', label: t('support.priority'), sortable: true, render: r => <span style={{ color: priorityColors[r.priority], fontWeight: 600, fontSize: '0.8125rem', textTransform: 'uppercase' }}>{r.priority}</span> },
         { key: 'status', label: t('common.status'), sortable: true, render: r => <StatusBadge status={r.status} /> },
         { key: 'assigned_to_name', label: t('support.assigned'), render: r => r.assigned_to_name || <span style={{ color: 'var(--text-tertiary)' }}>{t('support.unassigned')}</span> },
-        { key: 'created_at', label: t('support.created'), sortable: true, render: r => new Date(r.created_at).toLocaleDateString() },
+        {
+            key: 'actions',
+            label: '',
+            width: '90px',
+            render: r => (
+                <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }} onClick={e => e.stopPropagation()}>
+                    {r.assigned_to !== me && ACTIVE.includes(r.status) && (
+                        <button style={iconBtn} title={t('support.assignToMe')} onClick={() => assignToMe([r.id])}>
+                            <UserPlus size={15} />
+                        </button>
+                    )}
+                    <button style={iconBtn} title={t('common.view')} onClick={() => router.push(`/support/${r.id}`)}>
+                        <Eye size={15} />
+                    </button>
+                </div>
+            ),
+        },
     ];
 
-    const summary = { open: mockTickets.filter(t => t.status === 'open').length, inProgress: mockTickets.filter(t => t.status === 'in_progress').length, breached: mockTickets.filter(t => t.sla_breached).length };
+    const summary = {
+        open: tickets.filter(tk => tk.status === 'open').length,
+        inProgress: tickets.filter(tk => tk.status === 'in_progress').length,
+        breached: tickets.filter(tk => tk.sla_breached).length,
+    };
+
+    const selectedClosable = selected.filter(id => {
+        const tk = tickets.find(x => x.id === id);
+        return tk && tk.status !== 'resolved';
+    });
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, margin: 0 }}>{t('support.title')}</h1>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
                 <div style={{ background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 12, padding: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                     <MessageSquare size={20} color="var(--color-warning)" />
@@ -70,10 +173,79 @@ export default function SupportPage() {
                     <div><div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{t('support.slaBreached')}</div><div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--color-error)' }}>{summary.breached}</div></div>
                 </div>
             </div>
-            <DataTable<SupportTicket> columns={columns} data={filtered} searchKeys={['subject', 'id', 'submitted_by']} searchPlaceholder={t('support.searchPlaceholder')} getRowKey={r => r.id} onRowClick={r => router.push(`/support/${r.id}`)}
-                filters={<select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: '8px 12px', border: '1px solid var(--border-color)', borderRadius: 8, background: 'var(--bg-primary)', color: 'var(--text-primary)', fontSize: '0.875rem', fontFamily: 'var(--font-sans)' }}>
-                    <option value="all">{t('common.all')} {t('common.status')}</option><option value="open">{t('support.open')}</option><option value="in_progress">{t('support.inProgress')}</option><option value="waiting_on_customer">{t('support.waiting')}</option><option value="resolved">{t('support.resolved')}</option>
-                </select>}
+
+            {/* Saved views */}
+            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+                {VIEWS.map(v => {
+                    const active = view === v.key;
+                    const count = tickets.filter(tk => matchesView(tk, v.key)).length;
+                    return (
+                        <button
+                            key={v.key}
+                            onClick={() => setView(v.key)}
+                            aria-pressed={active}
+                            style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 6,
+                                padding: '6px 12px',
+                                borderRadius: 'var(--radius-full)',
+                                border: `1px solid ${active ? 'var(--color-primary-400)' : 'var(--border-color)'}`,
+                                background: active ? 'var(--color-primary-50)' : 'var(--bg-primary)',
+                                color: active ? 'var(--color-primary-700)' : 'var(--text-secondary)',
+                                fontSize: 'var(--text-sm)',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                            }}
+                        >
+                            {v.label}
+                            <span style={{ opacity: 0.7, fontVariantNumeric: 'tabular-nums' }}>{count}</span>
+                        </button>
+                    );
+                })}
+            </div>
+
+            <DataTable<SupportTicket>
+                columns={columns}
+                data={filtered}
+                searchKeys={['subject', 'id', 'submitted_by']}
+                searchPlaceholder={t('support.searchPlaceholder')}
+                getRowKey={r => r.id}
+                onRowClick={r => router.push(`/support/${r.id}`)}
+                selectable
+                selectedKeys={selected}
+                onSelectionChange={setSelected}
+                bulkActions={
+                    <>
+                        <button style={{ ...iconBtn, width: 'auto', padding: '0 12px', gap: 6 }} onClick={() => assignToMe(selected)}>
+                            <UserPlus size={15} /> {t('support.assignToMe')}
+                        </button>
+                        <button
+                            style={{ ...iconBtn, width: 'auto', padding: '0 12px', gap: 6, background: 'var(--color-primary-500)', borderColor: 'var(--color-primary-500)', color: '#fff', opacity: selectedClosable.length === 0 ? 0.5 : 1 }}
+                            disabled={selectedClosable.length === 0}
+                            onClick={() => setConfirmClose(selectedClosable)}
+                        >
+                            <CheckCircle size={15} /> {t('support.close')}{selectedClosable.length ? ` ${selectedClosable.length}` : ''}
+                        </button>
+                    </>
+                }
+            />
+
+            <ConfirmModal
+                open={!!confirmClose}
+                onClose={() => setConfirmClose(null)}
+                onConfirm={closeTickets}
+                title={t('support.close')}
+                message={
+                    confirmClose
+                        ? t('support.closeConfirm')
+                              .replace('{n}', String(confirmClose.length))
+                              .replace('{s}', confirmClose.length > 1 ? 's' : '')
+                        : ''
+                }
+                confirmLabel={t('support.close')}
+                variant="primary"
+                loading={working}
             />
         </div>
     );

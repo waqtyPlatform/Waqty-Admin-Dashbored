@@ -25,6 +25,7 @@ export default function TemplatesPage() {
     const { t } = useTranslation();
     const [templates, setTemplates] = useState(initialTemplates);
     const [editTpl, setEditTpl] = useState<EmailTemplate | null>(null);
+    const [creating, setCreating] = useState(false);
 
     const columns: Column<EmailTemplate>[] = [
         { key: 'name', label: t('content.templates.template'), sortable: true, render: r => <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{r.type === 'sms' ? <MessageSquare size={16} color="var(--color-warning)" /> : <Mail size={16} color="var(--color-info)" />}<div><div style={{ fontWeight: 500 }}>{r.name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>{r.slug}</div></div></div> },
@@ -40,37 +41,68 @@ export default function TemplatesPage() {
             <div className={shared.pageHeader}>
                 <h1 className={shared.pageTitle}>{t('content.templates.title')}</h1>
                 <PermissionGate module="content" action="create">
-                    <button className={shared.addBtn}><Plus size={16} /> {t('content.templates.add')}</button>
+                    <button className={shared.addBtn} onClick={() => setCreating(true)}><Plus size={16} /> {t('content.templates.add')}</button>
                 </PermissionGate>
             </div>
             <DataTable<EmailTemplate> columns={columns} data={templates} searchKeys={['name', 'slug', 'subject']} searchPlaceholder={t('content.templates.searchPlaceholder')} getRowKey={r => r.id} />
 
-            <FormModal open={!!editTpl} onClose={() => setEditTpl(null)} title={editTpl ? `${t('common.edit')}: ${editTpl.name}` : ''} submitLabel={t('common.save')} onSubmit={e => {
+            <FormModal open={!!editTpl || creating} onClose={() => { setEditTpl(null); setCreating(false); }} title={editTpl ? `${t('common.edit')}: ${editTpl.name}` : t('content.templates.add')} submitLabel={t('common.save')} onSubmit={e => {
                 e.preventDefault();
-                if (!editTpl) return;
                 const fd = new FormData(e.currentTarget as HTMLFormElement);
-                setTemplates(prev => prev.map(t => t.id === editTpl.id ? {
-                    ...t,
-                    name: String(fd.get('name') || t.name),
-                    subject: String(fd.get('subject') || t.subject),
-                    subject_ar: String(fd.get('subject_ar') || t.subject_ar),
-                    body_html: String(fd.get('body_html') || t.body_html),
-                    body_html_ar: String(fd.get('body_html_ar') || t.body_html_ar),
-                    updated_at: new Date().toISOString(),
-                } : t));
-                setEditTpl(null);
+                if (editTpl) {
+                    setTemplates(prev => prev.map(t => t.id === editTpl.id ? {
+                        ...t,
+                        name: String(fd.get('name') || t.name),
+                        subject: String(fd.get('subject') || t.subject),
+                        subject_ar: String(fd.get('subject_ar') || t.subject_ar),
+                        body_html: String(fd.get('body_html') || t.body_html),
+                        body_html_ar: String(fd.get('body_html_ar') || t.body_html_ar),
+                        updated_at: new Date().toISOString(),
+                    } : t));
+                    setEditTpl(null);
+                } else {
+                    const name = String(fd.get('name') || '').trim();
+                    if (!name) return;
+                    const now = new Date().toISOString();
+                    const newTpl: EmailTemplate = {
+                        id: `tpl-${Date.now()}`,
+                        name,
+                        slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, ''),
+                        subject: String(fd.get('subject') || ''),
+                        subject_ar: String(fd.get('subject_ar') || ''),
+                        body_html: String(fd.get('body_html') || ''),
+                        body_html_ar: String(fd.get('body_html_ar') || ''),
+                        variables: [],
+                        type: (String(fd.get('type') || 'email') as EmailTemplate['type']),
+                        active: true,
+                        created_at: now,
+                        updated_at: now,
+                    };
+                    setTemplates(prev => [newTpl, ...prev]);
+                    setCreating(false);
+                }
             }}>
-                {editTpl && <>
-                    <FormField label={t('content.templates.templateName')}><input name="name" type="text" defaultValue={editTpl.name} className={shared.formInput} /></FormField>
+                {(editTpl || creating) && <>
+                    <FormField label={t('content.templates.templateName')}><input name="name" type="text" defaultValue={editTpl?.name ?? ''} className={shared.formInput} /></FormField>
+                    {creating && !editTpl && (
+                        <FormField label={t('content.templates.type')}>
+                            <select name="type" defaultValue="email" className={shared.formInput}>
+                                <option value="email">EMAIL</option>
+                                <option value="sms">SMS</option>
+                            </select>
+                        </FormField>
+                    )}
                     <div className={shared.formGrid2}>
-                        <FormField label={t('content.templates.subjectEn')}><input name="subject" type="text" defaultValue={editTpl.subject} className={shared.formInput} /></FormField>
-                        <FormField label={t('content.templates.subjectAr')}><input name="subject_ar" type="text" defaultValue={editTpl.subject_ar} className={shared.formInput} dir="rtl" /></FormField>
+                        <FormField label={t('content.templates.subjectEn')}><input name="subject" type="text" defaultValue={editTpl?.subject ?? ''} className={shared.formInput} /></FormField>
+                        <FormField label={t('content.templates.subjectAr')}><input name="subject_ar" type="text" defaultValue={editTpl?.subject_ar ?? ''} className={shared.formInput} dir="rtl" /></FormField>
                     </div>
-                    <FormField label={t('content.templates.bodyEn')}><textarea name="body_html" defaultValue={editTpl.body_html} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} /></FormField>
-                    <FormField label={t('content.templates.bodyAr')}><textarea name="body_html_ar" defaultValue={editTpl.body_html_ar} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} dir="rtl" /></FormField>
-                    <div style={{ padding: 8, background: 'var(--bg-tertiary)', borderRadius: 6, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
-                        Variables: {editTpl.variables.map(v => `{{${v}}}`).join(', ')}
-                    </div>
+                    <FormField label={t('content.templates.bodyEn')}><textarea name="body_html" defaultValue={editTpl?.body_html ?? ''} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} /></FormField>
+                    <FormField label={t('content.templates.bodyAr')}><textarea name="body_html_ar" defaultValue={editTpl?.body_html_ar ?? ''} style={{ ...inputStyle, minHeight: 120, resize: 'vertical', fontFamily: 'var(--font-mono)', fontSize: '0.8125rem' }} dir="rtl" /></FormField>
+                    {editTpl && (
+                        <div style={{ padding: 8, background: 'var(--bg-tertiary)', borderRadius: 6, fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+                            Variables: {editTpl.variables.map(v => `{{${v}}}`).join(', ')}
+                        </div>
+                    )}
                 </>}
             </FormModal>
         </div>

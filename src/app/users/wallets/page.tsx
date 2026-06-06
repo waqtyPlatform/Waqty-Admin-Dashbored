@@ -46,13 +46,13 @@ export default function WalletsPage() {
             key: 'actions', label: '', width: '140px',
             render: (row) => (
                 <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'add' }); setActionAmount(''); setActionReason(''); }} title={t('users.wallets.addFunds')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'add' }); setActionAmount(''); setActionReason(''); }} title={t('users.wallets.addFunds')} aria-label={t('users.wallets.addFunds')} style={{ width: 32, height: 32, border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-success)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Plus size={14} />
                     </button>
-                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'deduct' }); setActionAmount(''); setActionReason(''); }} title={t('users.wallets.deduct')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); setWalletAction({ wallet: row, type: 'deduct' }); setActionAmount(''); setActionReason(''); }} title={t('users.wallets.deduct')} aria-label={t('users.wallets.deduct')} style={{ width: 32, height: 32, border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: 'var(--color-error)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <Minus size={14} />
                     </button>
-                    <button onClick={e => { e.stopPropagation(); handleToggleFreeze(row.id); }} title={row.status === 'frozen' ? t('users.wallets.unfreeze') : t('users.wallets.freeze')} style={{ padding: '4px 8px', border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: row.status === 'frozen' ? 'var(--color-info)' : 'var(--color-warning)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                    <button onClick={e => { e.stopPropagation(); handleToggleFreeze(row.id); }} title={row.status === 'frozen' ? t('users.wallets.unfreeze') : t('users.wallets.freeze')} aria-label={row.status === 'frozen' ? t('users.wallets.unfreeze') : t('users.wallets.freeze')} style={{ width: 32, height: 32, border: '1px solid var(--border-color)', borderRadius: '6px', background: 'var(--bg-primary)', color: row.status === 'frozen' ? 'var(--color-info)' : 'var(--color-warning)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {row.status === 'frozen' ? <Unlock size={14} /> : <Lock size={14} />}
                     </button>
                 </div>

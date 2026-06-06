@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
     Building2,
@@ -14,33 +14,40 @@ import {
     Star,
     ArrowUpRight,
     ArrowDownRight,
+    Wallet,
+    ArrowRight,
+    CheckCircle2,
 } from 'lucide-react';
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell,
-} from 'recharts';
+import dynamic from 'next/dynamic';
 import {
     mockKPIs,
-    mockRevenueData,
-    mockCategoryBreakdown,
     mockSubscriptionBreakdown,
     mockTopProviders,
     mockRecentActivity,
 } from '@/mocks/dashboard';
-import { mockProviders } from '@/mocks/providers';
+import { mockProviders, mockRegistrations } from '@/mocks/providers';
+import { platformPayouts } from '@/mocks/finance';
+import { mockReviews } from '@/mocks/reviews';
+import { mockTickets } from '@/mocks/support';
 import { assessChurnRisk } from '@/lib/analytics';
-import { formatMoney, formatCompactMoney } from '@/lib/market';
+import { formatMoney } from '@/lib/market';
+import { useApiQuery } from '@/hooks/useApiQuery';
+import { adminProvidersApi, adminUsersApi, adminBookingsApi } from '@/lib/api';
 import Link from 'next/link';
 import { AlertTriangle } from 'lucide-react';
 import styles from './page.module.css';
+
+// recharts is heavy and lives below the KPI fold — load it client-side only so it
+// stays out of the initial bundle.
+const DashboardCharts = dynamic(() => import('./DashboardCharts'), {
+    ssr: false,
+    loading: () => (
+        <div className={styles.chartsRow}>
+            <div className={styles.chartCard} style={{ height: 340 }} />
+            <div className={styles.chartCard} style={{ height: 340 }} />
+        </div>
+    ),
+});
 
 const KPI_ICONS = [
     <Building2 key="providers" size={20} />,
@@ -64,11 +71,70 @@ const ACTIVITY_COLORS: Record<string, string> = {
 export default function DashboardPage() {
     const { t } = useTranslation();
 
+    // Real platform counts for the first three KPI tiles (providers / users / bookings)
+    // from each list endpoint's pagination total. The other tiles (revenue, subscriptions,
+    // registrations, tickets, monthly) have no backend endpoint and stay mock.
+    const { meta: providersMeta } = useApiQuery(() => adminProvidersApi.list({ per_page: 1 }), []);
+    const { meta: usersMeta } = useApiQuery(() => adminUsersApi.list({ per_page: 1 }), []);
+    const { meta: bookingsMeta } = useApiQuery(() => adminBookingsApi.list({ per_page: 1 }), []);
+    const realKpiCounts: Record<number, number | undefined> = {
+        0: providersMeta?.pagination?.total,
+        1: usersMeta?.pagination?.total,
+        2: bookingsMeta?.pagination?.total,
+    };
+    const kpis = mockKPIs.map((kpi, i) =>
+        realKpiCounts[i] != null ? { ...kpi, value: realKpiCounts[i]!.toLocaleString() } : kpi
+    );
+
     const churnWatch = mockProviders
         .map(p => ({ provider: p, risk: assessChurnRisk(p, mockProviders) }))
         .filter(x => x.risk.risk !== 'none')
         .sort((a, b) => b.risk.riskScore - a.risk.riskScore)
         .slice(0, 5);
+
+    // "Needs attention" — actionable backlogs sourced from the same mocks the
+    // queues use, deep-linking straight into each queue. Only non-zero items show.
+    const attention = useMemo(() => {
+        const activeTicket = (s: string) => s === 'open' || s === 'in_progress' || s === 'waiting_on_customer' || s === 'waiting_on_provider';
+        return [
+            {
+                key: 'registrations',
+                count: mockRegistrations.filter(r => r.status === 'pending').length,
+                label: t('dashboard.attn.registrations'),
+                href: '/providers/registrations',
+                icon: <Clock size={18} />,
+                tint: 'var(--color-warning)',
+                bg: 'var(--color-warning-light)',
+            },
+            {
+                key: 'payouts',
+                count: platformPayouts.filter(p => p.status === 'pending').length,
+                label: t('dashboard.attn.payouts'),
+                href: '/finance/payouts',
+                icon: <Wallet size={18} />,
+                tint: 'var(--color-primary-600)',
+                bg: 'var(--color-primary-50)',
+            },
+            {
+                key: 'reviews',
+                count: mockReviews.filter(r => r.status === 'flagged' || r.status === 'pending').length,
+                label: t('dashboard.attn.reviews'),
+                href: '/reviews',
+                icon: <Star size={18} />,
+                tint: '#f59e0b',
+                bg: 'color-mix(in srgb, #f59e0b 12%, transparent)',
+            },
+            {
+                key: 'tickets',
+                count: mockTickets.filter(tk => tk.sla_breached || (activeTicket(tk.status) && tk.assigned_to == null)).length,
+                label: t('dashboard.attn.tickets'),
+                href: '/support',
+                icon: <Headphones size={18} />,
+                tint: 'var(--color-error)',
+                bg: 'var(--color-error-50)',
+            },
+        ].filter(a => a.count > 0);
+    }, [t]);
 
     return (
         <div className={styles.dashboard}>
@@ -76,9 +142,51 @@ export default function DashboardPage() {
                 <h1 className={styles.title}>{t('dashboard.title')}</h1>
             </div>
 
+            {/* Needs attention */}
+            <section aria-label={t('dashboard.needsAttention')} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                <h2 style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                    {t('dashboard.needsAttention')}
+                </h2>
+                {attention.length === 0 ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 'var(--space-4)', background: 'var(--color-success-light)', color: 'var(--color-success)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-lg)', fontSize: 'var(--text-sm)', fontWeight: 500 }}>
+                        <CheckCircle2 size={18} /> {t('dashboard.allClear')}
+                    </div>
+                ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 'var(--space-3)' }}>
+                        {attention.map(a => (
+                            <Link
+                                key={a.key}
+                                href={a.href}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 'var(--space-3)',
+                                    padding: 'var(--space-4)',
+                                    background: 'var(--bg-primary)',
+                                    border: '1px solid var(--border-color)',
+                                    borderRadius: 'var(--radius-lg)',
+                                    borderInlineStart: `3px solid ${a.tint}`,
+                                    textDecoration: 'none',
+                                    color: 'var(--text-primary)',
+                                }}
+                            >
+                                <span style={{ width: 40, height: 40, borderRadius: 'var(--radius-lg)', background: a.bg, color: a.tint, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    {a.icon}
+                                </span>
+                                <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                                    <span style={{ fontSize: 'var(--text-2xl)', fontWeight: 700, lineHeight: 1.1, fontVariantNumeric: 'tabular-nums' }}>{a.count}</span>
+                                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)' }}>{a.label}</span>
+                                </span>
+                                <ArrowRight size={16} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
+                            </Link>
+                        ))}
+                    </div>
+                )}
+            </section>
+
             {/* KPI Cards */}
             <div className={styles.kpiGrid}>
-                {mockKPIs.map((kpi, i) => (
+                {kpis.map((kpi, i) => (
                     <div key={kpi.label} className={styles.kpiCard}>
                         <div className={styles.kpiIcon}>{KPI_ICONS[i]}</div>
                         <div className={styles.kpiContent}>
@@ -94,67 +202,7 @@ export default function DashboardPage() {
             </div>
 
             {/* Charts Row */}
-            <div className={styles.chartsRow}>
-                <div className={styles.chartCard}>
-                    <h3 className={styles.chartTitle}>{t('dashboard.revenueOverTime')}</h3>
-                    <ResponsiveContainer width="100%" height={280}>
-                        <AreaChart data={mockRevenueData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
-                            <XAxis dataKey="month" stroke="var(--text-tertiary)" fontSize={12} />
-                            <YAxis stroke="var(--text-tertiary)" fontSize={12} tickFormatter={v => formatCompactMoney(Number(v), { withCurrency: false })} />
-                            <Tooltip
-                                contentStyle={{
-                                    background: 'var(--bg-primary)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: '8px',
-                                    fontSize: '13px',
-                                }}
-                                formatter={(value) => [formatCompactMoney(Number(value)), '']}
-                            />
-                            <Area type="monotone" dataKey="subscriptions" stackId="1" stroke="var(--color-primary-500)" fill="var(--color-primary-500)" fillOpacity={0.25} name="Subscriptions" />
-                            <Area type="monotone" dataKey="commissions" stackId="1" stroke="var(--color-info)" fill="var(--color-info)" fillOpacity={0.25} name="Commissions" />
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-
-                <div className={styles.chartCard}>
-                    <h3 className={styles.chartTitle}>{t('dashboard.providersByCategory')}</h3>
-                    <ResponsiveContainer width="100%" height={280}>
-                        <PieChart>
-                            <Pie
-                                data={mockCategoryBreakdown}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={100}
-                                paddingAngle={3}
-                                dataKey="count"
-                                nameKey="name"
-                            >
-                                {mockCategoryBreakdown.map(entry => (
-                                    <Cell key={entry.name} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip
-                                contentStyle={{
-                                    background: 'var(--bg-primary)',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: '8px',
-                                }}
-                            />
-                        </PieChart>
-                    </ResponsiveContainer>
-                    <div className={styles.legend}>
-                        {mockCategoryBreakdown.map(item => (
-                            <div key={item.name} className={styles.legendItem}>
-                                <span className={styles.legendDot} style={{ backgroundColor: item.color }} />
-                                <span>{item.name}</span>
-                                <span className={styles.legendValue}>{item.count}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+            <DashboardCharts />
 
             {/* Bottom Row */}
             <div className={styles.bottomRow}>

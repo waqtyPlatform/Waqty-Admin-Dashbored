@@ -10,6 +10,7 @@ import { StatusBadge } from '@/components/admin/StatusBadge';
 import { FormModal, FormField } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { CreditCard, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { formatMoney, toMinor } from '@/lib/market';
 import shared from '@/components/admin/shared.module.css';
 
 export default function PaymentsPage() {
@@ -107,7 +108,7 @@ export default function PaymentsPage() {
         {
             key: 'amount',
             label: t('common.amount'),
-            render: r => <span style={{ fontWeight: 600 }}>EGP {Number(r.amount).toFixed(2)}</span>,
+            render: r => <span style={{ fontWeight: 600 }}>{formatMoney(toMinor(Number(r.amount)))}</span>,
         },
         {
             key: 'status',
@@ -134,11 +135,12 @@ export default function PaymentsPage() {
             render: r => (
                 <div style={{ position: 'relative' }}>
                     <button onClick={() => setActionMenuId(actionMenuId === r.uuid ? null : r.uuid)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-secondary)', borderRadius: 6 }}>
+                        aria-label={t('common.actions')}
+                        style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', borderRadius: 6 }}>
                         <MoreHorizontal size={16} />
                     </button>
                     {actionMenuId === r.uuid && (
-                        <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 140, padding: 4 }}>
+                        <div style={{ position: 'absolute', insetInlineEnd: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 140, padding: 'var(--space-1)' }}>
                             <PermissionGate module="settings" action="edit">
                                 <button onClick={() => { setEditTarget(r); setActionMenuId(null); }}
                                     style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}>

@@ -22,7 +22,7 @@
 
 .reviewRight { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
 .stars { display: flex; gap: 1px; }
-.reportCount { display: flex; align-items: center; gap: 4px; font-size: var(--text-xs); color: var(--color-warning); font-weight: 500; }
+.reportCount { display: flex; align-items: center; gap: var(--space-1); font-size: var(--text-xs); color: var(--color-warning); font-weight: 500; }
 
 .reviewComment { font-size: var(--text-sm); color: var(--text-primary); line-height: 1.6; margin: 0 0 var(--space-3); }
 

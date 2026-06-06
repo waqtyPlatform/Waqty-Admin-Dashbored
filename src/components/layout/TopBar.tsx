@@ -140,7 +140,7 @@ export default function TopBar() {
                             </div>
                             <div className={styles.notifList}>
                                 {notifications.length === 0 ? (
-                                    <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>
+                                    <div style={{ padding: 'var(--space-8) var(--space-4)', textAlign: 'center', color: 'var(--text-tertiary)', fontSize: '0.875rem' }}>
                                         {t('topbar.noNotifications')}
                                     </div>
                                 ) : (
@@ -189,7 +189,7 @@ export default function TopBar() {
                     </button>
                     {userMenuOpen && (
                         <div className={styles.userDropdown}>
-                            <button className={styles.dropdownItem} onClick={() => { setUserMenuOpen(false); router.push('/settings'); }}>
+                            <button className={styles.dropdownItem} onClick={() => { setUserMenuOpen(false); router.push('/settings/platform'); }}>
                                 <Settings size={16} /> {t('topbar.settings')}
                             </button>
                             <button className={styles.dropdownItem} onClick={() => { setUserMenuOpen(false); router.push('/settings/admins'); }}>

@@ -12,10 +12,11 @@ import {
 } from '@/lib/api';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
-import { FormModal, FormField } from '@/components/admin/FormModal';
+import { ConfirmModal } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
 import { Plus, Globe, MapPin, Building2, MoreHorizontal, Pencil, ShieldOff, ShieldCheck, Trash2 } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
+import { CountryFormModal } from './_components/CountryFormModal';
 
 type Tab = 'countries' | 'cities' | 'governorates';
 
@@ -47,6 +48,7 @@ export default function CountriesPage() {
     const [actionMenuId, setActionMenuId] = useState<string | null>(null);
     const [formError, setFormError]       = useState<string | null>(null);
     const [page, setPage]                 = useState(1);
+    const [deleteUuid, setDeleteUuid]     = useState<string | null>(null);
 
     // reset page when tab or filter changes
     const handleTabChange = (newTab: Tab) => { setPage(1); setTab(newTab); };
@@ -132,8 +134,6 @@ export default function CountriesPage() {
     };
 
     const handleDelete = async (uuid: string) => {
-        if (!confirm(t('settings.countries.confirmDelete'))) return;
-        setActionMenuId(null);
         if (tab === 'countries') { await deleteCountry(uuid); refetchCountries(); }
         else if (tab === 'cities') { await deleteCity(uuid); refetchCities(); }
         else { await deleteGovernorate(uuid); refetchGovernorates(); }
@@ -230,17 +230,18 @@ export default function CountriesPage() {
             return (
                 <div style={{ position: 'relative' }}>
                     <button onClick={e => { e.stopPropagation(); setActionMenuId(actionMenuId === item.uuid ? null : item.uuid); }}
+                        aria-label={t('common.actions')}
                         style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, border: 'none', borderRadius: '6px', background: 'transparent', color: 'var(--text-tertiary)', cursor: 'pointer' }}>
                         <MoreHorizontal size={16} />
                     </button>
                     {actionMenuId === item.uuid && (
-                        <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, minWidth: 170, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: '8px', boxShadow: 'var(--shadow-lg)', padding: '4px' }}>
+                        <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', insetInlineEnd: 0, top: '100%', zIndex: 50, minWidth: 170, background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', padding: 'var(--space-1)' }}>
                             <ActionItem icon={<Pencil size={14} />} label={t('common.edit')} onClick={() => { setActionMenuId(null); setEditTarget(row as unknown as CountryObject); }} />
                             {item.active
                                 ? <ActionItem icon={<ShieldOff size={14} />} label={t('common.deactivate')} onClick={() => handleToggle(row as unknown as CountryObject)} danger />
                                 : <ActionItem icon={<ShieldCheck size={14} />} label={t('common.activate')} onClick={() => handleToggle(row as unknown as CountryObject)} />
                             }
-                            <ActionItem icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => handleDelete(item.uuid)} danger />
+                            <ActionItem icon={<Trash2 size={14} />} label={t('common.delete')} onClick={() => { setActionMenuId(null); setDeleteUuid(item.uuid); }} danger />
                         </div>
                     )}
                 </div>
@@ -325,80 +326,50 @@ export default function CountriesPage() {
                     totalCount={activeMeta?.pagination?.total} onPageChange={setPage} />
             )}
 
-            {/* Create Modal */}
-            <FormModal
+            {/* Create */}
+            <CountryFormModal
                 open={showCreate}
                 onClose={() => { setShowCreate(false); setFormError(null); }}
-                title={tab === 'countries' ? t('settings.countries.addCountry') : tab === 'cities' ? t('settings.countries.addCity') : t('settings.countries.addGovernorate')}
-                submitLabel={isCreating ? t('common.saving') : t('settings.countries.add')}
+                mode="create"
+                tab={tab}
+                allCountries={allCountries ?? []}
+                formError={formError}
+                submitting={isCreating}
                 onSubmit={handleCreate}
-            >
-                {formError && <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>}
-                <div className={shared.formGrid2}>
-                    <FormField label={t('settings.countries.nameEn')} required>
-                        <input name="name_en" type="text" required className={shared.formInput} placeholder={t('settings.countries.namePlaceholderEn')} />
-                    </FormField>
-                    <FormField label={t('settings.countries.nameAr')} required>
-                        <input name="name_ar" type="text" required className={shared.formInput} placeholder={t('settings.countries.namePlaceholderAr')} dir="rtl" />
-                    </FormField>
-                </div>
-                {tab === 'countries' && (
-                    <div className={shared.formGrid2}>
-                        <FormField label={t('settings.countries.iso2Code')}>
-                            <input name="iso2" type="text" className={shared.formInput} placeholder="EG" maxLength={2} />
-                        </FormField>
-                        <FormField label={t('settings.countries.phoneCode')}>
-                            <input name="phone_code" type="text" className={shared.formInput} placeholder="+20" />
-                        </FormField>
-                    </div>
-                )}
-                {(tab === 'cities' || tab === 'governorates') && (
-                    <FormField label={t('settings.countries.country')} required>
-                        <select name="country_uuid" required className={shared.formInput}>
-                            <option value="">{t('settings.countries.selectCountry')}</option>
-                            {(allCountries ?? []).map(c => (
-                                <option key={c.uuid} value={c.uuid}>{c.name.en}</option>
-                            ))}
-                        </select>
-                    </FormField>
-                )}
-            </FormModal>
+            />
 
-            {/* Edit Modal */}
-            <FormModal
+            {/* Edit */}
+            <CountryFormModal
                 open={!!editTarget}
                 onClose={() => { setEditTarget(null); setFormError(null); }}
-                title={`${t('common.edit')} ${editTarget ? getNameEn(editTarget) : ''}`}
-                submitLabel={isUpdating ? t('common.saving') : t('common.save')}
+                mode="edit"
+                tab={tab}
+                editTarget={editTarget}
+                formError={formError}
+                submitting={isUpdating}
                 onSubmit={handleUpdate}
-            >
-                {formError && <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>}
-                <div className={shared.formGrid2}>
-                    <FormField label={t('settings.countries.nameEn')} required>
-                        <input name="name_en" type="text" required className={shared.formInput} defaultValue={editTarget ? getNameEn(editTarget) : ''} />
-                    </FormField>
-                    <FormField label={t('settings.countries.nameAr')} required>
-                        <input name="name_ar" type="text" required className={shared.formInput} defaultValue={editTarget ? getNameAr(editTarget) : ''} dir="rtl" />
-                    </FormField>
-                </div>
-                {tab === 'countries' && editTarget && (
-                    <div className={shared.formGrid2}>
-                        <FormField label={t('settings.countries.iso2Code')}>
-                            <input name="iso2" type="text" className={shared.formInput} defaultValue={(editTarget as CountryObject).iso2 ?? ''} maxLength={2} />
-                        </FormField>
-                        <FormField label={t('settings.countries.phoneCode')}>
-                            <input name="phone_code" type="text" className={shared.formInput} defaultValue={(editTarget as CountryObject).phone_code ?? ''} />
-                        </FormField>
-                    </div>
-                )}
-            </FormModal>
+            />
+
+            {/* Delete confirmation */}
+            <ConfirmModal
+                open={!!deleteUuid}
+                variant="danger"
+                title={t('common.delete')}
+                message={t('settings.countries.confirmDelete')}
+                confirmLabel={t('common.delete')}
+                onConfirm={async () => {
+                    if (deleteUuid) await handleDelete(deleteUuid);
+                    setDeleteUuid(null);
+                }}
+                onClose={() => setDeleteUuid(null)}
+            />
         </div>
     );
 }
 
 function ActionItem({ icon, label, onClick, danger }: { icon: React.ReactNode; label: string; onClick: () => void; danger?: boolean }) {
     return (
-        <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', border: 'none', borderRadius: '4px', background: 'transparent', color: danger ? 'var(--color-error)' : 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'left' }}>
+        <button onClick={onClick} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', border: 'none', borderRadius: 'var(--radius-sm)', background: 'transparent', color: danger ? 'var(--color-error)' : 'var(--text-primary)', fontSize: '0.875rem', cursor: 'pointer', fontFamily: 'var(--font-sans)', textAlign: 'start' }}>
             {icon} {label}
         </button>
     );

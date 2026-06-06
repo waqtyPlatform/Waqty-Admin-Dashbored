@@ -11,7 +11,7 @@
 .topActions {
     position: absolute;
     top: var(--space-4);
-    right: var(--space-4);
+    inset-inline-end: var(--space-4);
     display: flex;
     gap: var(--space-2);
 }
@@ -130,12 +130,12 @@
 }
 
 .passwordWrap .input {
-    padding-right: 44px;
+    padding-inline-end: 44px;
 }
 
 .eyeBtn {
     position: absolute;
-    right: var(--space-3);
+    inset-inline-end: var(--space-3);
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -201,14 +201,4 @@
     font-size: 0.6875rem;
     color: var(--text-tertiary);
     line-height: 1.6;
-}
-
-[dir='rtl'] .passwordWrap .input {
-    padding-right: var(--space-4);
-    padding-left: 44px;
-}
-
-[dir='rtl'] .eyeBtn {
-    right: auto;
-    left: var(--space-3);
 }

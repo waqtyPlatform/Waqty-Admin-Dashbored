@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@/hooks/useTranslation';
 import styles from './admin.module.css';
 
 type StatusVariant = 'active' | 'suspended' | 'blocked' | 'soft_deleted' | 'pending' | 'expired' | 'trial' | 'rejected' | 'paid' | 'overdue' | 'draft' | 'paused' | 'completed' | 'open' | 'in_progress' | 'resolved' | 'closed' | 'frozen' | 'healthy' | 'degraded' | 'down' | 'published' | 'flagged' | 'hidden' | string;
@@ -9,48 +10,54 @@ interface StatusBadgeProps {
     size?: 'sm' | 'md';
 }
 
-const STATUS_MAP: Record<string, { label: string; className: string }> = {
-    active: { label: 'Active', className: styles.statusActive },
-    suspended: { label: 'Suspended', className: styles.statusWarning },
-    blocked: { label: 'Blocked', className: styles.statusError },
-    soft_deleted: { label: 'Deleted', className: styles.statusError },
-    pending: { label: 'Pending', className: styles.statusWarning },
-    pending_review: { label: 'Pending Review', className: styles.statusWarning },
-    expired: { label: 'Expired', className: styles.statusNeutral },
-    trial: { label: 'Trial', className: styles.statusInfo },
-    rejected: { label: 'Rejected', className: styles.statusError },
-    paid: { label: 'Paid', className: styles.statusActive },
-    overdue: { label: 'Overdue', className: styles.statusError },
-    draft: { label: 'Draft', className: styles.statusNeutral },
-    paused: { label: 'Paused', className: styles.statusWarning },
-    completed: { label: 'Completed', className: styles.statusActive },
-    open: { label: 'Open', className: styles.statusInfo },
-    in_progress: { label: 'In Progress', className: styles.statusInfo },
-    resolved: { label: 'Resolved', className: styles.statusActive },
-    closed: { label: 'Closed', className: styles.statusNeutral },
-    frozen: { label: 'Frozen', className: styles.statusError },
-    healthy: { label: 'Healthy', className: styles.statusActive },
-    degraded: { label: 'Degraded', className: styles.statusWarning },
-    down: { label: 'Down', className: styles.statusError },
-    published: { label: 'Published', className: styles.statusActive },
-    flagged: { label: 'Flagged', className: styles.statusWarning },
-    hidden: { label: 'Hidden', className: styles.statusNeutral },
-    cancelled: { label: 'Cancelled', className: styles.statusError },
-    past_due: { label: 'Past Due', className: styles.statusError },
-    deactivated: { label: 'Deactivated', className: styles.statusNeutral },
-    // Canonical booking lifecycle (waqty_contract BookingStatus)
-    confirmed: { label: 'Confirmed', className: styles.statusInfo },
-    no_show: { label: 'No Show', className: styles.statusError },
-    // Canonical AdStatus (waqty_contract) — X16
-    scheduled: { label: 'Scheduled', className: styles.statusInfo },
-    ended: { label: 'Ended', className: styles.statusNeutral },
+// Colour class per status; the human label is resolved from i18n (`status.<key>`)
+// so badges localise everywhere the component is used (every admin table/detail).
+const STATUS_CLASS: Record<string, string> = {
+    active: styles.statusActive,
+    suspended: styles.statusWarning,
+    blocked: styles.statusError,
+    soft_deleted: styles.statusError,
+    pending: styles.statusWarning,
+    pending_review: styles.statusWarning,
+    expired: styles.statusNeutral,
+    trial: styles.statusInfo,
+    rejected: styles.statusError,
+    paid: styles.statusActive,
+    overdue: styles.statusError,
+    draft: styles.statusNeutral,
+    paused: styles.statusWarning,
+    completed: styles.statusActive,
+    open: styles.statusInfo,
+    in_progress: styles.statusInfo,
+    resolved: styles.statusActive,
+    closed: styles.statusNeutral,
+    frozen: styles.statusError,
+    healthy: styles.statusActive,
+    degraded: styles.statusWarning,
+    down: styles.statusError,
+    published: styles.statusActive,
+    flagged: styles.statusWarning,
+    hidden: styles.statusNeutral,
+    cancelled: styles.statusError,
+    past_due: styles.statusError,
+    deactivated: styles.statusNeutral,
+    confirmed: styles.statusInfo,
+    no_show: styles.statusError,
+    scheduled: styles.statusInfo,
+    ended: styles.statusNeutral,
 };
 
 export function StatusBadge({ status, size = 'sm' }: StatusBadgeProps) {
-    const info = STATUS_MAP[status] || { label: status.replace(/_/g, ' '), className: styles.statusNeutral };
+    const { t } = useTranslation();
+    const className = STATUS_CLASS[status] ?? styles.statusNeutral;
+    // Known statuses have a `status.<key>` translation; unknown ones fall back to a
+    // de-snaked version of the raw value (t() returns the key when it's missing).
+    const key = `status.${status}`;
+    const translated = t(key);
+    const label = translated === key ? status.replace(/_/g, ' ') : translated;
     return (
-        <span className={`${styles.statusBadge} ${info.className} ${size === 'sm' ? styles.statusSm : ''}`}>
-            {info.label}
+        <span className={`${styles.statusBadge} ${className} ${size === 'sm' ? styles.statusSm : ''}`}>
+            {label}
         </span>
     );
 }

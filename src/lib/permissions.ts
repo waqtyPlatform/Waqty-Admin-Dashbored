@@ -74,6 +74,6 @@ export function hasPermission(
     module: PermissionModule,
     action: PermissionAction
 ): boolean {
-    const perm = permissions.find(p => p.module === module);
+    const perm = permissions?.find(p => p.module === module);
     return perm?.actions.includes(action) ?? false;
 }

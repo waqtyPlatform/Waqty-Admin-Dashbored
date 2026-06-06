@@ -150,7 +150,7 @@ export default function ExperimentsPage() {
                                             : 'var(--bg-primary)',
                                     }}>{winnerLabel}</span>
                                 </div>
-                                <div style={{ marginLeft: 'auto', color: 'var(--text-tertiary)' }}>
+                                <div style={{ marginInlineStart: 'auto', color: 'var(--text-tertiary)' }}>
                                     {t('marketing.experiments.sample')}: {result.sampleSize.toLocaleString()} {winnerColor(result.winner) ? '' : ''}
                                 </div>
                             </div>

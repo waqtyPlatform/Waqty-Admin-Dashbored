@@ -62,7 +62,7 @@ export default function RevenueReportPage() {
                     <span className={shared.summaryValue} style={{ color: 'var(--color-success)' }}>+8.8%</span>
                 </div>
                 {nextMonth && (
-                    <div className={shared.summaryCard} style={{ borderLeft: '3px solid var(--color-info)' }}>
+                    <div className={shared.summaryCard} style={{ borderInlineStart: '3px solid var(--color-info)' }}>
                         <span className={shared.summaryLabel}>{t('reports.revenue.forecast.nextMonth')} ({nextMonth.month})</span>
                         <span className={shared.summaryValue} style={{ color: 'var(--color-info)' }}>{formatCompactMoney(nextMonth.total)}</span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>

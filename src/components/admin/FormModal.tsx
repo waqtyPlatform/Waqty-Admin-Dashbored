@@ -113,12 +113,13 @@ interface FormFieldProps {
     required?: boolean;
     children: React.ReactNode;
     error?: string;
+    htmlFor?: string;
 }
 
-export function FormField({ label, required, children, error }: FormFieldProps) {
+export function FormField({ label, required, children, error, htmlFor }: FormFieldProps) {
     return (
         <div className={styles.field}>
-            <label className={styles.label}>
+            <label className={styles.label} htmlFor={htmlFor}>
                 {label} {required && <span className={styles.required}>*</span>}
             </label>
             {children}

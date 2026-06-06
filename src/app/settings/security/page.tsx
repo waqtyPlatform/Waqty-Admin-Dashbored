@@ -48,7 +48,7 @@ export default function SecurityPage() {
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     <Row label={t('settings.security.requireMFA')} description={t('settings.security.requireMFADesc')}>
-                        <Toggle value={settings.requireMFA} onChange={v => update('requireMFA', v)} />
+                        <Toggle value={settings.requireMFA} onChange={v => update('requireMFA', v)} label={t('settings.security.requireMFA')} />
                     </Row>
                     <Row label={t('settings.security.defaultMFAMethod')}>
                         <select value={settings.mfaMethod} onChange={e => update('mfaMethod', e.target.value)} style={selectStyle}>
@@ -70,9 +70,9 @@ export default function SecurityPage() {
                     <Row label={t('settings.security.minimumPasswordLength')}>
                         <input type="number" min={8} max={32} value={settings.passwordMinLength} onChange={e => update('passwordMinLength', Number(e.target.value))} className={shared.formInput} />
                     </Row>
-                    <Row label={t('settings.security.requireUppercase')}><Toggle value={settings.passwordRequireUppercase} onChange={v => update('passwordRequireUppercase', v)} /></Row>
-                    <Row label={t('settings.security.requireNumber')}><Toggle value={settings.passwordRequireNumber} onChange={v => update('passwordRequireNumber', v)} /></Row>
-                    <Row label={t('settings.security.requireSpecial')}><Toggle value={settings.passwordRequireSpecial} onChange={v => update('passwordRequireSpecial', v)} /></Row>
+                    <Row label={t('settings.security.requireUppercase')}><Toggle value={settings.passwordRequireUppercase} onChange={v => update('passwordRequireUppercase', v)} label={t('settings.security.requireUppercase')} /></Row>
+                    <Row label={t('settings.security.requireNumber')}><Toggle value={settings.passwordRequireNumber} onChange={v => update('passwordRequireNumber', v)} label={t('settings.security.requireNumber')} /></Row>
+                    <Row label={t('settings.security.requireSpecial')}><Toggle value={settings.passwordRequireSpecial} onChange={v => update('passwordRequireSpecial', v)} label={t('settings.security.requireSpecial')} /></Row>
                     <Row label={t('settings.security.forcePasswordChange')}>
                         <input type="number" min={0} max={365} value={settings.requireStrongPasswordChange} onChange={e => update('requireStrongPasswordChange', Number(e.target.value))} className={shared.formInput} />
                     </Row>
@@ -128,9 +128,9 @@ function Row({ label, description, children }: { label: string; description?: st
     );
 }
 
-function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label?: string }) {
     return (
-        <button onClick={() => onChange(!value)} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: value ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+        <button onClick={() => onChange(!value)} role="switch" aria-checked={value} aria-label={label} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: value ? 'var(--color-primary-500)' : 'var(--color-gray-300)', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
             <span style={{ width: 18, height: 18, borderRadius: 9, background: 'white', position: 'absolute', top: 3, left: value ? 23 : 3, transition: 'left 0.2s' }} />
         </button>
     );

@@ -166,10 +166,6 @@
     border-bottom: 1px solid var(--border-color);
 }
 
-[dir='rtl'] .table th {
-    text-align: right;
-}
-
 .table td {
     padding: var(--space-3) var(--space-3);
     color: var(--text-primary);

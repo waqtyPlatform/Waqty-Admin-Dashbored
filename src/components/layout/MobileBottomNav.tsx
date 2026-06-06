@@ -17,7 +17,7 @@ export default function MobileBottomNav() {
         { href: '/providers', label: t('sidebar.providers'), icon: Building2 },
         { href: '/users', label: t('sidebar.users'), icon: Users },
         { href: '/support', label: t('sidebar.support'), icon: Headphones },
-        { href: '/settings', label: t('mobileNav.more'), icon: MoreHorizontal },
+        { href: '/settings/platform', label: t('mobileNav.more'), icon: MoreHorizontal },
     ];
 
     return (

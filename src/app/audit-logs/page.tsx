@@ -81,11 +81,11 @@ export default function AuditLogsPage() {
                     <span className={shared.summaryLabel}>{t('common.total')}</span>
                     <span className={shared.summaryValue}>{mockLogs.length}</span>
                 </div>
-                <div className={shared.summaryCard} style={{ borderLeft: '3px solid var(--color-warning)' }}>
+                <div className={shared.summaryCard} style={{ borderInlineStart: '3px solid var(--color-warning)' }}>
                     <span className={shared.summaryLabel}>{t('auditLogs.flagged')}</span>
                     <span className={shared.summaryValue} style={{ color: 'var(--color-warning)' }}>{flaggedCount}</span>
                 </div>
-                <div className={shared.summaryCard} style={{ borderLeft: '3px solid var(--color-error)' }}>
+                <div className={shared.summaryCard} style={{ borderInlineStart: '3px solid var(--color-error)' }}>
                     <span className={shared.summaryLabel}>{t('auditLogs.severity.high')}</span>
                     <span className={shared.summaryValue} style={{ color: 'var(--color-error)' }}>{highSeverityCount}</span>
                 </div>

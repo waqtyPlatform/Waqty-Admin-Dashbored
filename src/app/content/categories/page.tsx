@@ -10,10 +10,10 @@ import {
 } from '@/lib/api';
 import { DataTable, type Column } from '@/components/tables/DataTable';
 import { StatusBadge } from '@/components/admin/StatusBadge';
-import { FormModal, FormField } from '@/components/admin/FormModal';
 import { PermissionGate } from '@/components/admin/PermissionGate';
-import { Plus, MoreHorizontal, Pencil, Trash2, RotateCcw, ToggleLeft, ToggleRight, Tag, Layers, Upload } from 'lucide-react';
+import { Plus, MoreHorizontal, Pencil, Trash2, RotateCcw, ToggleLeft, ToggleRight, Tag, Layers } from 'lucide-react';
 import shared from '@/components/admin/shared.module.css';
+import { CategoryFormModal } from './_components/CategoryFormModal';
 
 type Tab = 'categories' | 'subcategories';
 
@@ -87,11 +87,10 @@ export default function CategoriesPage() {
     const [showCreate, setShowCreate]     = useState(false);
     const [editTarget, setEditTarget]     = useState<AdminCategoryObject | AdminSubcategoryObject | null>(null);
     const [formError,  setFormError]      = useState<string | null>(null);
-    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const isSaving = tab === 'categories' ? (creatingCat || updatingCat) : (creatingSub || updatingSub);
 
-    const resetForm = () => { setShowCreate(false); setEditTarget(null); setFormError(null); setImagePreview(null); };
+    const resetForm = () => { setShowCreate(false); setEditTarget(null); setFormError(null); };
 
     // ── Build FormData from form element ──────────────────
     const buildFormData = (el: HTMLFormElement, categoryUuid?: string): FormData => {
@@ -175,7 +174,7 @@ export default function CategoriesPage() {
                 <MoreHorizontal size={16} />
             </button>
             {actionMenuId === row.uuid && (
-                <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 160, padding: 4 }} onClick={e => e.stopPropagation()}>
+                <div style={{ position: 'absolute', insetInlineEnd: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 160, padding: 'var(--space-1)' }} onClick={e => e.stopPropagation()}>
                     <PermissionGate module="content" action="edit">
                         <button onClick={() => { setEditTarget(row); setActionMenuId(null); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}>
@@ -302,101 +301,6 @@ export default function CategoriesPage() {
         </select>
     );
 
-    const isEditCat = editTarget && tab === 'categories';
-    const isEditSub = editTarget && tab === 'subcategories';
-
-    // ── Modal input helpers ───────────────────────────────
-    const fieldStyle: React.CSSProperties = {
-        width: '100%', padding: '10px 14px',
-        border: '1.5px solid var(--border-color)', borderRadius: 10,
-        fontSize: '0.875rem', background: 'var(--bg-secondary)',
-        color: 'var(--text-primary)', outline: 'none',
-        fontFamily: 'var(--font-sans)', boxSizing: 'border-box' as const,
-        transition: 'border-color 0.2s, box-shadow 0.2s',
-    };
-    const focusField = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-        e.target.style.borderColor = 'var(--color-primary-500)';
-        e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--color-primary-500) 15%, transparent)';
-    };
-    const blurField = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
-        e.target.style.borderColor = 'var(--border-color)';
-        e.target.style.boxShadow = 'none';
-    };
-
-    const NameFields = ({ defaultAr = '', defaultEn = '' }) => (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <FormField label={t('content.categories.nameEn')} required>
-                <input name="name_en" type="text" required defaultValue={defaultEn}
-                    placeholder={t('content.categories.namePlaceholderEn')} style={fieldStyle} onFocus={focusField} onBlur={blurField} />
-            </FormField>
-            <FormField label={t('content.categories.nameAr')} required>
-                <input name="name_ar" type="text" required defaultValue={defaultAr}
-                    placeholder={t('content.categories.namePlaceholderAr')} dir="rtl" style={fieldStyle} onFocus={focusField} onBlur={blurField} />
-            </FormField>
-        </div>
-    );
-
-    const CommonFields = ({ defaultOrder = '', defaultActive = 'true' }) => (
-        <>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <FormField label={t('content.categories.sortOrder')}>
-                    <input name="sort_order" type="number" min={0} defaultValue={defaultOrder}
-                        placeholder="0" style={fieldStyle} onFocus={focusField} onBlur={blurField} />
-                </FormField>
-                <FormField label={t('common.status')}>
-                    <select name="active" defaultValue={defaultActive}
-                        style={{ ...fieldStyle, cursor: 'pointer' }}
-                        onFocus={focusField} onBlur={blurField}>
-                        <option value="true">{t('common.active')}</option>
-                        <option value="false">{t('common.inactive')}</option>
-                    </select>
-                </FormField>
-            </div>
-
-            <FormField label={t('content.categories.image')}>
-                <label style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    gap: 10, padding: imagePreview ? 8 : '22px 16px',
-                    border: '2px dashed var(--border-color)', borderRadius: 12,
-                    cursor: 'pointer', background: 'var(--bg-secondary)', transition: 'all 0.2s',
-                    minHeight: 110, position: 'relative', overflow: 'hidden',
-                }}>
-                    {imagePreview ? (
-                        <>
-                            <img src={imagePreview} alt="preview"
-                                style={{ width: '100%', height: 130, objectFit: 'cover', borderRadius: 8 }} />
-                            <span style={{ fontSize: '0.75rem', color: 'var(--color-primary-500)', fontWeight: 500 }}>
-                                {t('content.categories.clickToReplace')}
-                            </span>
-                        </>
-                    ) : (
-                        <>
-                            <div style={{
-                                width: 48, height: 48, borderRadius: 12,
-                                background: 'color-mix(in srgb, var(--color-primary-500) 10%, transparent)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: 'var(--color-primary-500)',
-                            }}>
-                                <Upload size={22} />
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>
-                                    {t('content.categories.clickToUpload')}
-                                </div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: 2 }}>
-                                    {t('content.categories.imageHint')}
-                                </div>
-                            </div>
-                        </>
-                    )}
-                    <input type="file" name="image" accept="image/jpeg,image/png,image/webp"
-                        onChange={e => { const f = e.target.files?.[0]; setImagePreview(f ? URL.createObjectURL(f) : null); }}
-                        style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
-                </label>
-            </FormField>
-        </>
-    );
-
     return (
         <div className={shared.page}>
             <div className={shared.pageHeader}>
@@ -439,63 +343,31 @@ export default function CategoriesPage() {
                 />
             )}
 
-            {/* Create Modal */}
-            <FormModal
+            {/* Create */}
+            <CategoryFormModal
                 open={showCreate}
                 onClose={resetForm}
-                title={tab === 'categories' ? t('content.categories.addCategory') : t('content.categories.addSubcategory')}
-                submitLabel={isSaving ? t('common.saving') : t('common.create')}
+                mode="create"
+                tab={tab}
+                allCategories={allCategories ?? []}
+                formError={formError}
+                saving={isSaving}
                 onSubmit={handleCreate}
-            >
-                {formError && <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>}
-                <NameFields />
-                {tab === 'subcategories' && (
-                    <FormField label={t('content.categories.category')} required>
-                        <select name="category_uuid" required
-                            style={{ ...fieldStyle, cursor: 'pointer' }}
-                            onFocus={focusField} onBlur={blurField}>
-                            <option value="">{t('content.categories.selectCategory')}</option>
-                            {(allCategories ?? []).map(c => <option key={c.uuid} value={c.uuid}>{c.name.en}</option>)}
-                        </select>
-                    </FormField>
-                )}
-                <CommonFields />
-            </FormModal>
+            />
 
-            {/* Edit Modal */}
+            {/* Edit */}
             {editTarget && (
-                <FormModal
+                <CategoryFormModal
                     open={!!editTarget}
                     onClose={resetForm}
-                    title={tab === 'categories' ? t('content.categories.editCategory') : t('content.categories.editSubcategory')}
-                    submitLabel={isSaving ? t('common.saving') : t('common.saveChanges')}
+                    mode="edit"
+                    tab={tab}
+                    editTarget={editTarget}
+                    allCategories={allCategories ?? []}
+                    formError={formError}
+                    saving={isSaving}
                     onSubmit={handleEdit}
-                >
-                    {formError && <div style={{ padding: '10px 12px', marginBottom: 12, borderRadius: 8, background: 'color-mix(in srgb, var(--color-error) 12%, transparent)', color: 'var(--color-error)', fontSize: '0.875rem' }}>{formError}</div>}
-                    <NameFields defaultEn={editTarget.name.en} defaultAr={editTarget.name.ar} />
-                    {isEditSub && (
-                        <FormField label={t('content.categories.category')} required>
-                            <select name="category_uuid" defaultValue={(editTarget as AdminSubcategoryObject).category_uuid}
-                                style={{ ...fieldStyle, cursor: 'pointer' }}
-                                onFocus={focusField} onBlur={blurField}>
-                                {(allCategories ?? []).map(c => <option key={c.uuid} value={c.uuid}>{c.name.en}</option>)}
-                            </select>
-                        </FormField>
-                    )}
-                    <CommonFields
-                        defaultOrder={String(editTarget.sort_order ?? '')}
-                        defaultActive={editTarget.active ? 'true' : 'false'}
-                    />
-                    {isEditCat && (editTarget as AdminCategoryObject).image_url && !imagePreview && (
-                        <div style={{ marginTop: -4 }}>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>{t('content.categories.currentImage')}</span>
-                            <div style={{ position: 'relative', display: 'inline-block' }}>
-                                <img src={(editTarget as AdminCategoryObject).image_url!} alt="current"
-                                    style={{ height: 72, borderRadius: 10, objectFit: 'cover', display: 'block' }} />
-                            </div>
-                        </div>
-                    )}
-                </FormModal>
+                />
             )}
         </div>
     );

@@ -108,8 +108,8 @@ export default function ProvidersPage() {
             key: 'name',
             label: t('providers.colProvider'),
             render: r => (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--color-primary-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary-600)', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 'var(--radius-md)', background: 'var(--color-primary-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary-600)', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0 }}>
                         {r.name.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -128,7 +128,7 @@ export default function ProvidersPage() {
             key: 'category',
             label: t('providers.category'),
             render: r => r.category
-                ? <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>{r.category.name}</span>
+                ? <span style={{ padding: '2px var(--space-3)', borderRadius: 'var(--radius-2xl)', fontSize: '0.75rem', background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>{r.category.name}</span>
                 : <span style={{ color: 'var(--text-tertiary)' }}>—</span>,
         },
         {
@@ -147,35 +147,35 @@ export default function ProvidersPage() {
             render: r => (
                 <div style={{ position: 'relative' }}>
                     <button onClick={e => { e.stopPropagation(); setActionMenuId(actionMenuId === r.uuid ? null : r.uuid); }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-secondary)', borderRadius: 6 }}>
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 'var(--space-1)', color: 'var(--text-secondary)', borderRadius: 'var(--radius-md)' }}>
                         <MoreHorizontal size={16} />
                     </button>
                     {actionMenuId === r.uuid && (
-                        <div style={{ position: 'absolute', right: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 160, padding: 4 }} onClick={e => e.stopPropagation()}>
+                        <div style={{ position: 'absolute', insetInlineEnd: 0, top: '100%', background: 'var(--bg-primary)', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 16px rgba(0,0,0,0.12)', zIndex: 50, minWidth: 160, padding: 'var(--space-1)' }} onClick={e => e.stopPropagation()}>
                             {!r.deleted_at && (
                                 <>
                                     <PermissionGate module="providers" action="edit">
                                         {r.active
-                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'deactivate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldOff size={14} /> {t('common.deactivate')}</button>
-                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'activate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><Play size={14} /> {t('providers.activate')}</button>
+                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'deactivate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}><ShieldOff size={14} /> {t('common.deactivate')}</button>
+                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'activate', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}><Play size={14} /> {t('providers.activate')}</button>
                                         }
                                         {r.blocked
-                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unblock', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> {t('providers.unblock')}</button>
-                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'block', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 6 }}><Ban size={14} /> {t('providers.block')}</button>
+                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unblock', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}><ShieldCheck size={14} /> {t('providers.unblock')}</button>
+                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'block', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-warning)', borderRadius: 'var(--radius-md)' }}><Ban size={14} /> {t('providers.block')}</button>
                                         }
                                         {r.banned
-                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><ShieldCheck size={14} /> {t('common.unban')}</button>
-                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'ban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Ban size={14} /> {t('common.ban')}</button>
+                                            ? <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'unban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}><ShieldCheck size={14} /> {t('common.unban')}</button>
+                                            : <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'ban', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 'var(--radius-md)' }}><Ban size={14} /> {t('common.ban')}</button>
                                         }
                                     </PermissionGate>
                                     <PermissionGate module="providers" action="delete">
-                                        <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'delete', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 6 }}><Trash2 size={14} /> {t('providers.softDelete')}</button>
+                                        <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'delete', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--color-error)', borderRadius: 'var(--radius-md)' }}><Trash2 size={14} /> {t('providers.softDelete')}</button>
                                     </PermissionGate>
                                 </>
                             )}
                             {r.deleted_at && (
                                 <PermissionGate module="providers" action="edit">
-                                    <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'restore', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 6 }}><RotateCcw size={14} /> {t('providers.restore')}</button>
+                                    <button onClick={() => { setConfirmAction({ uuid: r.uuid, action: 'restore', name: r.name }); setActionMenuId(null); }} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', width: '100%', padding: 'var(--space-2) var(--space-3)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-primary)', borderRadius: 'var(--radius-md)' }}><RotateCcw size={14} /> {t('providers.restore')}</button>
                                 </PermissionGate>
                             )}
                         </div>
@@ -186,7 +186,7 @@ export default function ProvidersPage() {
     ];
 
     const filterControls = (
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
             <select value={activeFilter ?? 'all'} onChange={e => setFilter('active', e.target.value)} className={shared.filterSelect}>
                 <option value="all">{t('common.allStatus')}</option>
                 <option value="true">{t('common.active')}</option>
@@ -222,7 +222,7 @@ export default function ProvidersPage() {
     return (
         <div className={styles.page}>
             <div className={styles.pageHeader}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
                     <Building2 size={24} />
                     <h1 className={styles.pageTitle}>{t('providers.title')}</h1>
                 </div>

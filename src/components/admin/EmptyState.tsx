@@ -18,8 +18,8 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: 8,
-                padding: '48px 24px',
+                gap: 'var(--space-2)',
+                padding: 'var(--space-12) var(--space-6)',
                 textAlign: 'center',
                 color: 'var(--text-secondary)',
             }}
@@ -29,7 +29,7 @@ export function EmptyState({ icon, title, description, action }: EmptyStateProps
             {description && (
                 <div style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', maxWidth: 360 }}>{description}</div>
             )}
-            {action && <div style={{ marginTop: 8 }}>{action}</div>}
+            {action && <div style={{ marginTop: 'var(--space-2)' }}>{action}</div>}
         </div>
     );
 }

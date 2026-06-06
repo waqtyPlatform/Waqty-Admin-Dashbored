@@ -35,7 +35,7 @@ export default function TaxReportsPage() {
                     <thead>
                         <tr style={{ background: 'var(--bg-secondary)' }}>
                             {headers.map(h => (
-                                <th key={h} style={{ textAlign: 'left', padding: '12px 16px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
+                                <th key={h} style={{ textAlign: 'start', padding: 'var(--space-3) var(--space-4)', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
                             ))}
                         </tr>
                     </thead>

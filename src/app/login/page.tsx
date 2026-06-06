@@ -47,7 +47,7 @@ export default function LoginPage() {
                     <div className={styles.logo}>H</div>
                     <h1 className={styles.title}>{t('auth.loginTitle')}</h1>
                     <p className={styles.subtitle}>{t('auth.loginSubtitle')}</p>
-                    <span style={{ display: 'inline-block', marginTop: 8, padding: '2px 10px', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', background: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)', border: '1px solid color-mix(in srgb, var(--color-warning) 40%, transparent)', borderRadius: 999 }}>
+                    <span style={{ display: 'inline-block', marginTop: 'var(--space-2)', padding: '2px var(--space-3)', fontSize: '0.6875rem', fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase', background: 'color-mix(in srgb, var(--color-warning) 15%, transparent)', color: 'var(--color-warning)', border: '1px solid color-mix(in srgb, var(--color-warning) 40%, transparent)', borderRadius: 'var(--radius-full)' }}>
                         {t('auth.demoMode')}
                     </span>
                 </div>

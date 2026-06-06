@@ -98,7 +98,7 @@ export default function ReviewAnalyticsPage() {
                     <thead>
                         <tr style={{ background: 'var(--bg-secondary)' }}>
                             {[t('reviews.analytics.provider'), t('reviews.analytics.reviews'), t('reviews.analytics.avgRating')].map(h => (
-                                <th key={h} style={{ textAlign: 'left', padding: '10px 16px', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
+                                <th key={h} style={{ textAlign: 'start', padding: 'var(--space-3) var(--space-4)', color: 'var(--text-secondary)', fontWeight: 500, fontSize: '0.75rem', textTransform: 'uppercase', borderBottom: '1px solid var(--border-color)' }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
