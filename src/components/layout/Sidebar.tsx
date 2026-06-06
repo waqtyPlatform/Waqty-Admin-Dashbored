@@ -127,7 +127,7 @@ export default function Sidebar() {
                 <div className={styles.header}>
                     {!collapsed && (
                         <Link href="/" className={styles.logo} onClick={closeMobile}>
-                            <Logo height={22} />
+                            <Logo height={22} color="white" />
                             <span className={styles.logoText}>Admin</span>
                         </Link>
                     )}
