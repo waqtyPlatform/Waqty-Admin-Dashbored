@@ -1,5 +1,5 @@
-// GENERATED — do not edit. Source: contract/fixtures.demo.json.
-// Regenerate: node contract/sync.mjs   (integrity: node contract/fixtures.test.mjs).
+// App-owned demo seed data (formerly generated from the retired shared
+// contract's fixtures.demo.json). Edit freely.
 import type { Provider, Branch, Employee, ServiceCategory, Service, ServicePrice, Customer, Visit } from '@/contract/waqty_contract';
 
 export const demoProviders: Provider[] = [

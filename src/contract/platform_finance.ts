@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- *  WAQTY / HAGZY — PLATFORM FINANCE  (mock derivation over the canonical contract)
+ *  WAQTY SUPERADMIN — PLATFORM FINANCE  (app-owned mock derivation)
  * ----------------------------------------------------------------------------
  *  Pure functions that turn paid Visits into the platform's money layer:
  *  per-booking commission, the user transaction fee, and the provider

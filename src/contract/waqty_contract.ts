@@ -1,11 +1,10 @@
 /**
  * ============================================================================
- *  WAQTY / HAGZY — CANONICAL ECOSYSTEM CONTRACT  (Phase 0)
- *  Source of truth for all four apps. Prepared for Yossef — 2026-05-28.
+ *  WAQTY SUPERADMIN — DOMAIN MODEL (app-owned)
+ *  Originally derived from the retired shared ecosystem contract (2026-06-10).
+ *  Edit freely; the real backend API is the future source of truth.
  * ----------------------------------------------------------------------------
- *  This file is the single shared contract. The two web dashboards import these
- *  types directly; the two Flutter apps mirror them in waqty_contract.dart.
- *  JSON shape == this file (snake_case). Dart maps snake_case <-> camelCase.
+ *  JSON shape == this file (snake_case).
  *
  *  CONVENTIONS (decided in the gap analysis):
  *   - IDs:        `uuid` (string) is the primary key and FK on every relation.
