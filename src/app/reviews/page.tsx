@@ -79,6 +79,19 @@ export default function ReviewsPage() {
     const [confirmDelete, setConfirmDelete] = useState<string[] | null>(null);
     const [working, setWorking] = useState(false);
 
+    // When the detail drawer opens, fetch the single rating; the already-loaded
+    // row is the fallback so the drawer renders instantly / offline. Shape guard
+    // (not isFallback) so a mismatched response can't crash the render.
+    const { data: detailData } = useApiQuery(
+        () => adminRatingsApi.get(detail!.uuid),
+        [detail?.uuid],
+        { enabled: !!detail, fallbackData: detail ?? undefined }
+    );
+    const record: RatingObject | null =
+        detailData && typeof detailData.uuid === 'string' && typeof detailData.rating === 'number'
+            ? detailData
+            : detail;
+
     const list = ratings ?? [];
 
     const refresh = () => { refetch(); refetchStats(); };
@@ -291,32 +304,32 @@ export default function ReviewsPage() {
             />
 
             {/* Review detail drawer */}
-            <SlideOver open={!!detail} onClose={() => setDetail(null)} title={detail ? (detail.user?.name ?? t('reviews.unknownUser')) : ''}>
-                {detail && (
+            <SlideOver open={!!detail} onClose={() => setDetail(null)} title={record ? (record.user?.name ?? t('reviews.unknownUser')) : ''}>
+                {record && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Stars value={detail.rating} />
-                            <StatusBadge status={statusOf(detail)} />
+                            <Stars value={record.rating} />
+                            <StatusBadge status={statusOf(record)} />
                         </div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)' }}>
-                            {t('reviews.on')} <strong style={{ color: 'var(--text-secondary)' }}>{detail.booking?.provider?.name ?? '—'}</strong> · {detail.created_at?.slice(0, 10)}
+                            {t('reviews.on')} <strong style={{ color: 'var(--text-secondary)' }}>{record.booking?.provider?.name ?? '—'}</strong> · {record.created_at?.slice(0, 10)}
                         </div>
                         <p style={{ fontSize: 'var(--text-base)', lineHeight: 1.6, color: 'var(--text-primary)', margin: 0 }}>
-                            {detail.comment || <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic' }}>{t('reviews.noComment')}</span>}
+                            {record.comment || <span style={{ color: 'var(--text-tertiary)', fontStyle: 'italic' }}>{t('reviews.noComment')}</span>}
                         </p>
                         <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-2)' }}>
-                            {statusOf(detail) === 'hidden' && (
-                                <button style={{ ...iconBtn, width: 'auto', padding: '8px 14px', gap: 6 }} onClick={() => setActive([detail.uuid], true)}>
+                            {statusOf(record) === 'hidden' && (
+                                <button style={{ ...iconBtn, width: 'auto', padding: '8px 14px', gap: 6 }} onClick={() => setActive([record.uuid], true)}>
                                     <Eye size={15} /> {t('reviews.unhide')}
                                 </button>
                             )}
-                            {statusOf(detail) === 'published' && (
-                                <button style={{ ...iconBtn, width: 'auto', padding: '8px 14px', gap: 6, color: 'var(--color-warning)' }} onClick={() => setActive([detail.uuid], false)}>
+                            {statusOf(record) === 'published' && (
+                                <button style={{ ...iconBtn, width: 'auto', padding: '8px 14px', gap: 6, color: 'var(--color-warning)' }} onClick={() => setActive([record.uuid], false)}>
                                     <EyeOff size={15} /> {t('reviews.hide')}
                                 </button>
                             )}
-                            {statusOf(detail) !== 'deleted' && (
-                                <button style={{ ...iconBtn, width: 'auto', padding: '8px 14px', gap: 6, color: 'var(--color-error)' }} onClick={() => setConfirmDelete([detail.uuid])}>
+                            {statusOf(record) !== 'deleted' && (
+                                <button style={{ ...iconBtn, width: 'auto', padding: '8px 14px', gap: 6, color: 'var(--color-error)' }} onClick={() => setConfirmDelete([record.uuid])}>
                                     <Trash2 size={15} /> {t('common.delete')}
                                 </button>
                             )}
